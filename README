@@ -10,38 +10,38 @@ SYNOPSIS
       use Device::Gsm;
 
       # NOT YET DEFINED!
-      my $gsm = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
+      my $gsm = new Device::Gsm( port => '/dev/ttyS1', pin => '0124' );
 
       if( $gsm->connect() ) {
           print "connected!\n";
       } else {
           print "sorry, no connection with gsm phone on serial port!\n';
       }
-
+ 
       # Register to GSM network (you must supply PIN number in above new() call)
       $gsm->register();
-
+ 
       # Get the manufacturer and model code of device
       my $mnf   = $gsm->manufacturer();
       my $model = $gsm->model();
-
+ 
       # What GSM software verson ?
       print 'GSM VERSION is ", $gsm->software_version(), "\n";
-
+ 
       # Test for command support
       if( $self->test_command('CGMI') ) {
           # `AT+CGMI' command supported!
       } else {
           # No luck, CGMI command not available
       }
-
+ 
       # Set service center number (depends on your network operator)
       $gsm->service_number( '+001505050' );   # This one is fake, not usable!
  
       # Retrieve actual stored service number
       print 'Service number is now: ', $gsm->service_number(), "\n";
  
-      # Send a short text message (SMS)
+      # Send a short text message (SMS in text mode *only*, no PDU)
       $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
  
 DESCRIPTION
@@ -50,14 +50,23 @@ DESCRIPTION
     Device::Modem for all low-level functions. It is planned to add more
     custom GSM commands support, with device identification, and so on...
 
-    Please feel free to contact me to provide feedback on this.
+    Actually, this was a rather dated module, that does not support PDU mode
+    (for example) and it is now undergoing a major rewrite.
+
+    So please be patient and contact me if you are interested in this.
 
   REQUIRES
 
-    Device::Modem
+    *   Device::Modem, which in turn requires
+
+    *   Device::SerialPort
+
   EXPORT
 
     None
+
+TO-DO
+    *   Too many things, but your suggestions are welcome...
 
 AUTHOR
     Cosimo Streppone, cosimo@cpan.org

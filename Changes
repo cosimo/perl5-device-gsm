@@ -15,3 +15,11 @@ Revision history for Perl extension Device::Gsm.
       get information about the device
 	- added test_command() to test support for a specific GSM command
 
+1.07  Wed Apr  3 23:38:51 CEST 2002
+	- removed unnecessary javadoc style tags
+	- made use of new parse_answer() call
+	- now service_center() works
+	- device identification functions now work
+	- improved test suite
+	- fixed logging class mechanism
+

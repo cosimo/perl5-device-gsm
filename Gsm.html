@@ -21,6 +21,7 @@
 		<LI><A HREF="#export">EXPORT</A></LI>
 	</UL>
 
+	<LI><A HREF="#todo">TO-DO</A></LI>
 	<LI><A HREF="#author">AUTHOR</A></LI>
 	<LI><A HREF="#see also">SEE ALSO</A></LI>
 </UL>
@@ -44,7 +45,7 @@
   use Device::Gsm;</PRE>
 <PRE>
   # NOT YET DEFINED!
-  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', PIN =&gt; '0124' );</PRE>
+  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', pin =&gt; '0124' );</PRE>
 <PRE>
   if( $gsm-&gt;connect() ) {
       print &quot;connected!\n&quot;;
@@ -83,7 +84,7 @@
   print 'Service number is now: ', $gsm-&gt;service_number(), &quot;\n&quot;;</PRE>
 <PRE>
 
-  # Send a short text message (SMS)
+  # Send a short text message (SMS in text mode *only*, no PDU)
   $modem-&gt;send_sms( '0123456789', 'A little message from Device::Gsm' );</PRE>
 <P>
 <HR>
@@ -91,16 +92,28 @@
 <P>Device::Gsm class implements basic GSM network registration and SMS sending functions.
 For now, it is only an example that inherits from Device::Modem for all low-level functions.
 It is planned to add more custom GSM commands support, with device identification, and so on...</P>
-<P>Please feel free to contact me to provide feedback on this.</P>
+<P>Actually, this was a rather dated module, that does not support PDU mode
+(for example) and it is now undergoing a major rewrite.</P>
+<P>So please be patient and contact me if you are interested in this.</P>
 <P>
 <H2><A NAME="requires">REQUIRES</A></H2>
-<DL>
-<DT><STRONG><A NAME="item_Device%3A%3AModem">Device::Modem</A></STRONG><BR>
-<DD>
-</DL>
+<UL>
+<LI>
+Device::Modem, which in turn requires
+<P></P>
+<LI>
+Device::SerialPort
+<P></P></UL>
 <P>
 <H2><A NAME="export">EXPORT</A></H2>
 <P>None</P>
+<P>
+<HR>
+<H1><A NAME="todo">TO-DO</A></H1>
+<UL>
+<LI>
+Too many things, but your suggestions are welcome...
+<P></P></UL>
 <P>
 <HR>
 <H1><A NAME="author">AUTHOR</A></H1>
