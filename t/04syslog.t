@@ -1,4 +1,4 @@
-# $Id: 04syslog.t,v 1.2 2002-04-03 21:41:18 cosimo Exp $
+# $Id: 04syslog.t,v 1.3 2002-09-03 20:44:53 cosimo Exp $
 #
 # test syslog mechanism
 #
@@ -8,7 +8,6 @@ BEGIN { plan tests => 2 };
 use Device::Gsm; 
 ok(1);
 
-my $gsm = new Device::Gsm( port => '/dev/ttyS0', log => 'syslog' );
-
+my $gsm = new Device::Gsm( log => 'syslog' );
 ok( $gsm->log->write('info', 'syslog test here') );
 
