@@ -21,10 +21,10 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.8 2002-04-05 22:24:15 cosimo Exp $
+# $Id: Gsm.pm,v 1.9 2002-04-08 05:34:20 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -54,7 +54,7 @@ sub hangup {
 	my $self = shift;
 	$self->log->write('info', 'hanging up...');
 	$self->attention();
-	$self->atsend( 'AT+CHUP' . CR );
+	$self->atsend( 'AT+CHUP' . Device::Modem::CR );
 	$self->flag('OFFHOOK', 0);
 	$self->answer();
 }
@@ -181,7 +181,7 @@ sub register {
 		
 		# Pin request, sending PIN code
 		$me->log->write( 'info', 'PIN requested: sending...' );
-		$me->atsend( qq[AT+CPIN="$$me{'PIN'}"] . Device::Modem::CR );
+		$me->atsend( qq[AT+CPIN="$$me{'pin'}"] . Device::Modem::CR );
 		
 		# Get reply
 		$cReply = $me->answer();
