@@ -32,7 +32,6 @@ t/01basic.t
 t/02info.t
 t/04syslog.t
 t/20pdu.t
-t/25msgread.t
 t/30gsmascii.t
 
 META.yml                                 Module meta-data (added by MakeMaker)
