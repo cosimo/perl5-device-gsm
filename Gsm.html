@@ -1,0 +1,87 @@
+<HTML>
+<HEAD>
+<TITLE>Device::Gsm - Perl extension to interface GSM cellular / modems</TITLE>
+<LINK REV="made" HREF="mailto:cosimo@dev.xproject.org">
+</HEAD>
+
+<BODY>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="#name">NAME</A></LI>
+	<LI><A HREF="#warning">WARNING</A></LI>
+	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
+	<LI><A HREF="#description">DESCRIPTION</A></LI>
+	<UL>
+
+		<LI><A HREF="#requires">REQUIRES</A></LI>
+		<LI><A HREF="#export">EXPORT</A></LI>
+	</UL>
+
+	<LI><A HREF="#author">AUTHOR</A></LI>
+	<LI><A HREF="#see also">SEE ALSO</A></LI>
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="name">NAME</A></H1>
+<P>Device::Gsm - Perl extension to interface GSM cellular / modems</P>
+<P>
+<HR>
+<H1><A NAME="warning">WARNING</A></H1>
+<PRE>
+   This is C&lt;PRE-ALPHA&gt; software, still needs extensive testing and
+   support for custom GSM commands, so use it at your own risk,
+   and without C&lt;ANY&gt; warranty! Have fun.</PRE>
+<P>
+<HR>
+<H1><A NAME="synopsis">SYNOPSIS</A></H1>
+<PRE>
+  use Device::Gsm;</PRE>
+<PRE>
+  # NOT YET DEFINED!
+  my $modem = new Device::Gsm( port =&gt; '/dev/ttyS1', PIN =&gt; '0124' );</PRE>
+<PRE>
+  if( $modem-&gt;connect() ) {
+      print &quot;connected!\n&quot;;
+  } else {
+      print &quot;sorry, no connection with serial port!\n';
+  }</PRE>
+<PRE>
+  # Register to GSM network (you must supply PIN number in above new() call)
+  $modem-&gt;register();</PRE>
+<PRE>
+  # Send a short text message (SMS)
+  $modem-&gt;send_sms( '0123456789', 'A little message from Device::Gsm' );</PRE>
+<P>
+<HR>
+<H1><A NAME="description">DESCRIPTION</A></H1>
+<P>Device::Gsm class implements basic GSM network registration and SMS sending functions.
+For now, it is only an example that inherits from Device::Modem for all low-level functions.
+It is planned to add more custom GSM commands support, with device identification, and so on...</P>
+<P>Please feel free to contact me to provide feedback on this.</P>
+<P>
+<H2><A NAME="requires">REQUIRES</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_Device%3A%3AModem">Device::Modem</A></STRONG><BR>
+<DD>
+</DL>
+<P>
+<H2><A NAME="export">EXPORT</A></H2>
+<P>None</P>
+<P>
+<HR>
+<H1><A NAME="author">AUTHOR</A></H1>
+<P>Cosimo Streppone, <A HREF="mailto:cosimo@cpan.org">cosimo@cpan.org</A></P>
+<P>
+<HR>
+<H1><A NAME="see also">SEE ALSO</A></H1>
+<P>Device::Modem(3), Device::SerialPort(3), <CODE>perl(1)</CODE></P>
+
+</BODY>
+
+</HTML>

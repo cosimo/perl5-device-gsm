@@ -1,0 +1,47 @@
+NAME
+    Device::Gsm - Perl extension to interface GSM cellular / modems
+
+WARNING
+       This is C<PRE-ALPHA> software, still needs extensive testing and
+       support for custom GSM commands, so use it at your own risk,
+       and without C<ANY> warranty! Have fun.
+
+SYNOPSIS
+      use Device::Gsm;
+
+      # NOT YET DEFINED!
+      my $modem = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
+
+      if( $modem->connect() ) {
+          print "connected!\n";
+      } else {
+          print "sorry, no connection with serial port!\n';
+      }
+
+      # Register to GSM network (you must supply PIN number in above new() call)
+      $modem->register();
+
+      # Send a short text message (SMS)
+      $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
+
+DESCRIPTION
+    Device::Gsm class implements basic GSM network registration and SMS
+    sending functions. For now, it is only an example that inherits from
+    Device::Modem for all low-level functions. It is planned to add more
+    custom GSM commands support, with device identification, and so on...
+
+    Please feel free to contact me to provide feedback on this.
+
+  REQUIRES
+
+    Device::Modem
+  EXPORT
+
+    None
+
+AUTHOR
+    Cosimo Streppone, cosimo@cpan.org
+
+SEE ALSO
+    Device::Modem(3), Device::SerialPort(3), perl(1)
+
