@@ -4,6 +4,7 @@ README
 Makefile.PL
 Gsm.pm
 lib/Device/Gsm/Pdu.pm
+examples/send_sms.pl
 Gsm.html
 t/01basic.t
 t/02connect.t
