@@ -20,7 +20,21 @@ SYNOPSIS
 
       # Register to GSM network (you must supply PIN number in above new() call)
       $gsm->register();
- 
+
+      # Get the manufacturer and model code of device
+      my $mnf   = $gsm->manufacturer();
+      my $model = $gsm->model();
+
+      # What GSM software verson ?
+      print 'GSM VERSION is ", $gsm->software_version(), "\n";
+
+      # Test for command support
+      if( $self->test_command('CGMI') ) {
+          # `AT+CGMI' command supported!
+      } else {
+          # No luck, CGMI command not available
+      }
+
       # Set service center number (depends on your network operator)
       $gsm->service_number( '+001505050' );   # This one is fake, not usable!
  

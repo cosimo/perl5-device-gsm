@@ -21,10 +21,10 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.5 2002-03-30 14:09:49 cosimo Exp $
+# $Id: Gsm.pm,v 1.6 2002-03-30 15:48:16 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::SerialPort;
@@ -59,6 +59,76 @@ sub connect {
 }
 
 
+# Who is the manufacturer of this device?
+sub manufacturer() {
+	my $self = shift;
+	my $man;
+
+	# Test if manufacturer code command is supported
+	if( $self->test_command('CGMI') ) {
+
+		$self->atsend( 'AT+CGMI' . Device::Modem::CR );
+		$man = $self->answer();
+
+		$self->log->write('info', 'manufacturer of this device appears to be ['.$man.']');
+
+	}
+
+	return $man;
+
+}
+
+# What is the model of this device?
+sub model() {
+	my $self = shift;
+	my $model;
+
+	# Test if manufacturer code command is supported
+	if( $self->test_command('CGMM') ) {
+
+		$self->atsend( 'AT+CGMM' . Device::Modem::CR );
+		$model = $self->answer();
+
+		$self->log->write('info', 'model of this device is ['.$model.']');
+
+	}
+
+	return $model;
+}
+
+# Get the GSM software version on this device
+sub software_version() {
+	my $self = shift;
+	my $ver;
+
+	# Test if manufacturer code command is supported
+	if( $self->test_command('CGMR') ) {
+
+		$self->atsend( 'AT+CGMR' . Device::Modem::CR );
+		$ver = $self->answer();
+
+		$self->log->write('info', 'GSM version is ['.$ver.']');
+
+	}
+
+	return $ver;
+}
+
+
+sub test_command {
+	my($self, $command) = @_;
+
+	# Standard test procedure for every command
+	$self->log->write('info', 'testing support for command ['.$command.']');
+	$self->atsend( "AT+$command=?" . Device::Modem::CR );
+
+	# If answer is ok, command is supported
+	my $ok = $self->answer() =~ /OK/;
+	$self->log->write('info', 'command ['.$command.'] is '.($ok ? '' : 'not ').'supported');
+
+	$ok;
+}
+
 #/**
 # * @method       register
 # *
@@ -72,15 +142,15 @@ sub register {
 	
 	# Check for connection
 	if( ! $me->{'CONNECTED'} ) {
-		$me->log-> write( 'Not yet connected. Doing it now...' );
+		$me->log-> write( 'info', 'Not yet connected. Doing it now...' );
 		if( ! $me->connect() ) {
-			$me->log->write( 'ERROR: No connection!' );
+			$me->log->write( 'warning', 'No connection!' );
 			return $lOk
 		}
 	}
 
 	# Send PIN status query
-	$me->log->write( 'PIN status query' );
+	$me->log->write( 'info', 'PIN status query' );
 	$me->atsend( 'AT+CPIN?' . Device::Modem::CR );
 	
 	# Get answer
@@ -88,13 +158,13 @@ sub register {
 
 	if( $cReply =~ /READY/ ) {
 		
-		$me->log->write( 'Already registered on network. Ready to send.' );
+		$me->log->write( 'info', 'Already registered on network. Ready to send.' );
 		$lOk = 1;
 		
 	} elsif( $cReply =~ /SIM PIN/ ) {
 		
 		# Pin request, sending PIN code
-		$me->log->write( 'PIN requested: sending...' );
+		$me->log->write( 'info', 'PIN requested: sending...' );
 		$me->atsend( qq[AT+CPIN="$$me{'PIN'}"] . Device::Modem::CR );
 		
 		# Get reply
@@ -102,10 +172,10 @@ sub register {
 
 		# Test reply		
 		if( $cReply !~ /ERROR/ ) {
-			$me->log->write( 'PIN accepted. Ready to send.' );
+			$me->log->write( 'info', 'PIN accepted. Ready to send.' );
 			$lOk = 1;
 		} else {
-			$me->log->write( 'PIN rejected' );
+			$me->log->write( 'warning', 'PIN rejected' );
 			$lOk = 0;
 		}
 
@@ -143,28 +213,28 @@ sub send_sms {
 
 	# Check if registered to network
 	if( ! $me->{REGISTERED} ) {
-		$me->log->write( 'Not yet registered, doing now...' );
+		$me->log->write( 'info', 'Not yet registered, doing now...' );
 		$me->register();
 	}
 
 	# Again check if registered
 	if( ! $me->{REGISTERED} ) {
 		
-		$me->log->write( 'ERROR in registering to network' );
+		$me->log->write( 'warning', 'ERROR in registering to network' );
 		return $lOk;
 		
 	} else {
 		
-		# Send sms
+		# Send sms in text mode
 		$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
 		$me->atsend( $text . Device::Modem::CTRL_Z );
 		
 		# Get reply and check for errors
 		$cReply = $me->answer();
 		if( $cReply =~ /ERROR/i ) {
-			$me->log->write( "ERROR in sending SMS" );
+			$me->log->write( 'warning', "ERROR in sending SMS" );
 		} else {
-			$me->log->write( "Sent SMS to $num!" );
+			$me->log->write( 'info', "Sent SMS to $num!" );
 			$lOk = 1;
 		}
 	}
@@ -191,7 +261,7 @@ sub service_center(;$) {
 		$nCenter =~ s/[^0-9+]//g;
 
 		# Send AT command
-		$self->atsend( qq[AT+CSCA="$nCenter"] );
+		$self->atsend( qq[AT+CSCA="$nCenter"] . Device::Modem::CR );
 
 		# Check for modem answer
 		$lOk = ( $self->answer =~ /OK/ );
@@ -205,7 +275,7 @@ sub service_center(;$) {
 	} else {
 
 		$self->log->write('info', 'requesting service center number');
-		$self->atsend('AT+CSCA=?');
+		$self->atsend('AT+CSCA=?' . Device::Modem::CR );
 
 		# Get answer and check for errors
 		$nCenter = $self->answer();
@@ -258,19 +328,33 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   } else {
       print "sorry, no connection with gsm phone on serial port!\n';
   }
-
+ 
   # Register to GSM network (you must supply PIN number in above new() call)
   $gsm->register();
  
+  # Get the manufacturer and model code of device
+  my $mnf   = $gsm->manufacturer();
+  my $model = $gsm->model();
+ 
+  # What GSM software verson ?
+  print 'GSM VERSION is ", $gsm->software_version(), "\n";
+ 
+  # Test for command support
+  if( $self->test_command('CGMI') ) {
+      # `AT+CGMI' command supported!
+  } else {
+      # No luck, CGMI command not available
+  }
+ 
   # Set service center number (depends on your network operator)
   $gsm->service_number( '+001505050' );   # This one is fake, not usable!
-
+ 
   # Retrieve actual stored service number
   print 'Service number is now: ', $gsm->service_number(), "\n";
-
+ 
   # Send a short text message (SMS)
   $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
-
+ 
 
 =head1 DESCRIPTION
 

@@ -1,7 +1,7 @@
 <HTML>
 <HEAD>
 <TITLE>Device::Gsm - Perl extension to interface GSM cellular / modems</TITLE>
-<LINK REV="made" HREF="mailto:cosimo@cpan.org">
+<LINK REV="made" HREF="mailto:cosimo@dev.xproject.org">
 </HEAD>
 
 <BODY>
@@ -50,11 +50,29 @@
       print &quot;connected!\n&quot;;
   } else {
       print &quot;sorry, no connection with gsm phone on serial port!\n';
-  }</PRE>
-<PRE>
-  # Register to GSM network (you must supply PIN number in above new() call)
-  $gsm-&gt;register();
+  }
 </PRE>
+<PRE>
+
+  # Register to GSM network (you must supply PIN number in above new() call)
+  $gsm-&gt;register();</PRE>
+<PRE>
+
+  # Get the manufacturer and model code of device
+  my $mnf   = $gsm-&gt;manufacturer();
+  my $model = $gsm-&gt;model();</PRE>
+<PRE>
+
+  # What GSM software verson ?
+  print 'GSM VERSION is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
+<PRE>
+
+  # Test for command support
+  if( $self-&gt;test_command('CGMI') ) {
+      # `AT+CGMI' command supported!
+  } else {
+      # No luck, CGMI command not available
+  }</PRE>
 <PRE>
 
   # Set service center number (depends on your network operator)

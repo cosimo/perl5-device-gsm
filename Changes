@@ -10,3 +10,8 @@ Revision history for Perl extension Device::Gsm.
 1.05  Sat Mar 30 15:12:09 CET 2002
 	- added service_number() method
 
+1.06  Sat Mar 30 16:43:55 CET 2002
+	- added manufacturer(), model(), software_version() methods to 
+      get information about the device
+	- added test_command() to test support for a specific GSM command
+
