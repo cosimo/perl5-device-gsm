@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: PDUTYPE.pm,v 1.1 2003-03-23 12:59:39 cosimo Exp $
+# $Id: PDUTYPE.pm,v 1.2 2003-03-23 14:44:12 cosimo Exp $
 
 package Sms::Token::PDUTYPE;
 use integer;
@@ -27,6 +27,7 @@ sub decode {
 	$self->data( substr($$rMessage, 0, 2) );
 
 	# Update PDU type flags into token object
+	$self->set( 'pdutype', hex(substr($$rMessage,0,2)) );
 	$self->set( 'MTI', $self->MTI() );
 	$self->set( 'MMS', $self->MMS() );
 	$self->set( 'RD',  $self->RD()  );
@@ -65,42 +66,42 @@ sub encode {
 
 sub RP { # REPLY PATH PARAMETER SET
 	my $self = shift;
-	$self->data() & 0x80;
+	( $self->get('pdutype') & 0x80 ) >> 7;
 }
 
 sub UDHI { # USER DATA HEADER PRESENT
 	my $self = shift;
-	$self->data() & 0x40;
+	( $self->get('pdutype') & 0x40 ) >> 6;
 }
 
 sub SRR { # STATUS REPORT REQUESTED
 	my $self = shift;
-	$self->data() & 0x20;
+	( $self->get('pdutype') & 0x20 ) >> 5;
 }
 
 sub SRI { # STATUS REPORT WILL BE RETURNED
 	my $self = shift;
-	$self->data() & 0x20;
+	( $self->get('pdutype') & 0x20 ) >> 5;
 }
 
 sub VPF { # VALIDITY PERIOD FLAG 0=not present, 1=reserved, 2=integer, 3=semioctet
 	my $self = shift;
-	$self->data() & 0x18;
+	( $self->get('pdutype') & 0x18 ) >> 3;
 }
 
 sub MMS { # MORE MESSAGES WAITING AT SMS-C
 	my $self = shift;
-	$self->data() & 0x04;
+	( $self->get('pdutype') & 0x04 ) >> 2;
 }
 
 sub RD { # ... allow repeated sending (REJECT DUPLICATES)
 	my $self = shift;
-	$self->data() & 0x04;
+	( $self->get('pdutype') & 0x04 ) >> 2;
 }
 
 sub MTI { # TYPE OF SMS (0x00=SMS-DELIVER, 0x01=SMS-SUBMIT, 0x10=SMS-STATUS/COMMAND, 0x11=RESERVED
 	my $self = shift;
-	$self->data() & 0x03;
+	$self->get('pdutype') & 0x03;
 }
 
 1;

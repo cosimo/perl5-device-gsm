@@ -1,4 +1,4 @@
-# Sms::Token::DCS - SMS DCS (data coding scheme) token 
+# Sms::Token::VP - SMS VP (validity period) token 
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,13 +9,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: DCS.pm,v 1.2 2003-03-23 14:44:12 cosimo Exp $
+# $Id: VP.pm,v 1.1 2003-03-23 14:44:12 cosimo Exp $
 
-package Sms::Token::DCS;
+package Sms::Token::VP;
 use integer;
 use strict;
 
-@Sms::Token::DCS::ISA = ('Sms::Token');
+@Sms::Token::VP::ISA = ('Sms::Token');
 
 # takes (scalar message (string) reference)
 # returns success/failure of decoding
@@ -24,11 +24,35 @@ sub decode {
 	my($self, $rMessage) = @_;
 	my $ok = 0;
 
-	$self->data( hex substr($$rMessage, 0, 2) );
-	$self->state( Sms::Token::DECODED );
+	# XXX
+	my $vpf = $self->messageTokens('PDUTYPE')->VPF();
 
-	# Remove DCS from message
-	$$rMessage = substr( $$rMessage, 2 );
+print "VPF = $vpf\n";
+
+	# Check if VP flag is present
+	if( $vpf & 0x02 ) {
+
+		my $vp = hex substr($$rMessage, 0, 2);
+
+		# Decode value of VP field
+		if( $vp <= 0x8F ) {
+			$vp = (($vp + 1) * 5).' minutes';
+		} elsif( $vp <= 0xA7 ) {
+			$vp = (( 24 + ($vp - 143) ) * 30 ) . ' minutes';
+		} elsif( $vp <= 0xC4 ) {
+			$vp = ($vp - 166) . ' days';
+		} else {
+			$vp = ($vp - 192) . ' weeks';
+		}
+
+		$self->set( 'validity_period' => $vp );
+		$self->data( $vp );
+
+		# Remove VP from message
+		$$rMessage = substr( $$rMessage, 2 );
+	}
+
+	$self->state( Sms::Token::DECODED );
 
 	return 1;
 }

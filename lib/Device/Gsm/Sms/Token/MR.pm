@@ -1,4 +1,4 @@
-# Sms::Token::DCS - SMS DCS (data coding scheme) token 
+# Sms::Token::MR - SMS MR (data coding scheme) token 
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,13 +9,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: DCS.pm,v 1.2 2003-03-23 14:44:12 cosimo Exp $
+# $Id: MR.pm,v 1.1 2003-03-23 14:44:12 cosimo Exp $
 
-package Sms::Token::DCS;
+package Sms::Token::MR;
 use integer;
 use strict;
 
-@Sms::Token::DCS::ISA = ('Sms::Token');
+@Sms::Token::MR::ISA = ('Sms::Token');
 
 # takes (scalar message (string) reference)
 # returns success/failure of decoding
@@ -27,7 +27,7 @@ sub decode {
 	$self->data( hex substr($$rMessage, 0, 2) );
 	$self->state( Sms::Token::DECODED );
 
-	# Remove DCS from message
+	# Remove MR from message
 	$$rMessage = substr( $$rMessage, 2 );
 
 	return 1;

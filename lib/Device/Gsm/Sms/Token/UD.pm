@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: UD.pm,v 1.1 2003-03-23 12:59:39 cosimo Exp $
+# $Id: UD.pm,v 1.2 2003-03-23 14:44:12 cosimo Exp $
 
 package Sms::Token::UD;
 use integer;
@@ -17,8 +17,6 @@ use strict;
 use Device::Gsm::Sms::Token;
 
 @Sms::Token::UD::ISA = ('Sms::Token');
-
-1;
 
 # takes (scalar message (string) reference)
 # returns success/failure of decoding

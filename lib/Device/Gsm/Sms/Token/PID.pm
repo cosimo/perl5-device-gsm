@@ -9,15 +9,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: PID.pm,v 1.1 2003-03-23 12:59:39 cosimo Exp $
+# $Id: PID.pm,v 1.2 2003-03-23 14:44:12 cosimo Exp $
 
 package Sms::Token::PID;
 use integer;
 use strict;
 
 @Sms::Token::PID::ISA = ('Sms::Token');
-
-1;
 
 # takes (scalar message (string) reference)
 # returns success/failure of decoding
