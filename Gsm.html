@@ -69,7 +69,7 @@
 <PRE>
 
   # Test for command support
-  if( $self-&gt;test_command('CGMI') ) {
+  if( $gsm-&gt;test_command('CGMI') ) {
       # `AT+CGMI' is supported!
   } else {
       # No luck, CGMI command not available
@@ -81,13 +81,13 @@
 <PRE>
 
   # Send quickly a short text message
-  $modem-&gt;send_sms(
+  $gsm-&gt;send_sms(
       recipient =&gt; '+3934910203040',
       content   =&gt; 'Hello world! from Device::Gsm'
   );</PRE>
 <PRE>
   # The long way...
-  $modem-&gt;send_sms(</PRE>
+  $gsm-&gt;send_sms(</PRE>
 <PRE>
       recipient =&gt; '34910203040',
       content   =&gt; 'Hello world again, with more args',</PRE>
@@ -101,6 +101,8 @@
       # `flash' mode delivers instantly!
       class     =&gt; 'normal'
   );</PRE>
+<PRE>
+  print &quot;Signal power seems to be &quot;, $gsm-&gt;signal_quality(), &quot; dBm\n&quot;;</PRE>
 <P>
 <HR>
 <H1><A NAME="description">DESCRIPTION</A></H1>

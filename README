@@ -29,7 +29,7 @@ SYNOPSIS
             $imei = $gsm->serial_number();
  
       # Test for command support
-      if( $self->test_command('CGMI') ) {
+      if( $gsm->test_command('CGMI') ) {
           # `AT+CGMI' is supported!
       } else {
           # No luck, CGMI command not available
@@ -39,13 +39,13 @@ SYNOPSIS
       $gsm->service_center( '+001505050' );   # Sets new number
   
       # Send quickly a short text message
-      $modem->send_sms(
+      $gsm->send_sms(
           recipient => '+3934910203040',
           content   => 'Hello world! from Device::Gsm'
       );
 
       # The long way...
-      $modem->send_sms(
+      $gsm->send_sms(
 
           recipient => '34910203040',
           content   => 'Hello world again, with more args',
@@ -59,7 +59,9 @@ SYNOPSIS
           # `flash' mode delivers instantly!
           class     => 'normal'
       );
- 
+
+      print "Signal power seems to be ", $gsm->signal_quality(), " dBm\n";
+
 DESCRIPTION
     `Device::Gsm' class implements basic GSM functions, network registration
     and SMS sending.
