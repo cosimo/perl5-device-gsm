@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.22 2003-09-14 17:09:56 cosimo Exp $
+# $Id: Gsm.pm,v 1.23 2003-12-15 23:03:19 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.23 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -59,6 +59,66 @@ sub connect {
 	$aOpt{'baudrate'} ||= $Device::Gsm::BAUDRATE;
 
 	$me->SUPER::connect( %aOpt );
+}
+
+#
+# Get/set phone date and time
+#
+sub datetime {
+	my $self     = shift;
+	my $ok       = undef;            # ok/err flag
+	my $datetime = undef;            # datetime string
+	my @time     = ();               # array in "localtime" format
+
+	# Test support for clock function
+	if( $self->test_command('CCLK') ) {
+
+		if( @_ ) {
+
+			# If called with "$self->datetime(time())" format
+			if( @_ == 1 ) {
+				# $_[0] must be result of `time()' func
+				@time = localtime($_[0]);
+			} else {
+				# If called with "$self->datetime(localtime())" format
+				# @_ here is the result of `localtime()' func
+				@time = @_;
+			}
+
+			$datetime = sprintf(
+				'%02d/%02d/%02d,%02d:%02d:%02d',
+				$time[5]-100,     # year
+				1+$time[4],       # month
+				$time[3],         # day
+				@time[2,1,0],     # hr,min,secs
+			);
+
+			# Set time of phone
+			$self->atsend( qq{AT+CCLK="$datetime"} . Device::Modem::CR );
+			$ok = $self->parse_answer();
+
+			$self->log->write('info', "write datetime ($datetime) to phone => (".($ok?'OK':'FAILED').")");
+
+		} else {
+
+			$self->atsend( 'AT+CCLK?' . Device::Modem::CR );
+			($ok, $datetime) = $self->parse_answer();
+		
+			#warn('datetime='.$datetime);
+			if( $ok && $datetime =~ m|\+CCLK: "(\d\d)/(\d\d)/(\d\d)\,(\d\d):(\d\d):(\d\d)"| ) {
+				$datetime = "$1/$2/$3 $4:$5:$6";
+				$self->log->write('info', "read datetime from phone ($datetime)");
+			} else {
+				$self->log->write('warn', "datetime format ($datetime) not recognized");
+				$datetime = undef;
+			}
+
+		}
+
+	}
+
+	return $datetime;
+
 }
 
 #
@@ -406,12 +466,10 @@ sub _send_sms_text {
 
 	# Select text format for messages
 	$me->atsend(  q[AT+CMGF=1] . Device::Modem::CR );
-	$me->wait(200);
 	$me->log->write('info', 'Selected text format for message sending');
 
 	# Send sms in text mode
 	$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
-	$me->wait(200);
 
 	$me->atsend( $text . Device::Modem::CTRL_Z );
 	$me->wait(1000);
@@ -481,12 +539,10 @@ sub _send_sms_pdu {
 
 	# Select PDU format for messages
 	$me->atsend(  q[AT+CMGF=0] . Device::Modem::CR );
-	$me->wait(200);
 	$me->log->write('info', 'Selected PDU format for msg sending');
 
 	# Send SMS length
 	$me->atsend( qq[AT+CMGS=$len] . Device::Modem::CR );
-	$me->wait(200);
 
 	# Sending SMS content encoded as PDU
 	$me->log->write('info', 'PDU sent ['.$pdu.' + CTRLZ]' );
@@ -811,7 +867,6 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   # see `examples/read_messages.pl' for all the details
   my @messages = $gsm->messages();
 
-
 =head1 DESCRIPTION
 
 C<Device::Gsm> class implements basic GSM functions, network registration and SMS sending.
@@ -828,7 +883,36 @@ Please be monstruosly kind to the universe and (if you don't mind spending an SM
 use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
 with your device (thanks!).
 
-=head2 REQUIRES
+=head1 METHODS
+
+=head2 XXX TO BE COMPLETED XXX
+
+=head2 datetime()
+
+Used to get or set your phone/gsm modem date and time.
+
+If called without parameters, it gets the current phone/gsm date and time in "gsm"
+format "YY/MM/DD,HH:MN:SS". For example C<03/12/15,22:48:59> means December the 15th,
+at 10:48:59 PM. Example:
+
+	$datestr = $gsm->datetime();
+
+If called with parameters, sets the current phone/gsm date and time to that
+of supplied value. Example:
+
+	$newdate = $gsm->datetime( time() );
+
+where C<time()> is the perl's builtin C<time()> function (see C<perldoc -f time> for details).
+Another variant allows to pass a C<localtime> array to set the correspondent datetime. Example:
+
+	$newdate = $gsm->datetime( localtime() );
+
+(Note the list context). Again you can read the details for C<localtime> function
+with C<perldoc -f localtime>.
+
+=head2 XXX TO BE COMPLETED XXX
+
+=head1 REQUIRES
 
 =over 4
 
@@ -842,7 +926,7 @@ Device::SerialPort (or Win32::SerialPort on Windows machines)
 
 =back
 
-=head2 EXPORT
+=head1 EXPORT
 
 None
 
