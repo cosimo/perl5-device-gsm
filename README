@@ -9,8 +9,7 @@ WARNING
 SYNOPSIS
       use Device::Gsm;
 
-      # NOT YET DEFINED!
-      my $gsm = new Device::Gsm( port => '/dev/ttyS1', pin => '0124' );
+      my $gsm = new Device::Gsm( port => '/dev/ttyS1', pin => 'xxxx' );
 
       if( $gsm->connect() ) {
           print "connected!\n";
@@ -24,39 +23,54 @@ SYNOPSIS
       # Get the manufacturer and model code of device
       my $mnf   = $gsm->manufacturer();
       my $model = $gsm->model();
- 
-      # What GSM software verson ?
-      print 'GSM VERSION is ", $gsm->software_version(), "\n";
+      print 'soft version is ", $gsm->software_version(), "\n";
 
-      # IMEI (serial number) of phone
-      my $imei = $gsm->imei();  # or $imei = $gsm->serial_number();
+      my $imei = $gsm->imei() or
+            $imei = $gsm->serial_number();
  
       # Test for command support
       if( $self->test_command('CGMI') ) {
-          # `AT+CGMI' command supported!
+          # `AT+CGMI' is supported!
       } else {
           # No luck, CGMI command not available
       }
  
-      # Set service center number (depends on your network operator)
-      $gsm->service_number( '+001505050' );   # This one is fake, not usable!
- 
-      # Retrieve actual stored service number
       print 'Service number is now: ', $gsm->service_number(), "\n";
- 
-      # Send a short text message (SMS in text mode *only*, no PDU)
-      $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
+      $gsm->service_number( '+001505050' );   # Sets new number
+  
+      # Send quickly a short text message
+      $modem->send_sms(
+          recipient => '+3934910203040',
+          content   => 'Hello world! from Device::Gsm'
+      );
+
+      # The long way...
+      $modem->send_sms(
+
+          recipient => '34910203040',
+          content   => 'Hello world again, with more args',
+
+          # SMS Class (can be `normal' or `flash')
+          # `flash' mode delivers instantly!
+          class     => 'normal',
+
+          # SMS sending mode
+          # try `text' or old phones or GSM modems (as Falcom or Digicom),
+          # `pdu' is the default nowadays
+          mode      => 'pdu'
+      );
  
 DESCRIPTION
-    Device::Gsm class implements basic GSM network registration and SMS
-    sending functions. For now, it is only an example that inherits from
-    Device::Modem for all low-level functions. It is planned to add more
-    custom GSM commands support, with device identification, and so on...
+    `Device::Gsm' class implements basic GSM functions, network registration
+    and SMS sending.
 
-    Actually, this was a rather dated module, that does not support PDU mode
-    (for example) and it is now undergoing a major rewrite.
+    This class supports also `PDU' mode to send `SMS' messages, and should
+    be fairly usable. I'm developing and testing it under `Linux RedHat 7.1'
+    with a 16550 serial port and `Siemens C35i' / `C45' GSM phones attached
+    with a Siemens-compatible serial cable.
 
-    So please be patient and contact me if you are interested in this.
+    Please be kind to the universe and contact me if you have troubles or
+    you are interested in this.
 
   REQUIRES
 
@@ -69,7 +83,14 @@ DESCRIPTION
     None
 
 TO-DO
-    *   Too many things, but your suggestions are welcome...
+    Validity Period
+        Support `validity period' option on SMS sending. Tells how much time
+        the SMS Service Center must hold the SMS for delivery.
+
+    Profiles
+        Build a profile of the GSM device used, so that we don't have to
+        `always' test each command to know whether it is supported or not,
+        because this takes too time to be done every time.
 
 AUTHOR
     Cosimo Streppone, cosimo@cpan.org

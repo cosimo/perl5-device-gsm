@@ -44,8 +44,7 @@
 <PRE>
   use Device::Gsm;</PRE>
 <PRE>
-  # NOT YET DEFINED!
-  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', pin =&gt; '0124' );</PRE>
+  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', pin =&gt; 'xxxx' );</PRE>
 <PRE>
   if( $gsm-&gt;connect() ) {
       print &quot;connected!\n&quot;;
@@ -61,44 +60,57 @@
 
   # Get the manufacturer and model code of device
   my $mnf   = $gsm-&gt;manufacturer();
-  my $model = $gsm-&gt;model();</PRE>
+  my $model = $gsm-&gt;model();
+  print 'soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
 <PRE>
-
-  # What GSM software verson ?
-  print 'GSM VERSION is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
-<PRE>
-  # IMEI (serial number) of phone
-  my $imei = $gsm-&gt;imei();  # or $imei = $gsm-&gt;serial_number();
+  my $imei = $gsm-&gt;imei() or
+        $imei = $gsm-&gt;serial_number();
 </PRE>
 <PRE>
 
   # Test for command support
   if( $self-&gt;test_command('CGMI') ) {
-      # `AT+CGMI' command supported!
+      # `AT+CGMI' is supported!
   } else {
       # No luck, CGMI command not available
   }</PRE>
 <PRE>
 
-  # Set service center number (depends on your network operator)
-  $gsm-&gt;service_number( '+001505050' );   # This one is fake, not usable!</PRE>
+  print 'Service number is now: ', $gsm-&gt;service_number(), &quot;\n&quot;;
+  $gsm-&gt;service_number( '+001505050' );   # Sets new number</PRE>
 <PRE>
 
-  # Retrieve actual stored service number
-  print 'Service number is now: ', $gsm-&gt;service_number(), &quot;\n&quot;;</PRE>
+  # Send quickly a short text message
+  $modem-&gt;send_sms(
+      recipient =&gt; '+3934910203040',
+      content   =&gt; 'Hello world! from Device::Gsm'
+  );</PRE>
 <PRE>
-
-  # Send a short text message (SMS in text mode *only*, no PDU)
-  $modem-&gt;send_sms( '0123456789', 'A little message from Device::Gsm' );</PRE>
+  # The long way...
+  $modem-&gt;send_sms(</PRE>
+<PRE>
+      recipient =&gt; '34910203040',
+      content   =&gt; 'Hello world again, with more args',</PRE>
+<PRE>
+      # SMS Class (can be `normal' or `flash')
+      # `flash' mode delivers instantly!
+      class     =&gt; 'normal',</PRE>
+<PRE>
+      # SMS sending mode
+      # try `text' or old phones or GSM modems (as Falcom or Digicom),
+      # `pdu' is the default nowadays
+      mode      =&gt; 'pdu'
+  );</PRE>
 <P>
 <HR>
 <H1><A NAME="description">DESCRIPTION</A></H1>
-<P>Device::Gsm class implements basic GSM network registration and SMS sending functions.
-For now, it is only an example that inherits from Device::Modem for all low-level functions.
-It is planned to add more custom GSM commands support, with device identification, and so on...</P>
-<P>Actually, this was a rather dated module, that does not support PDU mode
-(for example) and it is now undergoing a major rewrite.</P>
-<P>So please be patient and contact me if you are interested in this.</P>
+<P><CODE>Device::Gsm</CODE> class implements basic GSM functions, network registration and SMS sending.</P>
+<P>This class supports also <CODE>PDU</CODE> mode to send <CODE>SMS</CODE> messages, and should be
+fairly usable. I'm developing and testing it under <CODE>Linux RedHat 7.1</CODE>
+with a 16550 serial port and <CODE>Siemens C35i</CODE> / <CODE>C45</CODE> GSM phones attached with
+a Siemens-compatible serial cable.</P>
+<P>Please be kind to the universe and contact me if you have troubles or you are
+interested in this.</P>
 <P>
 <H2><A NAME="requires">REQUIRES</A></H2>
 <UL>
@@ -114,10 +126,18 @@ Device::SerialPort
 <P>
 <HR>
 <H1><A NAME="todo">TO-DO</A></H1>
-<UL>
-<LI>
-Too many things, but your suggestions are welcome...
-<P></P></UL>
+<DL>
+<DT><STRONG><A NAME="item_Validity_Period">Validity Period</A></STRONG><BR>
+<DD>
+Support <CODE>validity period</CODE> option on SMS sending. Tells how much time the SMS
+Service Center must hold the SMS for delivery.
+<P></P>
+<DT><STRONG><A NAME="item_Profiles">Profiles</A></STRONG><BR>
+<DD>
+Build a profile of the GSM device used, so that we don't have to <CODE>always</CODE>
+test each command to know whether it is supported or not, because this takes
+too time to be done every time.
+<P></P></DL>
 <P>
 <HR>
 <H1><A NAME="author">AUTHOR</A></H1>
