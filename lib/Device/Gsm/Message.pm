@@ -9,10 +9,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Message.pm,v 1.1 2002-09-25 21:52:01 cosimo Exp $
+# $Id: Message.pm,v 1.2 2002-09-25 22:07:42 cosimo Exp $
 
 package Device::Gsm::Message;
-
+use strict;
 use Device::Gsm::Pdu;
 
 #
@@ -34,14 +34,14 @@ sub new {
 	return undef unless( exists $opt{'header'} && exists $opt{'pdu'} );
 
     # Check for valid msg header
-	if( $header =~ /\+CMGL:\s*(\d+),(\d+),(\d*),(\d+)/ ) {
+	if( $opt{'header'} =~ /\+CMGL:\s*(\d+),(\d+),(\d*),(\d+)/ ) {
 		$self->{'index'}  = $1;
 		$self->{'type'}   = $2;
 		$self->{'xxx'}    = $3;   # XXX
 		$self->{'length'} = $4;
 			
 		$self->{'pdu'}    = $opt{'pdu'};
-		$self->{'decoded'}= Device::Gsm::Pdu::decode_text7( $opt{'pdu'} );
+#		$self->{'decoded'}= Device::Gsm::Pdu::decode_text7( $opt{'pdu'} );
 
 	} else {
 
@@ -126,7 +126,7 @@ Device::Gsm
 
 None
 
-=head  COPYRIGHT
+=head1 COPYRIGHT
 
 Device::Gsm::Message - SMS Message class (in PDU format)
 Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
