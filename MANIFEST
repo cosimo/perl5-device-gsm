@@ -12,4 +12,3 @@ t/03ident.t
 t/04syslog.t
 t/10servcenter.t
 t/20pdu.t
-t/30register.t
