@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.14 2002-04-29 16:54:18 cosimo Exp $
+# $Id: Gsm.pm,v 1.15 2002-05-22 20:45:37 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -463,7 +463,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   if( $gsm->connect() ) {
       print "connected!\n";
   } else {
-      print "sorry, no connection with gsm phone on serial port!\n';
+      print "sorry, no connection with gsm phone on serial port!\n";
   }
  
   # Register to GSM network (you must supply PIN number in above new() call)
@@ -472,7 +472,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   # Get the manufacturer and model code of device
   my $mnf   = $gsm->manufacturer();
   my $model = $gsm->model();
-  print 'soft version is ", $gsm->software_version(), "\n";
+  print "soft version is ", $gsm->software_version(), "\n";
 
   my $imei = $gsm->imei() or
 	$imei = $gsm->serial_number();
@@ -484,8 +484,8 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       # No luck, CGMI command not available
   }
  
-  print 'Service number is now: ', $gsm->service_number(), "\n";
-  $gsm->service_number( '+001505050' );   # Sets new number
+  print 'Service number is now: ', $gsm->service_center(), "\n";
+  $gsm->service_center( '+001505050' );   # Sets new number
   
   # Send quickly a short text message
   $modem->send_sms(
@@ -499,14 +499,14 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       recipient => '34910203040',
       content   => 'Hello world again, with more args',
 
+      # SMS sending mode
+      # try `text' on old phones or GSM modems
+      # `pdu' is the default nowadays
+      mode      => 'pdu',
+
       # SMS Class (can be `normal' or `flash')
       # `flash' mode delivers instantly!
-      class     => 'normal',
-
-      # SMS sending mode
-      # try `text' or old phones or GSM modems
-      # `pdu' is the default nowadays
-      mode      => 'pdu'
+      class     => 'normal'
   );
  
 
@@ -544,6 +544,11 @@ None
 =head1 TO-DO
 
 =over 4
+
+=item Spooler
+
+Build a simple spooler program that sends all SMS stored in a special
+queue (that could be a simple filesystem folder).
 
 =item Validity Period 
 
