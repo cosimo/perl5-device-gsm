@@ -103,6 +103,10 @@
 <pre>
   # Test network signal
   print &quot;Signal power seems to be &quot;, $gsm-&gt;signal_quality(), &quot; dBm\n&quot;;</pre>
+<pre>
+  # Get list of Device::Gsm::Sms message objects
+  # see `examples/read_messages.pl' for all the details
+  my @messages = $gsm-&gt;messages();</pre>
 <p>
 </p>
 <hr />
