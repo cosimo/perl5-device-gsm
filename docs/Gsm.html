@@ -36,6 +36,7 @@
 
 	<li><a href="#requires">REQUIRES</a></li>
 	<li><a href="#export">EXPORT</a></li>
+	<li><a href="#troubleshooting">TROUBLESHOOTING</a></li>
 	<li><a href="#todo">TO-DO</a></li>
 	<li><a href="#author">AUTHOR</a></li>
 	<li><a href="#see_also">SEE ALSO</a></li>
@@ -323,6 +324,29 @@ Device::SerialPort (or Win32::SerialPort on Windows machines)
 <hr />
 <h1><a name="export">EXPORT</a></h1>
 <p>None</p>
+<p>
+</p>
+<hr />
+<h1><a name="troubleshooting">TROUBLESHOOTING</a></h1>
+<p>If you experience problems, please double check:</p>
+<dl>
+<dt><strong><a name="item_device_permissions">Device permissions</a></strong><br />
+</dt>
+<dd>
+Maybe you don't have necessary permissions to access your serial,
+irda or bluetooth port device. Try executing your script as root, or
+try, if you don't mind, <code>chmod a+rw /dev/ttyS1</code> (or whatever device
+you use instead of <code>/dev/ttyS1</code>).
+</dd>
+<p></p>
+<dt><strong><a name="item_connection_speed">Connection speed</a></strong><br />
+</dt>
+<dd>
+Try switching <code>baudrate</code> parameter from 19200 (the default value)
+to 9600 or viceversa. This one is the responsible of 80% of the problems,
+because there is no baudrate auto-detection.
+</dd>
+<p></p></dl>
 <p>
 </p>
 <hr />

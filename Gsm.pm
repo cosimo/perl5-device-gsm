@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.25 2004-01-21 22:33:28 cosimo Exp $
+# $Id: Gsm.pm,v 1.26 2004-01-22 23:34:21 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.25 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -1100,6 +1100,26 @@ Device::SerialPort (or Win32::SerialPort on Windows machines)
 
 None
 
+=head1 TROUBLESHOOTING
+
+If you experience problems, please double check:
+
+=over 4
+
+=item Device permissions
+
+Maybe you don't have necessary permissions to access your serial,
+irda or bluetooth port device. Try executing your script as root, or
+try, if you don't mind, C<chmod a+rw /dev/ttyS1> (or whatever device
+you use instead of C</dev/ttyS1>).
+
+=item Connection speed
+
+Try switching C<baudrate> parameter from 19200 (the default value)
+to 9600 or viceversa. This one is the responsible of 80% of the problems,
+because there is no baudrate auto-detection.
+
+=back
 
 =head1 TO-DO
 
