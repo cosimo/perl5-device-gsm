@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Structure.pm,v 1.1 2003-03-23 12:59:07 cosimo Exp $
+# $Id: Structure.pm,v 1.2 2003-03-23 14:43:19 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -20,8 +20,8 @@ use Device::Gsm::Sms::Token;
 use Device::Gsm::Sms::Token::SCA;
 use Device::Gsm::Sms::Token::PDUTYPE;
 
-use constant SMS_DELIVER => 100;
-use constant SMS_SUBMIT  => 101;
+use constant SMS_DELIVER => 0x00;
+use constant SMS_SUBMIT  => 0x01;
 
 #
 # Inspect structure of SMS
