@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.19 2003-03-23 14:42:06 cosimo Exp $
+# $Id: Gsm.pm,v 1.20 2003-03-25 06:35:37 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -148,7 +148,7 @@ sub signal_quality() {
 
 	# Test if signal quality command is implemented
 	if( $self->test_command('CSQ') ) {
-		
+
 		$self->atsend( 'AT+CSQ' . Device::Modem::CR );
 		($code, $dBm) = $self->parse_answer();
 
@@ -162,7 +162,7 @@ sub signal_quality() {
 			} else {
 				$dBm = -113 + ($dBm << 1);
 			}
-		
+
 			$self->log->write('info', 'signal dBm power is ['.$dBm.'], bit error rate ['.$ber.']');
 
 		} else {
@@ -213,7 +213,7 @@ sub test_command {
 	$self->atsend( "AT+$command=?" . Device::Modem::CR );
 
 	# If answer is ok, command is supported
-	my $ok = $self->answer() =~ /OK/;
+	my $ok = ($self->answer() || '') =~ /OK/o;
 	$self->log->write('info', 'command ['.$command.'] is '.($ok ? '' : 'not ').'supported');
 
 	$ok;
@@ -243,7 +243,7 @@ sub messages() {
 
 	# Ok, messages read, now convert from PDU and store in object
 	$self->log->write('debug', 'messages='.$messages );
-	
+
 	my @data = split /\r+\n*/m, $messages;
 
 	# Check for errors on SMS reading
@@ -289,7 +289,7 @@ sub messages() {
 sub register {
 	my $me = shift;
 	my $lOk = 0;
-	
+
 	# Check for connection
 	if( ! $me->{'CONNECTED'} ) {
 		$me->log-> write( 'info', 'Not yet connected. Doing it now...' );
@@ -302,25 +302,25 @@ sub register {
 	# Send PIN status query
 	$me->log->write( 'info', 'PIN status query' );
 	$me->atsend( 'AT+CPIN?' . Device::Modem::CR );
-	
+
 	# Get answer
 	my $cReply = $me->answer();
 
 	if( $cReply =~ /READY/ ) {
-		
+
 		$me->log->write( 'info', 'Already registered on network. Ready to send.' );
 		$lOk = 1;
-		
+
 	} elsif( $cReply =~ /SIM PIN/ ) {
-		
+
 		# Pin request, sending PIN code
 		$me->log->write( 'info', 'PIN requested: sending...' );
 		$me->atsend( qq[AT+CPIN="$$me{'pin'}"] . Device::Modem::CR );
-		
+
 		# Get reply
 		$cReply = $me->answer();
 
-		# Test reply		
+		# Test reply
 		if( $cReply !~ /ERROR/ ) {
 			$me->log->write( 'info', 'PIN accepted. Ready to send.' );
 			$lOk = 1;
@@ -338,7 +338,7 @@ sub register {
 
 	# XXX Sending number of service provider
 	# $me->log -> write( 'Sending service provider number' );
-	
+
 }
 
 
@@ -349,7 +349,7 @@ sub register {
 #   validity  => [ default = 4 days ]
 #   content   => 'text-only for now'
 #   mode      => 'text' | 'pdu'        (default = 'pdu')
-# 
+#
 sub send_sms {
 
 	my( $me, %opt ) = @_;
@@ -369,10 +369,10 @@ sub send_sms {
 
 	# Again check if now registered
 	if( ! $me->{'REGISTERED'} ) {
-		
+
 		$me->log->write( 'warning', 'ERROR in registering to network' );
 		return $lOk;
-		
+
 	}
 
 	# Ok, registered. Select mode to send SMS
@@ -424,7 +424,7 @@ sub _send_sms_text {
 		$me->log->write( 'info', "Sent SMS (text mode) to $num!" );
 		$lOk = 1;
 	}
-	
+
 	$lOk
 }
 
@@ -476,7 +476,7 @@ sub _send_sms_pdu {
 	$me->log->write('info', 'due to send PDU ['.$pdu.']');
 
 	# Sending main SMS command ( with length )
-	my $len = ( (length $pdu) >> 1 ) - 1; 
+	my $len = ( (length $pdu) >> 1 ) - 1;
 	#$me->log->write('info', 'AT+CMGS='.$len.' string sent');
 
 	# Select PDU format for messages
@@ -488,7 +488,7 @@ sub _send_sms_pdu {
 	$me->atsend( qq[AT+CMGS=$len] . Device::Modem::CR );
 	$me->wait(200);
 
-	# Sending SMS content encoded as PDU	
+	# Sending SMS content encoded as PDU
 	$me->log->write('info', 'PDU sent ['.$pdu.' + CTRLZ]' );
 	$me->atsend( $pdu . Device::Modem::CTRL_Z );
 	$me->wait(2000);
@@ -502,7 +502,7 @@ sub _send_sms_pdu {
 		$me->log->write( 'info', "Sent SMS (pdu mode) to $num!" );
 		$lOk = 1;
 	}
-	
+
 	$lOk
 }
 
@@ -529,7 +529,7 @@ sub service_center(;$) {
 
 		# Check for modem answer
 		$lOk = ( $self->answer =~ /OK/ );
-		
+
 		if( $lOk ) {
 			$self->log->write('info', 'service center number ['.$nCenter.'] stored');
 		} else {
@@ -590,7 +590,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   } else {
       print "sorry, no connection with gsm phone on serial port!\n";
   }
- 
+
   # Register to GSM network (you must supply PIN number in above new() call)
   $gsm->register();
 
@@ -601,7 +601,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
 
   my $imei = $gsm->imei() or
 	$imei = $gsm->serial_number();
- 
+
   # Test for command support
   if( $gsm->test_command('CGMI') ) {
       # `AT+CGMI' is supported!
@@ -609,11 +609,11 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       # No luck, CGMI command not available
   }
 
- 
+
   print 'Service number is now: ', $gsm->service_center(), "\n";
   $gsm->service_center( '+001505050' );   # Sets new number
- 
- 
+
+
   # Send quickly a short text message
   $gsm->send_sms(
       recipient => '+3934910203040',
@@ -643,7 +643,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   # Get list of Device::Gsm::Sms message objects
   # see `examples/read_messages.pl' for all the details
   my @messages = $gsm->messages();
-  
+
 
 =head1 DESCRIPTION
 
@@ -665,7 +665,7 @@ with your device (thanks!).
 
 =over 4
 
-=item * 
+=item *
 
 Device::Modem, which in turn requires
 
@@ -689,7 +689,7 @@ None
 Build a simple spooler program that sends all SMS stored in a special
 queue (that could be a simple filesystem folder).
 
-=item Validity Period 
+=item Validity Period
 
 Support C<validity period> option on SMS sending. Tells how much time the SMS
 Service Center must hold the SMS for delivery.

@@ -1,4 +1,4 @@
-# Sms::Token::SCA - SMS SCA token (service center address) 
+# Sms::Token::SCA - SMS SCA token (service center address)
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,11 +9,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: SCA.pm,v 1.1 2003-03-23 12:59:39 cosimo Exp $
+# $Id: SCA.pm,v 1.2 2003-03-25 06:35:37 cosimo Exp $
 
 package Sms::Token::SCA;
 use integer;
 use strict;
+use Device::Gsm::Sms::Token;
 
 @Sms::Token::SCA::ISA = ('Sms::Token');
 
@@ -39,17 +40,17 @@ sub decode {
 		# Remove length-octet read from message
 		$$rMessage = substr( $$rMessage, 1 );
 		return 1;
-	} 
+	}
 
 	# Begin decoding (length is number of octets for the SCA + 1 (length) )
 	$length = hex $length;
-	
+
 	# Length > 9 is impossible; max is 8 + 1 (length)
 	if( $length > 9 ) {
 		$self->data( undef );
 		$self->state( Sms::Token::ERROR );
 		return 0;
-	} 
+	}
 
 	$self->set( 'length' => $length );
 
@@ -83,7 +84,7 @@ sub decode {
 	$self->set( type => $type );
 	$self->set( 'length' => $length );
 	$self->state( Sms::Token::DECODED );
-	
+
 	# Remove SCA info from message
 	$$rMessage = substr( $msg, ($length + 1) << 1 );
 
@@ -135,4 +136,3 @@ sub encode {
 }
 
 1;
-

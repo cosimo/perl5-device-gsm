@@ -9,21 +9,19 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.2 2003-03-23 14:42:59 cosimo Exp $
+# $Id: Sms.pm,v 1.3 2003-03-25 06:35:37 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
 use integer;
+use constant SMS_DELIVER => 0x00;
+use constant SMS_SUBMIT  => 0x01;
+
 use Device::Gsm::Pdu;
 use Device::Gsm::Sms::Structure;
 use Device::Gsm::Sms::Token;
 
-use constant DCS_7BIT => 0x00;
-use constant DCS_8BIT => 0xF6;
-
-sub _log {
-	print @_, "\n";
-}
+sub _log { print @_, "\n"; }
 
 #
 # new(
@@ -32,7 +30,7 @@ sub _log {
 # )
 #
 # creates message object
-# 
+#
 sub new {
 	my($proto, %opt) = @_;
 	my $class = ref $proto || $proto;
@@ -46,14 +44,14 @@ sub new {
 
 	return undef unless( exists $opt{'header'} && exists $opt{'pdu'} );
 
-	_log("NEW SMS OBJECT");
-	_log("Header [$opt{header}]");
-	_log("PDU    [$opt{pdu}]");
+#_log("NEW SMS OBJECT");
+#_log("Header [$opt{header}]");
+#_log("PDU    [$opt{pdu}]");
 
 	# Check for valid msg header
 	if( $opt{'header'} =~ /\+CMGL:\s*(\d+),(\d+),(\w*),(\d+)/o ) {
 
-		$self->{'index'}  = $1;                        # Position of message in SIM card 
+		$self->{'index'}  = $1;                        # Position of message in SIM card
 		$self->{'status'} = $2;                        # Status of message (REC READ/UNREAD, STO, ...);
 		$self->{'alpha'}  = $3;                        # Alphanumeric representation of sender
 		$self->{'length'} = $4;                        # Final length of message
@@ -61,10 +59,10 @@ sub new {
 
 		bless $self, $class;
 
-		if( $self->decode(SMS_DELIVER) ) {
-			_log('OK, message decoded correctly!');
+		if( $self->decode( Device::Gsm::Sms::SMS_DELIVER ) ) {
+#			_log('OK, message decoded correctly!');
 		} else {
-			_log('CASINO!');
+#			_log('CASINO!');
 			undef $self;
 		}
 
@@ -136,10 +134,10 @@ sub decode2 {
 		$msg{'SCA'} = Device::Gsm::Pdu::decode_address( substr($pdu, 0, ($sca_length+1) << 1 ) );
 		print STDERR ' = `', $msg{'SCA'}, "'\n";
 	}
-	
+
 	# ----------------------------------- PDU type
 	$pdu = substr $pdu => (($sca_length+1) << 1);
-	$msg{'PDU_TYPE'} = substr $pdu, 0, 2; 
+	$msg{'PDU_TYPE'} = substr $pdu, 0, 2;
 	undef $sca_length;
 
 	# ----------------------------------- OA (originating address)
@@ -219,7 +217,7 @@ sub decode {
 			# Store token object into SMS message
 			$self->{'tokens'}->{ $token->name() } = $token;
 
-			# Catch message type indicator (MTI) and re-load structure 
+			# Catch message type indicator (MTI) and re-load structure
 			if( $token->name() eq 'PDUTYPE' && $token->MTI() != $type ) {
 
 #_log('token PDUTYPE, data='.$token->data().' MTI='.$token->get('MTI').' ->MTI()='.$token->MTI());
@@ -241,16 +239,15 @@ sub decode {
 				redo;
 			}
 
-_log('       ', $token->name(), ' DATA = ', $token->toString() );
+#_log('       ', $token->name(), ' DATA = ', $token->toString() );
 
 		}
-		
+
 #_log('PDU AFTER  ['.$cPdu.']', length($cPdu) );
 
 	}
 
-_log("\n", 'PRESS ENTER TO CONTINUE');
-<STDIN>;
+#_log("\n", 'PRESS ENTER TO CONTINUE'); <STDIN>;
 
 	return $decoded;
 
@@ -300,7 +297,7 @@ sub token ($) {
 
 =head1 NAME
 
-Device::Gsm::Sms - SMS messages internal class 
+Device::Gsm::Sms - SMS messages internal class
 
 =head1 WARNING
 
@@ -341,7 +338,7 @@ interested in this.
 
 =over 4
 
-=item * 
+=item *
 
 Device::Gsm
 
@@ -373,4 +370,3 @@ Cosimo Streppone, cosimo@cpan.org
 L<Device::Gsm>, perl(1)
 
 =cut
-

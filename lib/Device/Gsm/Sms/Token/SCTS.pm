@@ -9,11 +9,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: SCTS.pm,v 1.1 2003-03-23 12:59:39 cosimo Exp $
+# $Id: SCTS.pm,v 1.2 2003-03-25 06:35:38 cosimo Exp $
 
 package Sms::Token::SCTS;
 use integer;
 use strict;
+use Device::Gsm::Sms::Token;
 
 @Sms::Token::SCTS::ISA = ('Sms::Token');
 
@@ -37,12 +38,12 @@ sub decode {
 	# Store also timestamp as convenient format
 	$self->set( 'date' => $self->get('day').'/'.$self->get('month').'/'.$self->get('year') );
 	$self->set( 'time' => $self->get('hour').':'.$self->get('minute').':'.$self->get('second') );
- 
+
 	$self->data( $self->get('date').' '.$self->get('time').' '.$self->get('timezone') );
 
-	# Signal token as correctly decoded (?) 
+	# Signal token as correctly decoded (?)
 	$self->state( Sms::Token::DECODED );
-	
+
 	# Remove SCTS info from message
 	$$rMessage = substr( $$rMessage, 14 );
 
@@ -60,4 +61,3 @@ sub encode {
 }
 
 1;
-

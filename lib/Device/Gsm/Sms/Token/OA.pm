@@ -9,11 +9,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: OA.pm,v 1.1 2003-03-23 12:59:39 cosimo Exp $
+# $Id: OA.pm,v 1.2 2003-03-25 06:35:37 cosimo Exp $
 
 package Sms::Token::OA;
 use integer;
 use strict;
+use Device::Gsm::Sms::Token;
 
 @Sms::Token::OA::ISA = ('Sms::Token');
 
@@ -76,14 +77,10 @@ sub toString {
 	my $self = shift;
 	my $str;
 
-	if( $self->get('type') eq '91' ) {
-		$str = '+';
-	}
-
+	$str = '+' if $self->get('type') eq '91';
 	$str .= $self->get('address');
 
 	return $str;
 }
 
 1;
-

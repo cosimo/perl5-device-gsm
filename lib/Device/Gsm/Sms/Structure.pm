@@ -1,4 +1,4 @@
-# Device::Gsm::Sms::Structure - SMS messages structure class 
+# Device::Gsm::Sms::Structure - SMS messages structure class
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Structure.pm,v 1.2 2003-03-23 14:43:19 cosimo Exp $
+# $Id: Structure.pm,v 1.3 2003-03-25 06:35:37 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -19,9 +19,6 @@ use Device::Gsm::Sms::Token;
 
 use Device::Gsm::Sms::Token::SCA;
 use Device::Gsm::Sms::Token::PDUTYPE;
-
-use constant SMS_DELIVER => 0x00;
-use constant SMS_SUBMIT  => 0x01;
 
 #
 # Inspect structure of SMS
@@ -43,4 +40,3 @@ sub structure {
 
 
 1;
-

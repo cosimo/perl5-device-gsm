@@ -1,4 +1,4 @@
-# Sms::Token::PDUTYPE - SMS PDU TYPE token (type of message) 
+# Sms::Token::PDUTYPE - SMS PDU TYPE token (type of message)
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,11 +9,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: PDUTYPE.pm,v 1.2 2003-03-23 14:44:12 cosimo Exp $
+# $Id: PDUTYPE.pm,v 1.3 2003-03-25 06:35:37 cosimo Exp $
 
 package Sms::Token::PDUTYPE;
 use integer;
 use strict;
+use Device::Gsm::Sms::Token;
 
 @Sms::Token::PDUTYPE::ISA = ('Sms::Token');
 
@@ -36,7 +37,7 @@ sub decode {
 	$self->set( 'SRI', $self->SRI() );
 	$self->set( 'UDHI',$self->UDHI());
 	$self->set( 'RP',  $self->RP()  );
-	
+
 	# Remove PDU TYPE from message
 	$$rMessage = substr($$rMessage, 2);
 
@@ -105,4 +106,3 @@ sub MTI { # TYPE OF SMS (0x00=SMS-DELIVER, 0x01=SMS-SUBMIT, 0x10=SMS-STATUS/COMM
 }
 
 1;
-

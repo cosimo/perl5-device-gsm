@@ -1,4 +1,4 @@
-# Sms::Token::VP - SMS VP (validity period) token 
+# Sms::Token::VP - SMS VP (validity period) token
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,11 +9,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: VP.pm,v 1.1 2003-03-23 14:44:12 cosimo Exp $
+# $Id: VP.pm,v 1.2 2003-03-25 06:35:38 cosimo Exp $
 
 package Sms::Token::VP;
 use integer;
 use strict;
+use Device::Gsm::Sms::Token;
 
 @Sms::Token::VP::ISA = ('Sms::Token');
 
@@ -24,10 +25,7 @@ sub decode {
 	my($self, $rMessage) = @_;
 	my $ok = 0;
 
-	# XXX
 	my $vpf = $self->messageTokens('PDUTYPE')->VPF();
-
-print "VPF = $vpf\n";
 
 	# Check if VP flag is present
 	if( $vpf & 0x02 ) {
@@ -77,4 +75,3 @@ sub encode {
 }
 
 1;
-

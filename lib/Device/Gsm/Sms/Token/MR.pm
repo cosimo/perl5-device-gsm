@@ -1,4 +1,4 @@
-# Sms::Token::MR - SMS MR (data coding scheme) token 
+# Sms::Token::MR - SMS MR (data coding scheme) token
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,11 +9,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: MR.pm,v 1.1 2003-03-23 14:44:12 cosimo Exp $
+# $Id: MR.pm,v 1.2 2003-03-25 06:35:37 cosimo Exp $
 
 package Sms::Token::MR;
 use integer;
 use strict;
+use Device::Gsm::Sms::Token;
 
 @Sms::Token::MR::ISA = ('Sms::Token');
 
@@ -53,4 +54,3 @@ sub encode {
 }
 
 1;
-
