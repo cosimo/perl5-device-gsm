@@ -21,10 +21,10 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.2 2002-03-25 06:24:06 cosimo Exp $
+# $Id: Gsm.pm,v 1.3 2002-03-25 06:25:35 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::SerialPort;
