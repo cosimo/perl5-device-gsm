@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.34 2004-08-18 07:07:32 cosimo Exp $
+# $Id: Gsm.pm,v 1.35 2004-09-15 21:14:42 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.34 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.35 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -218,7 +218,7 @@ sub model() {
 		$self->atsend( 'AT+CGMM' . Device::Modem::CR );
 		($code, $model) = $self->parse_answer();
 
-		$self->log->write('info', 'model of this device is ['.$model.']');
+		$self->log->write('info', 'model of this device is ['.($model||'').']');
 
 	}
 
@@ -689,174 +689,6 @@ sub service_center(;$) {
 	return $lOk;
 
 }
-
-# Transform ascii char set to gsm 3.38 charset
-{
-
-	my @gsm = map chr, 0 .. 255;
-	$gsm[0] = '@';
-	$gsm[1] = '£';
-	$gsm[2] = '$';
-	$gsm[3] = '¥';
-	$gsm[5] = 'é';
-	$gsm[4] = 'è';
-	$gsm[6] = 'ù';
-	$gsm[7] = 'ì';
-	$gsm[8] = 'ò';
-	$gsm[9] = 'ç';
-	$gsm[11] = 'ø';
-	$gsm[12] = $gsm[11];
-	$gsm[15] = 'å';
-	$gsm[17] = '_';
- 	$gsm[20] = '^';
- 	$gsm[27] = chr(164); # '¤';
-	$gsm[29] = 'æ';
-	$gsm[30] = chr(223); # 'ß';
-	$gsm[31] = chr(201); # 'É';
-	$gsm[36] = '¤';
-# 	$gsm[47] = '\\';
-#	$gsm[60] = '[';
-#	$gsm[62] = ']';
- 	$gsm[92] = '/';
- 	$gsm[95] = '§';
-	$gsm[123] = 'ä';
-	$gsm[127] = 'à';
-	$gsm[124] = 'ö';
-	$gsm[125] = 'ñ';
-	$gsm[126] = 'ü';
-	$gsm[164] = '¤';
- 	$gsm[232] = 'è';
- 	$gsm[233] = 'é';
- 	$gsm[236] = 'ì';
- 	$gsm[248] = 'ø';
-
-=cut
-
-CODE 	$gsm[95] = '§';
-CODE 	$gsm[27] = '¤';
-CODE 	$gsm[101] = 'é';
-CODE 	$gsm[5] = 'è';
-CODE 	$gsm[4] = 'g';
-CODE 	$gsm[103] = 'h';
-CODE 	$gsm[104] = 'i';
-CODE 	$gsm[105] = '4';
-CODE 	$gsm[52] = 'ì';
-CODE 	$gsm[7] = '[';
-CODE 	$gsm[27] = '\';
-CODE 	$gsm[60] = ']';
-CODE 	$gsm[27] = '^';
-CODE 	$gsm[47] = 'j';
-CODE 	$gsm[27] = 'k';
-CODE 	$gsm[62] = 'l';
-CODE 	$gsm[27] = '5';
-CODE 	$gsm[20] = 'm';
-CODE 	$gsm[106] = 'n';
-CODE 	$gsm[107] = 'o';
-CODE 	$gsm[108] = '6';
-CODE 	$gsm[53] = 'ñ';
-CODE 	$gsm[109] = 'ò';
-CODE 	$gsm[110] = 'ø';
-CODE 	$gsm[111] = 'ö';
-CODE 	$gsm[54] = 'p';
-CODE 	$gsm[125] = 'q';
-CODE 	$gsm[8] = 'r';
-CODE 	$gsm[12] = 's';
-CODE 	$gsm[124] = '7';
-CODE 	$gsm[112] = 't';
-CODE 	$gsm[113] = 'u';
-CODE 	$gsm[114] = 'v';
-CODE 	$gsm[115] = '8';
-CODE 	$gsm[55] = 'ù';
-CODE 	$gsm[116] = 'ü';
-CODE 	$gsm[117] = 'w';
-CODE 	$gsm[118] = 'x';
-CODE 	$gsm[56] = 'y';
-CODE 	$gsm[6] = 'z';
-CODE 	$gsm[126] = '9';
-CODE 	$gsm[119] = '0';
-CODE 	$gsm[120] = '+';
-CODE 	$gsm[121] = '';
-CODE 	$gsm[122] = '';
-CODE 	$gsm[57] = '';
-CODE 	$gsm[48] = '';
-CODE 	$gsm[43] = '';
-
-=cut
-
-=cut
-
-	# The following is the GSM 3.38 standard charset, as shown
-	# on some Siemens documentation found on the internet
-	my $gsm_charset = join('',
-		'@»$»»»»»»»'."\n".'»»'."\r".'»»»',  # 16
-		'»»»»»»»»»»»»ß»»',
-		' !"# %&‘()*+,-./',
-		'0123456789:;<=>?',
-		'-ABCDEFGHIJKLMNO',
-		'PQRSTUVWXYZÄÖ»Ü»',
-		'¨abcdefghijklmno',
-		'pqrstuvwxyzäö»ü»'
-	);
-
-=cut
-
-	my $gsm_charset = join('',@gsm);
-
-sub _ascii2gsm {
-	my $self = shift;
-	my $ascii = shift;
-
-	return '' unless $ascii;
-
-	my $gsm = '';
-	my $n = 0;
-	for( ; $n < length($ascii) ; $n++ ) {
-		$gsm .= chr index($gsm_charset, substr($ascii, $n, 1));
-	}
-
-	return $gsm;
-}
-
-sub _gsm2ascii {
-	my $self = shift;
-	my $gsm = shift;
-	return '' unless $gsm;
-
-	my $ascii = '';
-	my $n = 0;
-
-	for( ; $n < length($gsm) ; $n++ ) {
-
-		my $c = ord( substr( $gsm, $n, 1 ) );
-
-		# Extended charset ?
-		if( $c == 0x1B ) {                          # "escape extended mode"
-			$n++;
-			$c = ord(substr($gsm, $n, 1));
-			if( $c == 0x65 ) {                  # 'e'
-				$ascii .= chr(164);         # iso_8859_15 EURO SIGN
-			} elsif( $c == 0x14 ) {
-				$ascii .= '^';
-			} elsif( $c == 0x3C ) {
-				$ascii .= '[';
-			} elsif( $c == 0x2F ) {
-				$ascii .= '\\';
-			} elsif( $c == 0x3E ) {
-				$ascii .= ']';
-			} else {
-				$ascii .= chr($c);          # Un-managed "extended" chars
-			}
-		} else {
-			# Standard GSM 3.38 encoding
-			$ascii .= substr( $gsm_charset, $c, 1 );
-		}
-	}
-
-	return $ascii;
-}
-
-}
-
 
 
 2703;
