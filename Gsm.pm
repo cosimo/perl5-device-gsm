@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.10 2002-04-09 22:27:49 cosimo Exp $
+# $Id: Gsm.pm,v 1.11 2002-04-14 09:26:27 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -317,11 +317,11 @@ sub _send_sms_pdu {
 	#OK
 
 	# Encode DA
-	my $enc_da = Device::Gsm::Pdu::encodeAddress( $num );
+	my $enc_da = Device::Gsm::Pdu::encode_address( $num );
 	$me->log->write('info', 'encoded dest. address is ['.$enc_da.']');
 
 	# Encode text
-	my $enc_msg = Device::Gsm::Pdu::encodeText7( $text );
+	my $enc_msg = Device::Gsm::Pdu::encode_text7( $text );
 	$me->log->write('info', 'encoded 7bit text (w/length) is ['.$enc_msg.']');
 
 	# Build PDU data
@@ -338,7 +338,7 @@ sub _send_sms_pdu {
 	# Sending SMS content encoded as PDU	
 	$me->log->write('info', 'PDU sent ['.$pdu.' + CTRLZ]' );
 	$me->atsend( $pdu . Device::Modem::CTRL_Z );
-	$me->wait( 1000 );
+	$me->wait( 3000 );
 
 	# Get reply and check for errors
 	$cReply = $me->answer();
@@ -505,7 +505,7 @@ Device::Modem, which in turn requires
 
 =item *
 
-Device::SerialPort
+Device::SerialPort (or Win32::SerialPort on Windows machines)
 
 =back
 
@@ -538,6 +538,6 @@ Cosimo Streppone, cosimo@cpan.org
 
 =head1 SEE ALSO
 
-Device::Modem(3), Device::SerialPort(3), perl(1)
+L<Device::Modem>, L<Device::SerialPort>, L<Win32::SerialPort>, perl(1)
 
 =cut
