@@ -1,4 +1,4 @@
-# $Id: 02info.t,v 1.1 2002-09-11 22:30:38 cosimo Exp $
+# $Id: 02info.t,v 1.2 2002-09-25 22:08:06 cosimo Exp $
 #
 # test connection with a gsm device on serial port
 #
@@ -81,7 +81,7 @@ ok( $info[0] ne 'ERROR' );
 ok( $info[1] ne 'ERROR' );
 ok( $info[2] ne 'ERROR' );
 ok( $info[3] ne 'ERROR' );
-ok( $info[3], $gsm->serial_number );
+ok( $info[3] eq $gsm->serial_number );
 
 
 #
