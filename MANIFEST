@@ -5,6 +5,7 @@ INSTALL
 README
 Makefile.PL
 Gsm.pm
+bin/autoscan
 docs/Gsm.html
 lib/Device/Gsm/Pdu.pm
 lib/Device/Gsm/Sms.pm
