@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.29 2004-03-23 22:11:26 cosimo Exp $
+# $Id: Gsm.pm,v 1.30 2004-03-23 22:12:32 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.29 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.30 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -976,12 +976,12 @@ If your device does not support this command, an B<undefined> value will be retu
 in either case.
 
 
-=head2 deleteMessage()
+=head2 delete_sms()
 
 This method deletes a message from your SIM card, given the message index number.
 Example:
 
-    $gsm->deleteMessage(3);
+    $gsm->delete_sms(3);
 
 
 =head2 hangup()
