@@ -9,10 +9,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Charset.pm,v 1.1 2004-09-15 20:02:00 cosimo Exp $
+# $Id: Charset.pm,v 1.2 2004-09-15 21:14:19 cosimo Exp $
 
 package Device::Gsm::Charset;
-$VERSION = substr q$Revision: 1.1 $, 0, 10;
+$VERSION = substr q$Revision: 1.2 $, 0, 10;
 
 use strict;
 use constant NPC7   => 0x3F;
@@ -41,7 +41,7 @@ use constant ESCAPE => 0x1B;
 # Un grazie a Stefano!
 #
 
-@Device::Gsm::Charset::GSM0338_TO_LATIN = (
+@Device::Gsm::Charset::GSM0338_TO_ISO8859 = (
     64,         #  0      @  COMMERCIAL AT                           */      
     163,        #  1      £  POUND SIGN                              */      
     36,         #  2      $  DOLLAR SIGN                             */      
@@ -422,7 +422,7 @@ use constant ESCAPE => 0x1B;
     -101,       #   234    ê lowercase e circumflex                  */
     -101,       #   235    ë lowercase e dieresis or umlaut          */
     7,          #   236    ì lowercase i grave                       */
-    7,          #   237    í lowercase i acute                       */
+    -7,         #   237    í lowercase i acute                       */
     -105,       #   238    î lowercase i circumflex                  */
     -105,       #   239    ï lowercase i dieresis or umlaut          */
     NPC7,       #   240    ð lowercase eth                           */
@@ -444,10 +444,8 @@ use constant ESCAPE => 0x1B;
 );
 
 sub iso8859_to_gsm0338 {
-	my $self = shift;
 	my $ascii = shift;
-
-	return '' unless $ascii;
+	return '' if ! defined $ascii || $ascii eq '';
 
 	my $gsm = '';
 	my $n = 0;
@@ -464,18 +462,18 @@ sub iso8859_to_gsm0338 {
             # Pre-add an escape char for extended char
             $gsm .= chr(ESCAPE);
             # Encode extended char
-            $ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_gsm - 0xFF];
-
+            #$ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_gsm - 256];
+            $ch_gsm -= 256;
         }
-		$gsm .= chr $ch_gsm;
+        #warn('char ['.$ch_ascii.'] => ['.$ch_gsm.']');
+		$gsm .= chr($ch_gsm);
 	}
 	return $gsm;
 }
 
 sub gsm0338_to_iso8859 {
-	my $self = shift;
 	my $gsm = shift;
-	return '' unless $gsm;
+	return '' if ! defined $gsm || $gsm eq '';
 
 	my $ascii = '';
 	my $n = 0;
@@ -526,6 +524,8 @@ sub gsm0338_to_iso8859 {
 			# Standard GSM 3.38 encoding
 			$ascii .= chr( $Device::Gsm::Charset::GSM0338_TO_ISO8859[$c] );
 		}
+
+        #warn('gsm char ['.$c.'] converted to ascii ['.ord(substr($ascii,-1)).']');
 	}
 
 	return $ascii;
