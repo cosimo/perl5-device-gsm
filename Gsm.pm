@@ -21,10 +21,10 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.7 2002-04-03 21:38:37 cosimo Exp $
+# $Id: Gsm.pm,v 1.8 2002-04-05 22:24:15 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -48,6 +48,16 @@ sub connect {
 	$me->SUPER::connect( %aOpt );
 }
 
+# Hangup and terminate active call(s)
+# this overrides the `Device::Modem::hangup()' method
+sub hangup {
+	my $self = shift;
+	$self->log->write('info', 'hanging up...');
+	$self->attention();
+	$self->atsend( 'AT+CHUP' . CR );
+	$self->flag('OFFHOOK', 0);
+	$self->answer();
+}
 
 # Who is the manufacturer of this device?
 sub manufacturer() {
@@ -85,6 +95,28 @@ sub model() {
 
 	return $code eq 'OK' ? $model : $code;
 }
+
+# Get handphone serial number (IMEI number)
+sub imei() {
+	my $self = shift;
+	my($code,$imei);
+
+	# Test if manufacturer code command is supported
+	if( $self->test_command('CGSN') ) {
+
+		$self->atsend( 'AT+CGSN' . Device::Modem::CR );
+		($code, $imei) = $self->parse_answer();
+
+		$self->log->write('info', 'IMEI code is ['.$imei.']');
+
+	}
+
+	return $code eq 'OK' ? $imei : $code;
+}
+
+# Alias for `imei()' is `serial_number()'
+*serial_number = *imei;
+
 
 # Get the GSM software version on this device
 sub software_version() {
@@ -310,6 +342,9 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
  
   # What GSM software verson ?
   print 'GSM VERSION is ", $gsm->software_version(), "\n";
+
+  # IMEI (serial number) of phone
+  my $imei = $gsm->imei();  # or $imei = $gsm->serial_number();
  
   # Test for command support
   if( $self->test_command('CGMI') ) {
