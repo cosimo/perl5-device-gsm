@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.4 2004-01-22 23:19:41 cosimo Exp $
+# $Id: Sms.pm,v 1.5 2004-01-22 23:20:42 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -129,10 +129,10 @@ sub _old_decode {
 		$msg{'SCA'} = undef;
 	} else {
 		# Parse SCA address
-		print STDERR "SCA length = ", $sca_length, "; ";
-		print STDERR "Parsing address ", substr( $pdu, 0, ($sca_length+1) << 1 );
+		#print STDERR "SCA length = ", $sca_length, "; ";
+		#print STDERR "Parsing address ", substr( $pdu, 0, ($sca_length+1) << 1 );
 		$msg{'SCA'} = Device::Gsm::Pdu::decode_address( substr($pdu, 0, ($sca_length+1) << 1 ) );
-		print STDERR ' = `', $msg{'SCA'}, "'\n";
+		#print STDERR ' = `', $msg{'SCA'}, "'\n";
 	}
 
 	# ----------------------------------- PDU type
@@ -164,9 +164,9 @@ sub _old_decode {
 	}
 
 	# XXX DEBUG
-	foreach( sort keys %msg ) {
-		print STDERR 'MSG[', $_, '] = `'.$msg{$_}.'\'', "\n";
-	}
+	#foreach( sort keys %msg ) {
+	#	print STDERR 'MSG[', $_, '] = `'.$msg{$_}.'\'', "\n";
+	#}
 
 	bless \%msg, 'Device::Gsm::Sms';
 }
