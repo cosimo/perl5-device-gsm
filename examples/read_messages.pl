@@ -3,14 +3,14 @@
 # Short example of use for Device::Gsm class
 # Script that reads all SMS stored on SIM
 #
-# $Id: read_messages.pl,v 1.2 2003-09-14 09:42:10 cosimo Exp $
+# $Id: read_messages.pl,v 1.3 2003-12-15 22:45:04 cosimo Exp $
 
 use strict;
 use lib '../lib';
 use lib '../';
 use Gsm;
 
-print "\nthis is ", '$Id: read_messages.pl,v 1.2 2003-09-14 09:42:10 cosimo Exp $', "\n";
+print "\nthis is ", '$Id: read_messages.pl,v 1.3 2003-12-15 22:45:04 cosimo Exp $', "\n";
 print "\nTrying to read all messages you have on your SIM card...\n";
 
 my $port = $ENV{'DEV_GSM_PORT'} || ( $^O =~ /Win/ ? 'COM2' : '/dev/ttyS1' );
@@ -70,7 +70,7 @@ if( $lOk ) {
 		print 'Status ', $sms->status(), "\n";
 		print 'From   ', $sms->sender(), "\n";
 		print 'To     ', $sms->recipient(), "\n";
-		print 'Text   ', $sms->text(), "\n";
+		print 'Text   [', $sms->text(), "]\n";
 		$n++;
 		<STDIN>;
 	}
