@@ -1,8 +1,8 @@
-# $Id: 05messages.t,v 1.1 2004-05-25 20:37:19 cosimo Exp $
+# $Id: 05messages.t,v 1.2 2004-05-25 21:01:32 cosimix Exp $
 #
 # test sim card message reading functions
 #
-use Test;
+use Test::More;
 BEGIN { plan tests => 3 };
 use Device::Gsm; 
 ok(1);
@@ -11,6 +11,8 @@ ok(1);
 my $port = $ENV{'DEV_GSM_PORT'} || '';
 my $baud = $ENV{'DEV_GSM_BAUD'} || 9600;
 my $pin  = $ENV{'DEV_GSM_PIN'}  || '';
+
+SKIP: {
 
 if( $port eq '' ) {
 
@@ -39,8 +41,8 @@ if( $port eq '' ) {
 
 NOTICE
 
-	skip( 'Serial port not set up!', 1 ) for 2..10;
-#	print "skip $_\n" for (2..10);
+        skip( 'Serial port not set up!', 2 );
+#        print "skip $_\n" for (2..3);
 
 	exit;
 
@@ -72,4 +74,6 @@ foreach my $msg ( @msg ) {
 }
 
 $gsm->disconnect();
+
+}
 
