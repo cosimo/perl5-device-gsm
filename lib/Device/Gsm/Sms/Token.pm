@@ -1,4 +1,4 @@
-# $Id: Token.pm,v 1.3 2004-03-23 22:08:58 cosimo Exp $
+# $Id: Token.pm,v 1.4 2004-08-18 07:09:41 cosimo Exp $
 
 package Sms::Token;
 
@@ -18,6 +18,11 @@ sub new {
 	my($proto, $name, $options ) = @_;
 #	my $class = ref $proto || $proto;
 	$options->{'data'} ||= [];
+
+	# Cannot load a token without its name
+	if( ! defined $name || $name eq '' ) {
+		return undef;
+	}
 
 	# Create basic structure for a token
 	my %token = (
