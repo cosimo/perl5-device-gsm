@@ -1,5 +1,11 @@
 Revision history for Perl extension Device::Gsm.
 
+1.36
+1.35  Wed Sep 15 23:43:03 CEST 2004
+    - finally added encoding/decoding of sms text between
+      8 bit ASCII (ISO-8859) and 7 bit GSM 03.38
+      (thanks to Stefano Pisani for his feedback)
+
 1.34  Wed Aug 18 09:10:48 CEST 2004
     - fixed delete_sms() command syntax and results parsing. Thanks
       to all users that reported problems.
