@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Pdu.pm,v 1.4 2002-04-14 08:50:37 cosimo Exp $
+# $Id: Pdu.pm,v 1.5 2002-05-22 21:49:05 cosimo Exp $
 
 package Device::Gsm::Pdu;
 
@@ -34,6 +34,36 @@ sub decode_address {
 
 	return $number;
 }
+
+# decode 7-bit encoded text (thanks to kiat@spiralcomms.com)
+sub decode_text7($) {
+
+	my $text7 = shift();
+	return unless $text7;
+
+	my $len = hex substr( $text7, 0, 2 );
+#	print "length = $len\n";
+
+	$text7  = substr $text7, 2;
+#	print "text7  = $text7\n";
+
+	my $bits;
+	while( $text7 ) {
+		$bits .= unpack 'b8' => pack 'H2' => substr $text7, 0, 2;
+		$text7 = substr $text7, 2;
+	}
+#	print "bits = $bits (length=".length($bits).")\n";
+
+	my $decoded;
+	while( length $bits >= 7 ) {
+		#print "septet = ",substr($bits,0,7), "\n";
+		$decoded .= pack 'b7' => substr($bits, 0, 7);
+		$bits = substr $bits, 7;
+	}
+	
+	$decoded;
+}
+
 
 sub encode_address {
 	my $num = shift();
