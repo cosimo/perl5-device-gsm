@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.24 2004-01-10 22:14:32 cosimo Exp $
+# $Id: Gsm.pm,v 1.25 2004-01-21 22:33:28 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.25 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -914,6 +914,15 @@ Example:
 	$gsm->hangup();
 
 
+=head2 imei()
+
+Returns the device own IMEI number (International Mobile Equipment Identifier ???).
+This identifier is numeric and should be unique among all GSM mobile devices and phones.
+This is not really true, but ... . Example:
+
+	my $imei = $gsm->imei();
+
+
 =head2 manufacturer()
 
 Returns the device manufacturer, usually only the first word (example: C<Nokia>,
@@ -927,6 +936,14 @@ C<Siemens>, C<Falcom>, ...). Example:
 	}
 
 
+=head2 messages()
+
+This method is a somewhat unstable and subject to change, but for now it seems to work.
+It is meant to extract all text SMS messages stored on your SIM card.
+In list context, it returns a list of messages (or undefined value if no message or errors),
+every message being a C<Device::Gsm::Sms> object.
+
+
 =head2 model()
 
 Returns phone/device model name or number. Example:
@@ -935,15 +952,6 @@ Returns phone/device model name or number. Example:
 
 For example, for Siemens C45, C<$model> holds C<C45>; for Nokia 6600, C<$model>
 holds C<6600>.
-
-
-=head2 imei()
-
-Returns the device own IMEI number (International Mobile Equipment Identifier ???).
-This identifier is numeric and should be unique among all GSM mobile devices and phones.
-This is not really true, but ... . Example:
-
-	my $imei = $gsm->imei();
 
 
 =head2 signal_quality()
@@ -965,9 +973,114 @@ Returns the device firmare version, as stored by the manufacturer. Example:
 
 For example, for my Siemens C45, C<$rev> holds C<06>.
 
-=head2 test_command( [cmd] )
+=head2 test_command()
 
-=head2 XXX TO BE COMPLETED XXX
+This method allows to query the device to know if a specific AT GSM command is supported.
+This is used only with GSM commands (those with C<AT+> prefix).
+For example, I want to know if my device supports the C<AT+GXXX> command.
+All we have to do is:
+
+	my $gsm = Device::Gsm->new( port => '/dev/myport' );
+
+	...
+
+	if( $gsm->test_command('GXXX') ) {
+		# Ok, command is supported
+	} else {
+		# Nope, no GXXX command
+	}
+
+Note that if you omit the starting C<+> character, it is automatically added.
+You can also test commands like C<^SNBR> or the like, without C<+> char being added.
+
+=for html
+<I>Must be explained better, uh?</I>
+
+=for comment
+// must be explainer better, uh? //
+
+=head2 register()
+
+"Registering" on the GSM network is what happens when you turn on your mobile phone or GSM equipment
+and the device tries to reach the GSM operator network. If your device requires a B<PIN> number,
+it is used here (but remember to supply the C<pin> parameter in new() object constructor for this
+to work.
+
+Registration can take some seconds, don't worry for the wait.
+After that, you are ready to send your SMS messages or do some voice calls, ... .
+Normally you don't need to call register() explicitly because it is done automatically for you
+when/if needed.
+
+If return value is true, registration was successful, otherwise there is something wrong;
+probably you supplied the wrong PIN code or network unreachable.
+
+=head2 send_sms()
+
+Obviously, this sends out SMS text messages. I should warn you that B<you cannot send>
+(for now) MMS, ringtone, smart, ota messages of any kind with this method.
+
+Send out an SMS message quickly:
+
+	my $sent = $gsm->send_sms(
+		content   => 'Hello, world!',   # SMS text
+		recipient => '+99000123456',    # recipient phone number
+	);
+
+	if( $sent ) {
+		print "OK!";
+	} else {
+		print "Troubles...";
+	}
+
+The allowed parameters to send_sms() are:
+
+=over -
+
+=item C<class>
+
+Class parameter can assume two values: C<normal> and C<flash>. Flash (or class zero) messages are
+particular because they are immediately displayed (without user confirm) and never stored
+on phone memory, while C<normal> is the default.
+
+=item C<content>
+
+This is the text you want to send, consisting of max 160 chars if you use B<PDU> mode
+and 140 (?) if in B<text> mode (more on this later).
+
+=item C<mode>
+
+Can assume two values (case insensitive): C<pdu> and C<text>.
+C<PDU> means B<Protocol Data Unit> and it is a sort of B<binary> encoding of commands,
+to save time/space, while C<text> is the normal GSM commands text mode.
+
+Recent mobile phones and GSM equipments surely have support for C<PDU> mode.
+Older OEM modules (like Falcom Swing, for example) don't have PDU mode, but only text mode.
+It is just a matter of trying.
+
+=item C<recipient>
+
+Phone number of message recipient
+
+=back
+
+=head2 service_center()
+
+If called without parameters, returns the actual SMS Service Center phone number. This is
+the number your phone automatically calls when receiving and sending SMS text messages, and
+your network operator should tell you what this number is.
+
+Example:
+
+	my $gsm = Device::Gsm->new( port => 'COM1' );
+	$gsm->connect() or die "Can't connect";
+	$srv_cnt = $gsm->service_center();
+	print "My service center number is: $srv_cnt\n";
+
+If you want to set or change this number (if used improperly this can disable
+sending of SMS messages, so be warned!), you can try something like:
+
+	my $ok = $gsm->service_center('+99001234567');
+	print "Service center changed!\n" if $ok;
 
 =head1 REQUIRES
 
@@ -999,8 +1112,8 @@ queue (that could be a simple filesystem folder).
 
 =item Validity Period
 
-Support C<validity period> option on SMS sending. Tells how much time the SMS
-Service Center must hold the SMS for delivery.
+Support C<validity> period option on SMS sending. Tells how much time the SMS
+Service Center must hold the SMS for delivery when not received.
 
 =item Profiles
 
