@@ -16,12 +16,23 @@
 	<li><a href="#warning">WARNING</a></li>
 	<li><a href="#synopsis">SYNOPSIS</a></li>
 	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#methods">METHODS</a></li>
 	<ul>
 
-		<li><a href="#requires">REQUIRES</a></li>
-		<li><a href="#export">EXPORT</a></li>
+		<li><a href="#connect__"><code>connect()</code></a></li>
+		<li><a href="#datetime__"><code>datetime()</code></a></li>
+		<li><a href="#hangup__"><code>hangup()</code></a></li>
+		<li><a href="#manufacturer__"><code>manufacturer()</code></a></li>
+		<li><a href="#model__"><code>model()</code></a></li>
+		<li><a href="#imei__"><code>imei()</code></a></li>
+		<li><a href="#signal_quality__"><code>signal_quality()</code></a></li>
+		<li><a href="#software_version__"><code>software_version()</code></a></li>
+		<li><a href="#test_command___cmd___">test_command( [cmd] )</a></li>
+		<li><a href="#xxx_to_be_completed_xxx">XXX TO BE COMPLETED XXX</a></li>
 	</ul>
 
+	<li><a href="#requires">REQUIRES</a></li>
+	<li><a href="#export">EXPORT</a></li>
 	<li><a href="#todo">TO-DO</a></li>
 	<li><a href="#author">AUTHOR</a></li>
 	<li><a href="#see_also">SEE ALSO</a></li>
@@ -31,6 +42,7 @@
 <hr />
 <p>
 </p>
+<hr />
 <h1><a name="name">NAME</a></h1>
 <p>Device::Gsm - Perl extension to interface GSM cellular / modems</p>
 <p>
@@ -54,55 +66,16 @@
       print &quot;connected!\n&quot;;
   } else {
       print &quot;sorry, no connection with gsm phone on serial port!\n&quot;;
-  }
- 
+  }</pre>
+<pre>
   # Register to GSM network (you must supply PIN number in above new() call)
   $gsm-&gt;register();</pre>
 <pre>
-  # Get the manufacturer and model code of device
-  my $mnf   = $gsm-&gt;manufacturer();
-  my $model = $gsm-&gt;model();
-  print &quot;soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</pre>
-<pre>
-  my $imei = $gsm-&gt;imei() or
-        $imei = $gsm-&gt;serial_number();
- 
-  # Test for command support
-  if( $gsm-&gt;test_command('CGMI') ) {
-      # `AT+CGMI' is supported!
-  } else {
-      # No luck, CGMI command not available
-  }</pre>
-<pre>
- 
-  print 'Service number is now: ', $gsm-&gt;service_center(), &quot;\n&quot;;
-  $gsm-&gt;service_center( '+001505050' );   # Sets new number
- 
- 
   # Send quickly a short text message
   $gsm-&gt;send_sms(
       recipient =&gt; '+3934910203040',
       content   =&gt; 'Hello world! from Device::Gsm'
   );</pre>
-<pre>
-  # The long way...
-  $gsm-&gt;send_sms(</pre>
-<pre>
-      recipient =&gt; '34910203040',
-      content   =&gt; 'Hello world again, with more args',</pre>
-<pre>
-      # SMS sending mode
-      # try `text' on old phones or GSM modems
-      # `pdu' is the default nowadays
-      mode      =&gt; 'pdu',</pre>
-<pre>
-      # SMS Class (can be `normal' or `flash')
-      # `flash' mode delivers instantly!
-      class     =&gt; 'normal'
-  );</pre>
-<pre>
-  # Test network signal
-  print &quot;Signal power seems to be &quot;, $gsm-&gt;signal_quality(), &quot; dBm\n&quot;;</pre>
 <pre>
   # Get list of Device::Gsm::Sms message objects
   # see `examples/read_messages.pl' for all the details
@@ -113,17 +86,125 @@
 <h1><a name="description">DESCRIPTION</a></h1>
 <p><code>Device::Gsm</code> class implements basic GSM functions, network registration and SMS sending.</p>
 <p>This class supports also <code>PDU</code> mode to send <code>SMS</code> messages, and should be
-fairly usable. I'm developing and testing it under <code>Linux RedHat 7.1</code>
-with a 16550 serial port and <code>Siemens C35i</code> / <code>C45</code> GSM phones attached with
-a Siemens-compatible serial cable.</p>
+fairly usable. In the past, I have developed and tested it under Linux RedHat 7.1
+with a 16550 serial port and Siemens C35i/C45 GSM phones attached with
+a Siemens-compatible serial cable. Currently, I'm developing and testing this stuff
+with Linux Slackware 9.1 and a <strong>Cambridge Silicon Radio</strong> (CSR) USB
+bluetooth dongle, connecting to a Nokia 6600 phone.</p>
 <p>Please be kind to the universe and contact me if you have troubles or you are
 interested in this.</p>
 <p>Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
-use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
+use the <code>examples/send_to_cosimo.pl</code> script to make me know that Device::Gsm works
 with your device (thanks!).</p>
 <p>
 </p>
-<h2><a name="requires">REQUIRES</a></h2>
+<hr />
+<h1><a name="methods">METHODS</a></h1>
+<p>The following documents all supported methods with simple examples of usage.</p>
+<p>
+</p>
+<h2><a name="connect__"><code>connect()</code></a></h2>
+<p>This is the main call that connects to the appropriate device. After the
+connection has been established, you can start issuing commands.
+The list of accepted parameters (to be specified as hash keys and values) is
+the same of <code>Device::SerialPort</code> (or <code>Win32::SerialPort</code> on Windows platform),
+as all parameters are passed to those classes' <code>connect()</code> method.</p>
+<p>The default value for <code>baudrate</code> parameter is <code>19200</code>.</p>
+<p>Example:</p>
+<pre>
+        my $gsm = Device::Gsm-&gt;new( port=&gt;'/dev/ttyS0', log=&gt;'syslog' );
+        # ...
+        if( $gsm-&gt;connect(baudrate =&gt; 19200) ) {
+                print &quot;Connected!&quot;;
+        } else {
+                print &quot;Could not connect, sorry!&quot;;
+        }
+        # ...</pre>
+<p>
+</p>
+<h2><a name="datetime__"><code>datetime()</code></a></h2>
+<p>Used to get or set your phone/gsm modem date and time.</p>
+<p>If called without parameters, it gets the current phone/gsm date and time in ``gsm''
+format ``YY/MM/DD,HH:MN:SS''. For example <code>03/12/15,22:48:59</code> means December the 15th,
+at 10:48:59 PM. Example:</p>
+<pre>
+        $datestr = $gsm-&gt;datetime();</pre>
+<p>If called with parameters, sets the current phone/gsm date and time to that
+of supplied value. Example:</p>
+<pre>
+        $newdate = $gsm-&gt;datetime( time() );</pre>
+<p>where <code>time()</code> is the perl's builtin <code>time()</code> function (see <code>perldoc -f time</code> for details).
+Another variant allows to pass a <code>localtime</code> array to set the correspondent datetime. Example:</p>
+<pre>
+        $newdate = $gsm-&gt;datetime( localtime() );</pre>
+<p>(Note the list context). Again you can read the details for <code>localtime</code> function
+with <code>perldoc -f localtime</code>.</p>
+<p>If your device does not support this command, an <strong>undefined</strong> value will be returned
+in either case.</p>
+<p>
+</p>
+<h2><a name="hangup__"><code>hangup()</code></a></h2>
+<p>Hangs up the phone, terminating the active calls, if any.
+This method has been never tested on real ``live'' conditions, but it needs to be
+specialized for GSM phones, because it relies on <code>+HUP</code> GSM command.
+Example:</p>
+<pre>
+        $gsm-&gt;hangup();</pre>
+<p>
+</p>
+<h2><a name="manufacturer__"><code>manufacturer()</code></a></h2>
+<p>Returns the device manufacturer, usually only the first word (example: <code>Nokia</code>,
+<code>Siemens</code>, <code>Falcom</code>, ...). Example:</p>
+<pre>
+        my $man_name = $gsm-&gt;manufacturer();
+        if( $man_name eq 'Nokia' ) {
+                print &quot;We have a nokia phone...&quot;;
+        } else {
+                print &quot;We have a $man_name phone...&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="model__"><code>model()</code></a></h2>
+<p>Returns phone/device model name or number. Example:</p>
+<pre>
+        my $model = $gsm-&gt;model();</pre>
+<p>For example, for Siemens C45, <code>$model</code> holds <code>C45</code>; for Nokia 6600, <code>$model</code>
+holds <code>6600</code>.</p>
+<p>
+</p>
+<h2><a name="imei__"><code>imei()</code></a></h2>
+<p>Returns the device own IMEI number (International Mobile Equipment Identifier ???).
+This identifier is numeric and should be unique among all GSM mobile devices and phones.
+This is not really true, but ... . Example:</p>
+<pre>
+        my $imei = $gsm-&gt;imei();</pre>
+<p>
+</p>
+<h2><a name="signal_quality__"><code>signal_quality()</code></a></h2>
+<p>Returns the measure of signal quality expressed in dBm units, where near to zero is better.
+An example value is -91 dBm, and reported value is <code>-91</code>. Values should range from
+-113 to -51 dBm, where -113 is the minimum signal quality and -51 is the theorical maximum quality.</p>
+<pre>
+        my $level = $gsm-&gt;signal_quality();</pre>
+<p>If signal quality can't be read or your device does not support this command,
+an <strong>undefined</strong> value will be returned.</p>
+<p>
+</p>
+<h2><a name="software_version__"><code>software_version()</code></a></h2>
+<p>Returns the device firmare version, as stored by the manufacturer. Example:</p>
+<pre>
+        my $rev = $gsm-&gt;software_revision();</pre>
+<p>For example, for my Siemens C45, <code>$rev</code> holds <code>06</code>.</p>
+<p>
+</p>
+<h2><a name="test_command___cmd___">test_command( [cmd] )</a></h2>
+<p>
+</p>
+<h2><a name="xxx_to_be_completed_xxx">XXX TO BE COMPLETED XXX</a></h2>
+<p>
+</p>
+<hr />
+<h1><a name="requires">REQUIRES</a></h1>
 <ul>
 <li></li>
 Device::Modem, which in turn requires
@@ -133,7 +214,8 @@ Device::SerialPort (or Win32::SerialPort on Windows machines)
 <p></p></ul>
 <p>
 </p>
-<h2><a name="export">EXPORT</a></h2>
+<hr />
+<h1><a name="export">EXPORT</a></h1>
 <p>None</p>
 <p>
 </p>
