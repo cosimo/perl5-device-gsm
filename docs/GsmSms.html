@@ -58,28 +58,28 @@
     @sms = $gsm-&gt;messages();</pre>
 <pre>
     if( @sms ) {
-                foreach( @sms ) {
+        foreach( @sms ) {
             print $msg-&gt;recipient() , &quot;\n&quot;;
             print $msg-&gt;sender()    , &quot;\n&quot;;
             print $msg-&gt;content()   , &quot;\n&quot;;
             print $msg-&gt;time()      , &quot;\n&quot;;
             print $msg-&gt;type()      , &quot;\n&quot;;
-                }
-        }</pre>
+        }
+    }</pre>
 <pre>
-        # Or you can instance a sms message from raw PDU data
+    # Or you can instance a sms message from raw PDU data
     my $msg = new Device::Gsm::Sms(
         header =&gt; '+CMGL: ...',
         pdu    =&gt; `[encoded pdu data]'
     );</pre>
 <pre>
-        if( defined $msg ) {
-            print $msg-&gt;recipient() , &quot;\n&quot;;
-            print $msg-&gt;sender()    , &quot;\n&quot;;
-            print $msg-&gt;content()   , &quot;\n&quot;;
-            print $msg-&gt;time()      , &quot;\n&quot;;
-            print $msg-&gt;type()      , &quot;\n&quot;;
-        }</pre>
+    if( defined $msg ) {
+        print $msg-&gt;recipient() , &quot;\n&quot;;
+        print $msg-&gt;sender()    , &quot;\n&quot;;
+        print $msg-&gt;content()   , &quot;\n&quot;;
+        print $msg-&gt;time()      , &quot;\n&quot;;
+        print $msg-&gt;type()      , &quot;\n&quot;;
+    }</pre>
 <p>
 </p>
 <hr />

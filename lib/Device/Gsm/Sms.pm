@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.7 2004-03-23 22:23:58 cosimo Exp $
+# $Id: Sms.pm,v 1.8 2004-03-23 22:27:14 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -348,28 +348,28 @@ Device::Gsm::Sms - SMS message internal class that represents a single text SMS 
     @sms = $gsm->messages();
 
     if( @sms ) {
-		foreach( @sms ) {
+        foreach( @sms ) {
             print $msg->recipient() , "\n";
             print $msg->sender()    , "\n";
             print $msg->content()   , "\n";
             print $msg->time()      , "\n";
             print $msg->type()      , "\n";
-		}
-	}
+        }
+    }
 
-	# Or you can instance a sms message from raw PDU data
+    # Or you can instance a sms message from raw PDU data
     my $msg = new Device::Gsm::Sms(
         header => '+CMGL: ...',
         pdu    => `[encoded pdu data]'
     );
 
-	if( defined $msg ) {
-	    print $msg->recipient() , "\n";
-	    print $msg->sender()    , "\n";
-	    print $msg->content()   , "\n";
-	    print $msg->time()      , "\n";
-	    print $msg->type()      , "\n";
-	}
+    if( defined $msg ) {
+        print $msg->recipient() , "\n";
+        print $msg->sender()    , "\n";
+        print $msg->content()   , "\n";
+        print $msg->time()      , "\n";
+        print $msg->type()      , "\n";
+    }
 
 =head1 DESCRIPTION
 
