@@ -51,3 +51,7 @@ Revision history for Perl extension Device::Gsm.
 	- improved test scripts; now work also with env vars, and without too
 	  many `connect()'s
 
+1.17  Thu Sep 12 00:22:06 CEST 2002
+	- added signal_quality() method to measure gsm signal power (dBm)
+	- added an example script in [examples] folder (`report_signal.pl')
+
