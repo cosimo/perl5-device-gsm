@@ -1,8 +1,12 @@
 Revision history for Perl extension Device::Gsm.
 
-0.01  Tue Feb 26 22:15:31 2002
+0.01  Tue Feb 26 22:15:31 CET 2002
 	- original version; created by h2xs 1.20 with options
 		-A -X -n Device::Gsm -v 0.01
 
-1.04  Mon Mar 25 07:34:52 2002
+1.04  Mon Mar 25 07:34:52 CET 2002
     - added pod, html, text docs
+
+1.05  Sat Mar 30 15:12:09 CET 2002
+	- added service_number() method
+
