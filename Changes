@@ -23,3 +23,7 @@ Revision history for Perl extension Device::Gsm.
 	- improved test suite
 	- fixed logging class mechanism
 
+1.08  Sat Apr  6 00:24:29 CEST 2002
+	- hangup() method
+	- imei() / serial_number() method with test case
+

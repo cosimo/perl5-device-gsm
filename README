@@ -27,6 +27,9 @@ SYNOPSIS
  
       # What GSM software verson ?
       print 'GSM VERSION is ", $gsm->software_version(), "\n";
+
+      # IMEI (serial number) of phone
+      my $imei = $gsm->imei();  # or $imei = $gsm->serial_number();
  
       # Test for command support
       if( $self->test_command('CGMI') ) {

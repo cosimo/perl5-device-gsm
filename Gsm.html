@@ -1,7 +1,7 @@
 <HTML>
 <HEAD>
 <TITLE>Device::Gsm - Perl extension to interface GSM cellular / modems</TITLE>
-<LINK REV="made" HREF="mailto:cosimo@dev.xproject.org">
+<LINK REV="made" HREF="mailto:cosimo@cpan.org">
 </HEAD>
 
 <BODY>
@@ -66,6 +66,10 @@
 
   # What GSM software verson ?
   print 'GSM VERSION is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
+<PRE>
+  # IMEI (serial number) of phone
+  my $imei = $gsm-&gt;imei();  # or $imei = $gsm-&gt;serial_number();
+</PRE>
 <PRE>
 
   # Test for command support
