@@ -21,10 +21,12 @@
 
 		<li><a href="#connect__"><code>connect()</code></a></li>
 		<li><a href="#datetime__"><code>datetime()</code></a></li>
+		<li><a href="#delete_sms__"><code>delete_sms()</code></a></li>
 		<li><a href="#hangup__"><code>hangup()</code></a></li>
 		<li><a href="#imei__"><code>imei()</code></a></li>
 		<li><a href="#manufacturer__"><code>manufacturer()</code></a></li>
 		<li><a href="#messages__"><code>messages()</code></a></li>
+		<li><a href="#mode__"><code>mode()</code></a></li>
 		<li><a href="#model__"><code>model()</code></a></li>
 		<li><a href="#signal_quality__"><code>signal_quality()</code></a></li>
 		<li><a href="#software_version__"><code>software_version()</code></a></li>
@@ -153,6 +155,13 @@ with <code>perldoc -f localtime</code>.</p>
 in either case.</p>
 <p>
 </p>
+<h2><a name="delete_sms__"><code>delete_sms()</code></a></h2>
+<p>This method deletes a message from your SIM card, given the message index number.
+Example:</p>
+<pre>
+    $gsm-&gt;delete_sms(3);</pre>
+<p>
+</p>
 <h2><a name="hangup__"><code>hangup()</code></a></h2>
 <p>Hangs up the phone, terminating the active calls, if any.
 This method has been never tested on real ``live'' conditions, but it needs to be
@@ -187,6 +196,17 @@ This is not really true, but ... . Example:</p>
 It is meant to extract all text SMS messages stored on your SIM card.
 In list context, it returns a list of messages (or undefined value if no message or errors),
 every message being a <code>Device::Gsm::Sms</code> object.</p>
+<p>
+</p>
+<h2><a name="mode__"><a href="#item_mode"><code>mode()</code></a></a></h2>
+<p>Sets the device GSM command mode. Accepts one parameter to set the new mode that can
+be the string <code>text</code> or <code>pdu</code>. Example:</p>
+<pre>
+        # Set text mode
+    $gsm-&gt;mode('text');
+    
+    # Set pdu mode
+    $gsm-&gt;mode('pdu');</pre>
 <p>
 </p>
 <h2><a name="model__"><code>model()</code></a></h2>
