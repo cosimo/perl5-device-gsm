@@ -1,5 +1,7 @@
 Changes
 Gsm.pm
 MANIFEST
+COPYING
+README
 Makefile.PL
 test.pl
