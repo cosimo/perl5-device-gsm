@@ -21,10 +21,10 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.4 2002-03-25 06:34:00 cosimo Exp $
+# $Id: Gsm.pm,v 1.5 2002-03-30 14:09:49 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::SerialPort;
@@ -57,6 +57,7 @@ sub connect {
 
 	$me->SUPER::connect( $rOpt );
 }
+
 
 #/**
 # * @method       register
@@ -173,6 +174,61 @@ sub send_sms {
 
 
 
+#
+# Set or request service center number
+#
+sub service_center(;$) {
+
+	my $self = shift;
+	my $nCenter;
+	my $lOk = 1;
+
+	# If additional parameter is supplied, store new message center number
+	if( @_ ) {
+		$nCenter = shift();
+
+		# Remove all non numbers or `+' sign
+		$nCenter =~ s/[^0-9+]//g;
+
+		# Send AT command
+		$self->atsend( qq[AT+CSCA="$nCenter"] );
+
+		# Check for modem answer
+		$lOk = ( $self->answer =~ /OK/ );
+		
+		if( $lOk ) {
+			$self->log->write('info', 'service center number ['.$nCenter.'] stored');
+		} else {
+			$self->log->write('warning', 'unexpected response for "service_center" command');
+		}
+
+	} else {
+
+		$self->log->write('info', 'requesting service center number');
+		$self->atsend('AT+CSCA=?');
+
+		# Get answer and check for errors
+		$nCenter = $self->answer();
+
+		if( $nCenter =~ /ERROR/ ) {
+			$self->log->write('warning', 'error status for "service_center" command');
+			$lOk = 0;
+		} else {
+			$nCenter =~ tr/\r\nA-Z//s;
+			$self->log->write('info', 'service center number is ['.$nCenter.']');
+
+			# Return service center number
+			$lOk = $nCenter;
+		}
+
+	}
+
+	# Status flag or service center number
+	return $lOk;
+
+}
+
+
 2703;
 
 
@@ -195,16 +251,22 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   use Device::Gsm;
 
   # NOT YET DEFINED!
-  my $modem = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
+  my $gsm = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
 
-  if( $modem->connect() ) {
+  if( $gsm->connect() ) {
       print "connected!\n";
   } else {
-      print "sorry, no connection with serial port!\n';
+      print "sorry, no connection with gsm phone on serial port!\n';
   }
 
   # Register to GSM network (you must supply PIN number in above new() call)
-  $modem->register();
+  $gsm->register();
+ 
+  # Set service center number (depends on your network operator)
+  $gsm->service_number( '+001505050' );   # This one is fake, not usable!
+
+  # Retrieve actual stored service number
+  print 'Service number is now: ', $gsm->service_number(), "\n";
 
   # Send a short text message (SMS)
   $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
