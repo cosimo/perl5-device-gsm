@@ -21,97 +21,87 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.6 2002-03-30 15:48:16 cosimo Exp $
+# $Id: Gsm.pm,v 1.7 2002-04-03 21:38:37 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
-use Device::SerialPort;
 use Device::Modem;
 
-# Connection defaults
-$Device::Gsm::BAUDRATE = 9600;
+# Connection defaults to 19200 baud. This seems to be the optimal
+# rate for serial links to new gsm devices
+$Device::Gsm::BAUDRATE = 19200;
 
-# Hierarchy information
-@Device::Gsm::ISA = qw( Device::Modem );
+@Device::Gsm::ISA = ('Device::Modem');
 
-#/**
-# * @method       connect
-# *
-# * Connect on serial port to gsm device
-# *
-# * @param        reference to hash of options, that must contain:
-# *     BAUDRATE  speed of communication (default 9600)
-# *     DATABITS  byte length (default 8)
-# *     STOPBITS  stop bits (default 1)
-# *     PARITY    ... (default 'none')
-# *
-# * @return       success of connection
-# */
+# Connect on serial port to gsm device
+# see parameters on Device::Modem::connect()
 sub connect {
-	my ($me,$rOpt) = @_;
+	my $me = shift;
+	my %aOpt;
+	%aOpt = @_ if(@_);
 
 	# GSM defaults to 9600 baud
-	$rOpt->{BAUDRATE} ||= $Device::Gsm::BAUDRATE;
+	$aOpt{'baudrate'} ||= $Device::Gsm::BAUDRATE;
 
-	$me->SUPER::connect( $rOpt );
+	$me->SUPER::connect( %aOpt );
 }
 
 
 # Who is the manufacturer of this device?
 sub manufacturer() {
 	my $self = shift;
-	my $man;
+	my($ok, $man);
 
 	# Test if manufacturer code command is supported
 	if( $self->test_command('CGMI') ) {
 
 		$self->atsend( 'AT+CGMI' . Device::Modem::CR );
-		$man = $self->answer();
+		($ok, $man) = $self->parse_answer();
 
 		$self->log->write('info', 'manufacturer of this device appears to be ['.$man.']');
 
 	}
 
-	return $man;
+	return $ok eq 'OK' ? $man : $ok;
 
 }
 
 # What is the model of this device?
 sub model() {
 	my $self = shift;
-	my $model;
+	my($code, $model);
 
 	# Test if manufacturer code command is supported
 	if( $self->test_command('CGMM') ) {
 
 		$self->atsend( 'AT+CGMM' . Device::Modem::CR );
-		$model = $self->answer();
+		($code, $model) = $self->parse_answer();
 
 		$self->log->write('info', 'model of this device is ['.$model.']');
 
 	}
 
-	return $model;
+	return $code eq 'OK' ? $model : $code;
 }
 
 # Get the GSM software version on this device
 sub software_version() {
 	my $self = shift;
-	my $ver;
+	my($code, $ver);
 
 	# Test if manufacturer code command is supported
 	if( $self->test_command('CGMR') ) {
 
 		$self->atsend( 'AT+CGMR' . Device::Modem::CR );
-		$ver = $self->answer();
+		($code, $ver) = $self->parse_answer();
 
 		$self->log->write('info', 'GSM version is ['.$ver.']');
 
 	}
 
-	return $ver;
+	return $code eq 'OK' ? $ver : $code;
 }
 
 
@@ -129,13 +119,7 @@ sub test_command {
 	$ok;
 }
 
-#/**
-# * @method       register
-# *
-# * Register to GSM service provider network
-# *
-# * @return       [bool] success of registering
-# */
+# register to GSM service provider network
 sub register {
 	my $me = shift;
 	my $lOk = 0;
@@ -189,23 +173,10 @@ sub register {
 	
 }
 
-#/**
-# * @method       send_sms
-# *
-# * Send SMS to handphone number [cRecipient]. The text of
-# * SMS to send is in [cText]. Returns a boolean value telling
-# * if send has been successful, but *NOT* if SMS reached
-# * recipient.
-# *
-# * @param        cRecipient
-# * 	Recipient number
-# *
-# * @param        cText
-# * 	Text of SMS to send
-# *
-# * @return       lSuccess
-# * 	success of sending
-# */
+# send_sms( recipient, text, success )
+#
+# for now, this works only in text mode, not PDU mode!
+# so it's not very usable nowadays... :-(
 sub send_sms {
 	my($me, $num, $text) = @_;
 	my $lOk = 0;
@@ -252,6 +223,7 @@ sub service_center(;$) {
 	my $self = shift;
 	my $nCenter;
 	my $lOk = 1;
+	my $code;
 
 	# If additional parameter is supplied, store new message center number
 	if( @_ ) {
@@ -275,16 +247,16 @@ sub service_center(;$) {
 	} else {
 
 		$self->log->write('info', 'requesting service center number');
-		$self->atsend('AT+CSCA=?' . Device::Modem::CR );
+		$self->atsend('AT+CSCA?' . Device::Modem::CR );
 
 		# Get answer and check for errors
-		$nCenter = $self->answer();
+		($code, $nCenter) = $self->parse_answer();
 
-		if( $nCenter =~ /ERROR/ ) {
+		if( $code =~ /ERROR/ ) {
 			$self->log->write('warning', 'error status for "service_center" command');
 			$lOk = 0;
 		} else {
-			$nCenter =~ tr/\r\nA-Z//s;
+			# $nCenter =~ tr/\r\nA-Z//s;
 			$self->log->write('info', 'service center number is ['.$nCenter.']');
 
 			# Return service center number
@@ -321,7 +293,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   use Device::Gsm;
 
   # NOT YET DEFINED!
-  my $gsm = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
+  my $gsm = new Device::Gsm( port => '/dev/ttyS1', pin => '0124' );
 
   if( $gsm->connect() ) {
       print "connected!\n";
@@ -352,7 +324,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   # Retrieve actual stored service number
   print 'Service number is now: ', $gsm->service_number(), "\n";
  
-  # Send a short text message (SMS)
+  # Send a short text message (SMS in text mode *only*, no PDU)
   $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
  
 
@@ -362,19 +334,40 @@ Device::Gsm class implements basic GSM network registration and SMS sending func
 For now, it is only an example that inherits from Device::Modem for all low-level functions.
 It is planned to add more custom GSM commands support, with device identification, and so on...
 
-Please feel free to contact me to provide feedback on this.
+Actually, this was a rather dated module, that does not support PDU mode
+(for example) and it is now undergoing a major rewrite.
+
+So please be patient and contact me if you are interested in this.
 
 =head2 REQUIRES
 
 =over 4
 
-=item Device::Modem
+=item * 
+
+Device::Modem, which in turn requires
+
+=item *
+
+Device::SerialPort
 
 =back
 
 =head2 EXPORT
 
 None
+
+
+=head1 TO-DO
+
+=over 4
+
+=item *
+
+Too many things, but your suggestions are welcome...
+
+=back
+
 
 =head1 AUTHOR
 
