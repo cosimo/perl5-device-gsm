@@ -6,14 +6,15 @@
 # This is a funny experiment to know how many people are
 # using this module out there... :-) 
 #
-# $Id: send_to_cosimo.pl,v 1.1 2002-09-03 21:23:37 cosimo Exp $
+# $Id: send_to_cosimo.pl,v 1.2 2002-09-03 21:35:09 cosimo Exp $
 
 use strict;
 use Config;
 use Device::Gsm;
 
-print "\nthis is ", '$Id: send_to_cosimo.pl,v 1.1 2002-09-03 21:23:37 cosimo Exp $', "\n";
-print "I'm sending out an SMS message to the author of Device::Gsm module\n";
+print "\nthis is ", '$Id: send_to_cosimo.pl,v 1.2 2002-09-03 21:35:09 cosimo Exp $', "\n\n";
+print "\n", '-' x 80, "\n";
+print "HEY! I'm sending out an SMS message to the author of Device::Gsm module\n";
 print "(Cosimo Streppone <cosimo\@cpan.org>).\n\n";
 
 my $port = $^O =~ /Win/ ? 'COM2' : '/dev/ttyS1';
@@ -35,7 +36,6 @@ $mypin = substr( $mypin, 0, 4 );
 my $gsm = new Device::Gsm( port => $myport, pin => $mypin, log => 'file,send.log' );
 
 die "cannot create Device::Gsm object!" unless $gsm;
-
 $gsm->connect( baudrate => 9600 ) or die "cannot connect to GSM device on [$myport]\n";
 $gsm->register() or die "cannot register on GSM network: check pin and/or network signal!"; 
 
@@ -55,10 +55,10 @@ chomp $comment;
 my $number = '+393289287791';
 my $content =
 	'From '.$name.";\n".
-	'Device-Gsm v'.$Device::Gsm::VERSION.', '.
-	'installed on '.$Config{'myhostname'}.$Config{'mydomain'}.' ('.$Config{'myarchname'}.'), '.
-	'perl v'.$]."\n-- ".
-	$comment;
+	'Device-Gsm v'.$Device::Gsm::VERSION.','."\n".
+	'installed on '.$Config{'myhostname'}.$Config{'mydomain'}.' ('.$Config{'myarchname'}.'), perl v'.$]."\n".
+	'Mod:'.$gsm->manufacturer()||''.' '.$gsm->model().' Ver:'.$gsm->software_version()||''."\n".
+	"-- ".$comment;
 
 $content = substr( $content, 0, 160 );
 
