@@ -1,12 +1,15 @@
 Changes
-Gsm.pm
-Gsm.html
 MANIFEST
 COPYING
 README
 Makefile.PL
+Gsm.pm
+lib/Device/Gsm/Pdu.pm
+Gsm.html
 t/01basic.t
 t/02connect.t
 t/03ident.t
 t/04syslog.t
 t/10servcenter.t
+t/20pdu.t
+t/30register.t
