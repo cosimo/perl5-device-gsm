@@ -1,4 +1,4 @@
-# Device::Gsm::Sms - SMS short text message class (PDU format)
+# Device::Gsm::Sms - SMS message simple class that represents a text SMS message
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.3 2003-03-25 06:35:37 cosimo Exp $
+# $Id: Sms.pm,v 1.4 2004-01-22 23:19:41 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -99,7 +99,7 @@ sub new {
 # If some error occurs, returns undef.
 #
 #
-sub decode2 {
+sub _old_decode {
 	my($header, $pdu) = @_;
 	my %msg = ();
 	my $errors = 0;
@@ -297,33 +297,40 @@ sub token ($) {
 
 =head1 NAME
 
-Device::Gsm::Sms - SMS messages internal class
-
-=head1 WARNING
-
-   This is C<ALPHA> software, still needs a lot of testing, so
-   so use it at your own risk and without C<ANY> warranty! Have fun.
+Device::Gsm::Sms - SMS message internal class that represents a single text SMS message
 
 =head1 SYNOPSIS
 
-  #
-  # This is an internal class, so you should not have
-  # need to use it directly, but ..
-  #
+    # A list of Device::Gsm::Sms messages is returned by
+    # Device::Gsm messages() method.
 
-  use Device::Gsm::Sms;
+    use Device::Gsm;
+    ...
+    @sms = $gsm->messages();
 
-  my $msg = new Device::Gsm::Sms(
-      header => '+CMGL: ...',
-      pdu => `[encoded pdu data]'
-  );
+    if( @sms ) {
+		foreach( @sms ) {
+            print $msg->recipient() , "\n";
+            print $msg->sender()    , "\n";
+            print $msg->content()   , "\n";
+            print $msg->time()      , "\n";
+            print $msg->type()      , "\n";
+		}
+	}
 
-  print $msg->recipient() , "\n";
-  print $msg->sender()    , "\n";
-  print $msg->content()   , "\n";
-  print $msg->time()      , "\n";
-  print $msg->type()      , "\n";
+	# Or you can instance a sms message from raw PDU data
+    my $msg = new Device::Gsm::Sms(
+        header => '+CMGL: ...',
+        pdu    => `[encoded pdu data]'
+    );
 
+	if( defined $msg ) {
+	    print $msg->recipient() , "\n";
+	    print $msg->sender()    , "\n";
+	    print $msg->content()   , "\n";
+	    print $msg->time()      , "\n";
+	    print $msg->type()      , "\n";
+	}
 
 =head1 DESCRIPTION
 
@@ -331,8 +338,84 @@ C<Device::Gsm::Sms> class implements very basic SMS message object,
 that can be used to decode C<+CMGL> GSM command response to build a more
 friendly high-level object.
 
-Please be kind to the universe and contact me if you have troubles or you are
-interested in this.
+=head1 METHODS
+
+The following is a list of methods applicable to C<Device::Gsm::Sms> objects.
+
+
+=head2 decode()
+
+Starts the decoding process of pdu binary data. If decoding process 
+ends in success, return value is true and sms object is filled with
+all proper values.
+
+If decoding process has errors or pdu data is not provided, return
+value is 0 (zero).
+
+
+=head2 new()
+
+Basic constructor. You can build a new C<Device::Gsm::Sms> object from the
+raw B<+CMGL> header and B<PDU> data. Those data is then decoded and a new
+sms object is instanced and all information filled, to be available
+for subsequent method calls.
+
+The allowed parameters to new() method are:
+
+=over 4
+
+=item header
+
+This is the raw B<+CMGL> header string as modem outputs when you
+issue a B<+CMGL> command
+
+=item pdu
+
+Binary encoded sms data
+
+=back
+
+
+=head2 recipient()
+
+Returns the sms recipient number (destination address = DA)
+as string (ex.: C<+39012345678>).
+
+=head2 sender()
+
+Returns the sms sender number (originating address = OA) as string.
+
+=head2 status()
+
+Status of the message can be one value from the following list:
+
+=for html
+<FORM><SELECT><OPTION>UNKNOWN<OPTION>REC UNREAD<OPTION>REC READ<OPTION>SENT UNREAD<OPTION>SENT READ</SELECT></FORM>
+
+=for pod
+'UNKNOWN', 'REC UNREAD', 'REC READ', 'SENT UNREAD', 'SENT READ'
+
+=head2 text()
+
+Returns the textual content of sms message
+
+=head2 token()
+
+Returns the given PDU token of the decoded message (internal usage).
+
+=head2 type()
+
+SMS messages can be of two types: SMS_SUBMIT and SMS_DELIVER, that are defined by
+two constants with those names. type() method returns one of these two values.
+
+Example:
+
+	if( $sms->type() == Device::Gsm::Sms::SMS_DELIVER ) {
+		# ...
+	}
+	elsif( $sms->type() == Device::Gsm::Sms::SMS_SUBMIT ) {
+		# ...
+	}
 
 =head1 REQUIRES
 
@@ -348,10 +431,21 @@ Device::Gsm
 
 None
 
+=head1 TODO
+
+=over 4
+
+=item *
+
+Complete and proof-read documentation and examples
+
+=back
+
 =head1 COPYRIGHT
 
-Device::Gsm::Sms - SMS short text message class (in PDU format)
-Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
+Device::Gsm::Sms - SMS message simple class that represents a text SMS message
+
+Copyright (C) 2002-2004 Cosimo Streppone, cosimo@cpan.org
 
 This program is free software; you can redistribute it and/or modify
 it only under the terms of Perl itself.
