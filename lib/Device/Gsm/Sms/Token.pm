@@ -1,4 +1,4 @@
-# $Id: Token.pm,v 1.2 2003-03-23 14:43:46 cosimo Exp $
+# $Id: Token.pm,v 1.3 2004-03-23 22:08:58 cosimo Exp $
 
 package Sms::Token;
 
@@ -48,7 +48,7 @@ sub new {
 sub data {
 	my $self = shift;
 	if( @_ ) {
-		if( $_[0] eq undef ) {
+		if( ! defined $_[0] ) {
 			$self->{'__data'} = [];
 		} else {
 			$self->{'__data'} = [ @_ ];
