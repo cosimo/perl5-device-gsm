@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.11 2002-04-14 09:26:27 cosimo Exp $
+# $Id: Gsm.pm,v 1.12 2002-04-24 18:46:18 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -266,9 +266,14 @@ sub _send_sms_text {
 	my $lOk = 0;
 	my $cReply;
 
+	# Select text format for messages
+	$me->atsend(  q[AT+CMGF=1] . Device::Modem::CR );
+	$me->wait(200);
+	$me->log_>write('info', 'Selected text format for message sending');
+
 	# Send sms in text mode
 	$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
-	$me->wait(500);
+	$me->wait(200);
 
 	$me->atsend( $text . Device::Modem::CTRL_Z );
 	$me->wait(1000);
@@ -332,13 +337,20 @@ sub _send_sms_pdu {
 	# Sending main SMS command ( with length )
 	my $len = ( (length $pdu) >> 1 ) - 1; 
 	#$me->log->write('info', 'AT+CMGS='.$len.' string sent');
+
+	# Select PDU format for messages
+	$me->atsend(  q[AT+CMGF=0] . Device::Modem::CR );
+	$me->wait(200);
+	$me->log_>write('info', 'Selected PDU format for msg sending');
+
+	# Send SMS length
 	$me->atsend( qq[AT+CMGS=$len] . Device::Modem::CR );
-	$me->wait( 1000 );
+	$me->wait(200);
 
 	# Sending SMS content encoded as PDU	
 	$me->log->write('info', 'PDU sent ['.$pdu.' + CTRLZ]' );
 	$me->atsend( $pdu . Device::Modem::CTRL_Z );
-	$me->wait( 3000 );
+	$me->wait(2000);
 
 	# Get reply and check for errors
 	$cReply = $me->answer();
