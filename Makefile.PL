@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.6 2002-09-03 21:25:47 cosimo Exp $
+# $Id: Makefile.PL,v 1.7 2004-05-25 20:52:40 cosimix Exp $
 use ExtUtils::MakeMaker;
 WriteMakefile(
 	'ABSTRACT_FROM' => 'Gsm.pm',
@@ -6,6 +6,7 @@ WriteMakefile(
 	'NAME'          => 'Device::Gsm',
 	'VERSION_FROM'  => 'Gsm.pm', # finds $VERSION
 	'PREREQ_PM'     => {
+                'Test::More'    => 0,
 		'Device::Modem' => 0,
 		( $^O =~ /Win/i
 			? ( 'Win32::SerialPort' => 0 )
