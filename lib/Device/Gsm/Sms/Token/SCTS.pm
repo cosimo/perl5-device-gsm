@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: SCTS.pm,v 1.2 2003-03-25 06:35:38 cosimo Exp $
+# $Id: SCTS.pm,v 1.3 2004-09-15 20:02:57 cosimo Exp $
 
 package Sms::Token::SCTS;
 use integer;
@@ -39,6 +39,7 @@ sub decode {
 	$self->set( 'date' => $self->get('day').'/'.$self->get('month').'/'.$self->get('year') );
 	$self->set( 'time' => $self->get('hour').':'.$self->get('minute').':'.$self->get('second') );
 
+	# TODO: add timezone decoding ...
 	$self->data( $self->get('date').' '.$self->get('time').' '.$self->get('timezone') );
 
 	# Signal token as correctly decoded (?)
