@@ -21,10 +21,10 @@
 # support for custom GSM commads, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.3 2002-03-25 06:25:35 cosimo Exp $
+# $Id: Gsm.pm,v 1.4 2002-03-25 06:34:00 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::SerialPort;
@@ -171,4 +171,71 @@ sub send_sms {
 	$lOk
 }
 
-1;
+
+
+2703;
+
+
+
+
+__END__
+
+=head1 NAME
+
+Device::Gsm - Perl extension to interface GSM cellular / modems
+
+=head1 WARNING
+
+   This is C<PRE-ALPHA> software, still needs extensive testing and
+   support for custom GSM commands, so use it at your own risk,
+   and without C<ANY> warranty! Have fun.
+
+=head1 SYNOPSIS
+
+  use Device::Gsm;
+
+  # NOT YET DEFINED!
+  my $modem = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
+
+  if( $modem->connect() ) {
+      print "connected!\n";
+  } else {
+      print "sorry, no connection with serial port!\n';
+  }
+
+  # Register to GSM network (you must supply PIN number in above new() call)
+  $modem->register();
+
+  # Send a short text message (SMS)
+  $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
+
+
+=head1 DESCRIPTION
+
+Device::Gsm class implements basic GSM network registration and SMS sending functions.
+For now, it is only an example that inherits from Device::Modem for all low-level functions.
+It is planned to add more custom GSM commands support, with device identification, and so on...
+
+Please feel free to contact me to provide feedback on this.
+
+=head2 REQUIRES
+
+=over 4
+
+=item Device::Modem
+
+=back
+
+=head2 EXPORT
+
+None
+
+=head1 AUTHOR
+
+Cosimo Streppone, cosimo@cpan.org
+
+=head1 SEE ALSO
+
+Device::Modem(3), Device::SerialPort(3), perl(1)
+
+=cut
