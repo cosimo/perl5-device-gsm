@@ -2,13 +2,13 @@
 #
 # Short example of use for Device::Gsm class
 #
-# $Id: send_sms.pl,v 1.1 2002-04-14 09:24:31 cosimo Exp $
+# $Id: send_sms.pl,v 1.2 2002-04-29 17:03:46 cosimo Exp $
 
 use strict;
 use Device::Gsm;
 
-print "\nthis is $0 version ", '$Id: send_sms.pl,v 1.1 2002-04-14 09:24:31 cosimo Exp $', "\n";
-print "I hope I can send SMS on your GSM phone attached to...\n";
+print "\nthis is ", '$Id: send_sms.pl,v 1.2 2002-04-29 17:03:46 cosimo Exp $', "\n";
+print "I hope I can send an SMS on your GSM phone attached to...\n";
 
 my $port = $^O =~ /Win/ ? 'COM2' : '/dev/ttyS1';
 my $myport;
@@ -30,7 +30,21 @@ my $gsm = new Device::Gsm( port => $myport, pin => $mypin, log => 'file,send.log
 
 die "cannot create Device::Gsm object!" unless $gsm;
 
-$gsm->connect() or die "cannot connect to GSM device on [$myport]\n";
+#
+# If you have problems with bad characters being trasmitted across serial link,
+# try different baud rates, as below...
+#
+# .---------------------------------.
+# | Model (phone/modem) |  Baudrate |
+# |---------------------+-----------|
+# | Falcom Swing (A2D)  |      9600 |
+# | Siemens C35/C45     |     19200 |
+# | Digicom             |      9600 |
+# | Nokia Communicator  |      9600 |
+# `---------------------------------'
+#
+
+$gsm->connect( baudrate => 9600 ) or die "cannot connect to GSM device on [$myport]\n";
 $gsm->register() or die "cannot register on GSM network: check pin and/or network signal!"; 
 
 print "\nok! connected and registered to network.\n";
