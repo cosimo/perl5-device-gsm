@@ -13,13 +13,14 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.17 2002-09-11 22:21:41 cosimo Exp $
+# $Id: Gsm.pm,v 1.18 2002-09-25 22:08:46 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
+use Device::Gsm::Message;
 use Device::Gsm::Pdu;
 
 @Device::Gsm::ISA = ('Device::Modem');
@@ -60,8 +61,10 @@ sub connect {
 	$me->SUPER::connect( %aOpt );
 }
 
+#
 # Hangup and terminate active call(s)
 # this overrides the `Device::Modem::hangup()' method
+#
 sub hangup {
 	my $self = shift;
 	$self->log->write('info', 'hanging up...');
@@ -71,7 +74,9 @@ sub hangup {
 	$self->answer();
 }
 
+#
 # Who is the manufacturer of this device?
+#
 sub manufacturer() {
 	my $self = shift;
 	my($ok, $man);
@@ -90,7 +95,9 @@ sub manufacturer() {
 
 }
 
+#
 # What is the model of this device?
+#
 sub model() {
 	my $self = shift;
 	my($code, $model);
@@ -108,7 +115,9 @@ sub model() {
 	return $model || $code;
 }
 
+#
 # Get handphone serial number (IMEI number)
+#
 sub imei() {
 	my $self = shift;
 	my($code,$imei);
@@ -129,8 +138,9 @@ sub imei() {
 # Alias for `imei()' is `serial_number()'
 *serial_number = *imei;
 
-
-# Get mobile phone signal quality
+#
+# Get mobile phone signal quality (expressed in dBm)
+#
 sub signal_quality() {
 	my $self = shift;
 	# Error code, dBm (signal power), bit error rate
@@ -172,7 +182,9 @@ sub signal_quality() {
 }
 
 
+#
 # Get the GSM software version on this device
+#
 sub software_version() {
 	my $self = shift;
 	my($code, $ver);
@@ -190,7 +202,9 @@ sub software_version() {
 	return $ver || $code;
 }
 
-
+#
+# Test support for a specific command
+#
 sub test_command {
 	my($self, $command) = @_;
 
@@ -205,7 +219,73 @@ sub test_command {
 	$ok;
 }
 
-# register to GSM service provider network
+#
+# Read all messages on SIM card (XXX must be registered on network)
+#
+sub messages() {
+	my $self = shift;
+	$self->log->write('info', 'reading messages on SIM card');
+
+	# Register on network (give your PIN number for this!)
+	#return undef unless $self->register();
+	$self->register();
+
+	#
+	# Read messages (XXX need to check if device supports CMGL with `stat'=4)
+	#
+	$self->atsend('AT+CMGL=4'.Device::Modem::CR);
+	my($messages) = $self->answer();
+
+	#if( $code =~ /ERROR/ ) {
+	#	$self->log->write('error', 'cannot read SMS messages on SIM: ['.$code.']');
+	#	return ();
+	#}
+
+	# Ok, messages read, now convert from PDU and store in object
+	$self->log->write('debug', 'messages='.$messages );
+	
+	my @data = split /\r+\n*/m, $messages;
+
+	# Check for errors on SMS reading
+	my $code;
+	if( ($code = pop @data) =~ /ERROR/ ) {
+		$self->log->write('error', 'cannot read SMS messages on SIM: ['.$code.']');
+		return ();
+	}
+
+	my @message = ();
+	my $current;
+
+	#
+	# Parse received data (result of +CMGL command)
+	#
+	while( @data ) {
+
+		$self->log->write('debug', 'data[] = ', $data[0] );
+
+		# Instance new message object
+		my $msg = new Device::Gsm::Message(
+			header => shift @data,
+			pdu    => shift @data
+		);
+
+		# Check if message has been instanced correctly
+		if( ref $msg ) {
+			push @message, $msg;
+		} else {
+			$self->log->write('info', 'could not instance message!');
+		}
+
+	}
+
+	$self->log->write('info', 'found '.(scalar @message).' messages on SIM. Reading.');
+
+	return @message;
+}
+
+#
+# Register to GSM service provider network
+#
 sub register {
 	my $me = shift;
 	my $lOk = 0;
@@ -310,8 +390,9 @@ sub send_sms {
 	return $lOk;
 }
 
-
+#
 # _send_sms_text( %options ) : sends message in text mode
+#
 sub _send_sms_text {
 	my($me, %opt) = @_;
 
@@ -348,6 +429,9 @@ sub _send_sms_text {
 }
 
 
+#
+# _send_sms_pdu( %options )  : sends message in PDU mode
+#
 sub _send_sms_pdu {
 	my($me, %opt) = @_;
 
@@ -483,7 +567,6 @@ sub service_center(;$) {
 
 
 
-
 __END__
 
 =head1 NAME
@@ -510,7 +593,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
  
   # Register to GSM network (you must supply PIN number in above new() call)
   $gsm->register();
- 
+
   # Get the manufacturer and model code of device
   my $mnf   = $gsm->manufacturer();
   my $model = $gsm->model();
@@ -525,15 +608,18 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   } else {
       # No luck, CGMI command not available
   }
+
  
   print 'Service number is now: ', $gsm->service_center(), "\n";
   $gsm->service_center( '+001505050' );   # Sets new number
-  
+ 
+ 
   # Send quickly a short text message
   $gsm->send_sms(
       recipient => '+3934910203040',
       content   => 'Hello world! from Device::Gsm'
   );
+
 
   # The long way...
   $gsm->send_sms(
@@ -551,6 +637,8 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       class     => 'normal'
   );
 
+
+  # Test network signal
   print "Signal power seems to be ", $gsm->signal_quality(), " dBm\n";
 
 
