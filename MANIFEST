@@ -3,6 +3,7 @@ MANIFEST
 README
 Makefile.PL
 Gsm.pm
+lib/Device/Gsm/Message.pm
 lib/Device/Gsm/Pdu.pm
 examples/send_sms.pl
 examples/send_to_cosimo.pl
