@@ -48,4 +48,6 @@ Revision history for Perl extension Device::Gsm.
 	- fixed documentation example (thanks to Domenico Viggiani)
 	- added `examples/send_to_cosimo.pl' script to report successful
 	  installations of Device::Gsm module :-)
+	- improved test scripts; now work also with env vars, and without too
+	  many `connect()'s
 
