@@ -1,4 +1,4 @@
-# $Id: Pdu.pm,v 1.1 2002-04-08 22:18:01 cosimo Exp $
+# $Id: Pdu.pm,v 1.2 2002-04-08 22:21:44 cosimo Exp $
 package Device::Gsm::Pdu;
 
 
@@ -56,4 +56,8 @@ sub encodeText ($) {
 }
 
 }
+
+
+
+1;
 
