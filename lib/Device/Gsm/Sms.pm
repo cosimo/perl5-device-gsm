@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.1 2003-03-23 12:59:07 cosimo Exp $
+# $Id: Sms.pm,v 1.2 2003-03-23 14:42:59 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -90,11 +90,6 @@ sub new {
 		return $status[ defined $self->{'status'} ? $self->{'status'} : 0 ];
 	}
 
-}
-
-sub sender () {
-	my $self = shift;
-	$self->{'DA'};
 }
 
 #
@@ -197,32 +192,108 @@ sub decode {
 
 	# Get list of tokens for this message (from ::Sms::Structure)
 	my $cPdu        = $self->{'pdu'};
+
+	# Check that PDU is not empty
+	return 0 unless $cPdu;
+
+	# Backup copy for "backtracking"
+	my $cPduCopy    = $cPdu;
+
 	my @token_names = $self->structure();
 	my $decoded     = 1;
 
 	while( @token_names ) {
 
 		# Create new token object
-		my $token = new Sms::Token( shift @token_names );
+		my $token = new Sms::Token( shift @token_names, {messageTokens => $self->{'tokens'}} );
 		if( ! defined $token ) {
 			$decoded = 0;
 			last;
 		}
 
 		# If decoding is completed successfully, add token object to message
-		_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
+#_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
 
 		if( $token->decode(\$cPdu) ) {
+
+			# Store token object into SMS message
 			$self->{'tokens'}->{ $token->name() } = $token;
-			_log('       ', $token->name(), ' DATA = ', $token->toString() );
+
+			# Catch message type indicator (MTI) and re-load structure 
+			if( $token->name() eq 'PDUTYPE' && $token->MTI() != $type ) {
+
+#_log('token PDUTYPE, data='.$token->data().' MTI='.$token->get('MTI').' ->MTI()='.$token->MTI());
+
+				#
+				# This is a SMS-SUBMIT message, so:
+				#
+				# 1) change type
+				# 2) restore original PDU message
+				# 3) reload token structure
+				# 4) restart decoding
+				#
+				$self->type( $type = SMS_SUBMIT );    # (!) ++
+				$cPdu = $cPduCopy;
+				@token_names = $self->structure();
+
+#_log('RESTARTING DECODING AFTER MTI DETECTION');
+#<STDIN>;
+				redo;
+			}
+
+_log('       ', $token->name(), ' DATA = ', $token->toString() );
+
 		}
 		
-		_log('PDU AFTER  ['.$cPdu.']', length($cPdu) );
+#_log('PDU AFTER  ['.$cPdu.']', length($cPdu) );
 
 	}
 
+_log("\n", 'PRESS ENTER TO CONTINUE');
+<STDIN>;
+
 	return $decoded;
 
+}
+
+#
+# Only valid for SMS_SUBMIT messages (?)
+#
+sub recipient {
+	my $self = shift;
+	if( $self->type() == SMS_SUBMIT ) {
+		my $t = $self->token('DA');
+		return $t->toString() if $t;
+	}
+}
+
+#
+# Only valid for SMS_DELIVER messages (?)
+#
+sub sender {
+	my $self = shift;
+	if( $self->type() == SMS_DELIVER ) {
+		my $t = $self->token('OA');
+		return $t->toString() if $t;
+	}
+}
+
+sub text {
+	my $self = shift;
+	my $t = $self->token('UD');
+	return $t->toString() if $t;
+}
+
+sub token ($) {
+	my($self, $token_name) = @_;
+	return undef unless $token_name;
+
+	if( exists $self->{'tokens'}->{$token_name} ) {
+		return $self->{'tokens'}->{$token_name};
+	} else {
+		warn('undefined token '.$token_name.' for this sms');
+		return undef;
+	}
 }
 
 =pod
