@@ -1,6 +1,6 @@
-# $Id: 03ident.t,v 1.1 2002-04-03 20:54:09 cosimo Exp $
+# $Id: 03ident.t,v 1.2 2002-04-03 20:59:13 cosimo Exp $
 #
-# test connection with a gsm device on serial port
+# test gsm device identification routines
 #
 use Test;
 BEGIN { plan tests => 4 };
