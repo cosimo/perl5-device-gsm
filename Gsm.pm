@@ -13,14 +13,14 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.18 2002-09-25 22:08:46 cosimo Exp $
+# $Id: Gsm.pm,v 1.19 2003-03-23 14:42:06 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
-use Device::Gsm::Message;
+use Device::Gsm::Sms;
 use Device::Gsm::Pdu;
 
 @Device::Gsm::ISA = ('Device::Modem');
@@ -264,7 +264,7 @@ sub messages() {
 		$self->log->write('debug', 'data[] = ', $data[0] );
 
 		# Instance new message object
-		my $msg = new Device::Gsm::Message(
+		my $msg = new Device::Gsm::Sms(
 			header => shift @data,
 			pdu    => shift @data
 		);
@@ -637,10 +637,13 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       class     => 'normal'
   );
 
-
   # Test network signal
   print "Signal power seems to be ", $gsm->signal_quality(), " dBm\n";
 
+  # Get list of Device::Gsm::Sms message objects
+  # see `examples/read_messages.pl' for all the details
+  my @messages = $gsm->messages();
+  
 
 =head1 DESCRIPTION
 
