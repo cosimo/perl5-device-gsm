@@ -27,3 +27,13 @@ Revision history for Perl extension Device::Gsm.
 	- hangup() method
 	- imei() / serial_number() method with test case
 
+1.09  Tue Apr  9 00:19:02 CEST 2002
+	- Pdu.pm added with functions to treat PDU encoded data
+	- added _send_sms_pdu() internal method
+
+1.10  Wed Apr 10 00:20:28 CEST 2002
+	- fixed and renamed Pdu.pm functions
+	- send_sms() new parameters that dispatch calls to
+	  _send_sms_pdu() and _send_sms_text() to allow text and PDU modes
+	- send_sms() now works! (with siemens C25/35/45)
+
