@@ -1,9 +1,11 @@
 Changes
 MANIFEST
 MANIFEST.SKIP
+INSTALL
 README
 Makefile.PL
 Gsm.pm
+docs/Gsm.html
 lib/Device/Gsm/Pdu.pm
 lib/Device/Gsm/Sms.pm
 lib/Device/Gsm/Sms/Structure.pm
@@ -21,7 +23,6 @@ lib/Device/Gsm/Sms/Token/VP.pm
 examples/send_sms.pl
 examples/send_to_cosimo.pl
 examples/read_messages.pl
-Gsm.html
 t/01basic.t
 t/02info.t
 t/04syslog.t
