@@ -1,5 +1,10 @@
 Revision history for Perl extension Device::Gsm.
 
+1.34  Wed Aug 18 09:10:48 CEST 2004
+    - fixed delete_sms() command syntax and results parsing. Thanks
+      to all users that reported problems.
+    - added an example script on how to delete sms messages.
+
 1.33  Wed May 26 13:52:43 CEST 2004
     - added delete_sms() method. For now, works only in PDU mode.
     - fixed messages() newline regex split pattern
