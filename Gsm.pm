@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.16 2002-09-03 21:36:53 cosimo Exp $
+# $Id: Gsm.pm,v 1.17 2002-09-11 22:21:41 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -128,6 +128,48 @@ sub imei() {
 
 # Alias for `imei()' is `serial_number()'
 *serial_number = *imei;
+
+
+# Get mobile phone signal quality
+sub signal_quality() {
+	my $self = shift;
+	# Error code, dBm (signal power), bit error rate
+	my($code, $dBm, $ber);
+
+	# Test if signal quality command is implemented
+	if( $self->test_command('CSQ') ) {
+		
+		$self->atsend( 'AT+CSQ' . Device::Modem::CR );
+		($code, $dBm) = $self->parse_answer();
+
+		if( $dBm =~ /\+CSQ: (\d+),(\d+)/ ) {
+
+			($dBm, $ber) = ($1, $2);
+
+			# Further process dBm number to obtain real dB power
+			if( $dBm > 30 ) {
+				$dBm = -51;
+			} else {
+				$dBm = -113 + ($dBm << 1);
+			}
+		
+			$self->log->write('info', 'signal dBm power is ['.$dBm.'], bit error rate ['.$ber.']');
+
+		} else {
+
+			$self->log->write('warn', 'cannot obtain signal dBm power');
+
+		}
+
+	} else {
+
+		$self->log->write('warn', 'signal quality command not supported!');
+
+	}
+
+	return $dBm;
+
+}
 
 
 # Get the GSM software version on this device
@@ -478,7 +520,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
 	$imei = $gsm->serial_number();
  
   # Test for command support
-  if( $self->test_command('CGMI') ) {
+  if( $gsm->test_command('CGMI') ) {
       # `AT+CGMI' is supported!
   } else {
       # No luck, CGMI command not available
@@ -488,13 +530,13 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   $gsm->service_center( '+001505050' );   # Sets new number
   
   # Send quickly a short text message
-  $modem->send_sms(
+  $gsm->send_sms(
       recipient => '+3934910203040',
       content   => 'Hello world! from Device::Gsm'
   );
 
   # The long way...
-  $modem->send_sms(
+  $gsm->send_sms(
 
       recipient => '34910203040',
       content   => 'Hello world again, with more args',
@@ -508,7 +550,9 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       # `flash' mode delivers instantly!
       class     => 'normal'
   );
- 
+
+  print "Signal power seems to be ", $gsm->signal_quality(), " dBm\n";
+
 
 =head1 DESCRIPTION
 
