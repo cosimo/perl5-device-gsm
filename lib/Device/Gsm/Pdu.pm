@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Pdu.pm,v 1.6 2003-03-23 12:59:07 cosimo Exp $
+# $Id: Pdu.pm,v 1.7 2004-03-23 22:10:07 cosimo Exp $
 
 package Device::Gsm::Pdu;
 
@@ -58,7 +58,11 @@ sub decode_text7($) {
 	my $bits;
 	while( $text7 ) {
 		$bits .= unpack 'b8' => pack 'H2' => substr $text7, 0, 2;
-		$text7 = substr $text7, 2;
+		if( length($text7) > 2 ) {
+			$text7 = substr($text7, 2);
+		} else {
+			$text7 = '';
+		}
 	}
 #	print "bits = $bits (length=".length($bits).")\n";
 
