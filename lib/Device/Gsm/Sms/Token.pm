@@ -1,4 +1,4 @@
-# $Id: Token.pm,v 1.1 2003-03-23 12:59:07 cosimo Exp $
+# $Id: Token.pm,v 1.2 2003-03-23 14:43:46 cosimo Exp $
 
 package Sms::Token;
 
@@ -15,9 +15,21 @@ use constant DECODED => 2;
 # new token ( @data )
 #
 sub new {
-	my($proto, $name, @data) = @_;
+	my($proto, $name, $options ) = @_;
 #	my $class = ref $proto || $proto;
-	my %token = ( __name => $name, __data => \@data, __state => '' );
+	$options->{'data'} ||= [];
+
+	# Create basic structure for a token
+	my %token = (
+		# Name of token, see ->name()
+		__name => $name,
+		# Data that token contains
+		__data => $options->{'data'},
+		# Decoded? or error?
+		__state => '',
+		# This is used to access other tokens in the "message"
+		__messageTokens => $options->{'messageTokens'}
+	);
 
 	# Dynamically load required token module
 	eval { require "Device/Gsm/Sms/Token/$name.pm" };
@@ -62,6 +74,25 @@ sub get {
 	return undef unless $info;
 
 	return $self->{"_$info"};
+}
+
+# XXX This must be filled by the higher level object that
+# treats the entire message in tokens
+#
+# [token]->messageTokens( [name] )
+#
+sub messageTokens {
+	# Usually this is a hash of token objects, accessible by key (token name) 
+	my $self = shift;
+	my $name;
+	if( @_ ) {
+		$name = shift;
+	}
+	if( defined $name ) {
+		return $self->{'__messageTokens'}->{$name};
+	} else {
+		return $self->{'__messageTokens'};
+	}
 }
 
 sub name {
