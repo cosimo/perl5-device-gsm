@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.12 2002-04-24 18:46:18 cosimo Exp $
+# $Id: Gsm.pm,v 1.13 2002-04-24 18:56:05 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -25,7 +25,7 @@ use Device::Gsm::Pdu;
 @Device::Gsm::ISA = ('Device::Modem');
 
 # Connection defaults to 19200 baud. This seems to be the optimal
-# rate for serial links to new gsm devices
+# rate for serial links to new gsm phones.
 $Device::Gsm::BAUDRATE = 19200;
 
 # Time to wait after network register command (secs)
@@ -39,7 +39,22 @@ sub connect {
 	my %aOpt;
 	%aOpt = @_ if(@_);
 
-	# GSM defaults to 9600 baud
+	#
+	# If you have problems with bad characters being trasmitted across serial link,
+	# try different baud rates, as below...
+	#
+	# .---------------------------------.
+	# | Model (phone/modem) |  Baudrate |
+	# |---------------------+-----------|
+	# | Falcom Swing (A2D)  |      9600 |
+	# | Siemens C35/C45     |     19200 |
+	# | Nokia phones        |     19200 |
+	# | Digicom             |      9600 |
+	# | Nokia Communicator  |      9600 |
+	# `---------------------------------'
+	#
+	# GSM class defaults to 19200 baud
+	#
 	$aOpt{'baudrate'} ||= $Device::Gsm::BAUDRATE;
 
 	$me->SUPER::connect( %aOpt );
@@ -489,7 +504,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
       class     => 'normal',
 
       # SMS sending mode
-      # try `text' or old phones or GSM modems (as Falcom or Digicom),
+      # try `text' or old phones or GSM modems
       # `pdu' is the default nowadays
       mode      => 'pdu'
   );
