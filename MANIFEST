@@ -5,11 +5,9 @@ Makefile.PL
 Gsm.pm
 lib/Device/Gsm/Pdu.pm
 examples/send_sms.pl
+examples/send_to_cosimo.pl
 Gsm.html
 t/01basic.t
-t/02connect.t
-t/03ident.t
+t/02info.t
 t/04syslog.t
-t/10servcenter.t
 t/20pdu.t
-t/30register.t
