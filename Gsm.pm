@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.31 2004-04-28 20:49:03 cosimo Exp $
+# $Id: Gsm.pm,v 1.32 2004-05-25 21:30:15 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.31 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.32 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -478,7 +478,7 @@ sub _read_messages_pdu {
 	# Ok, messages read, now convert from PDU and store in object
 	$self->log->write('debug', 'messages='.$messages );
 
-	my @data = split /\r+\n*/m, $messages;
+	my @data = split /[\r\n]+/m, $messages;
 
 	# Check for errors on SMS reading
 	my $code;
