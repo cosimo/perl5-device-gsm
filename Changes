@@ -1,7 +1,21 @@
 Revision history for Perl extension Device::Gsm.
 
-1.24  Wed Jan 21 23:32:45 CET 2004
+1.28
+  ||
+1.25  Fri Jan 23 00:59:16 CET 2004
+    - further documentation, troubleshooting and autoscan utility
+	  sections
+	- added all new pdu sms token-oriented decoding classes
+	  (this is an 80% complete implementation, mostly regarding charset
+	  conversion issues)
+	- Device::Gsm::Sms public class is now documented properly
+
+1.24
+  ||
+1.20  Wed Jan 21 23:32:45 CET 2004
 	- completed full documentation (to be revised)
+	- documented working irda/bluetooth connections (always
+	  through device::serialport :-)
 
 1.19
 1.18  Mon Mar 24 23:32:27 CET 2003
