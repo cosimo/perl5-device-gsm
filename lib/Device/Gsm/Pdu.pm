@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Pdu.pm,v 1.5 2002-05-22 21:49:05 cosimo Exp $
+# $Id: Pdu.pm,v 1.6 2003-03-23 12:59:07 cosimo Exp $
 
 package Device::Gsm::Pdu;
 
@@ -20,14 +20,22 @@ sub decode_address {
 	my $number;
 	my($length, $type, $bcd_digits) = unpack('A2 A2 A*', $address);
 
+	# XXX DEBUG
+	#print STDERR "len=$length type=$type bcd=$bcd_digits\n";
+
 	# Reverse each pair of bcd digits
 	while( $bcd_digits ) {
 		$number .= reverse substr( $bcd_digits, 0, 2 );
 		$bcd_digits = substr $bcd_digits, 2;
 	}
 
-	# Truncate last `F' if found
-	$number = substr( $number, 0, hex($length) );
+	#print STDERR "num=$number - ";
+
+	# Truncate last `F' if found (XXX ???)
+	#$number = substr( $number, 0, hex($length) );
+	chop $number if substr($number, -1) eq 'F';
+
+	#print STDERR "num=$number";
 
 	# If number is international, put a '+' sign before
 	$number = '+'.$number if $type == 91;
