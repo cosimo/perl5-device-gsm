@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.13 2002-04-24 18:56:05 cosimo Exp $
+# $Id: Gsm.pm,v 1.14 2002-04-29 16:54:18 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -86,7 +86,7 @@ sub manufacturer() {
 
 	}
 
-	return $ok eq 'OK' ? $man : $ok;
+	return $man || $ok;
 
 }
 
@@ -105,7 +105,7 @@ sub model() {
 
 	}
 
-	return $code eq 'OK' ? $model : $code;
+	return $model || $code;
 }
 
 # Get handphone serial number (IMEI number)
@@ -123,7 +123,7 @@ sub imei() {
 
 	}
 
-	return $code eq 'OK' ? $imei : $code;
+	return $imei || $code;
 }
 
 # Alias for `imei()' is `serial_number()'
@@ -145,7 +145,7 @@ sub software_version() {
 
 	}
 
-	return $code eq 'OK' ? $ver : $code;
+	return $ver || $code;
 }
 
 
@@ -284,7 +284,7 @@ sub _send_sms_text {
 	# Select text format for messages
 	$me->atsend(  q[AT+CMGF=1] . Device::Modem::CR );
 	$me->wait(200);
-	$me->log_>write('info', 'Selected text format for message sending');
+	$me->log->write('info', 'Selected text format for message sending');
 
 	# Send sms in text mode
 	$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
@@ -356,7 +356,7 @@ sub _send_sms_pdu {
 	# Select PDU format for messages
 	$me->atsend(  q[AT+CMGF=0] . Device::Modem::CR );
 	$me->wait(200);
-	$me->log_>write('info', 'Selected PDU format for msg sending');
+	$me->log->write('info', 'Selected PDU format for msg sending');
 
 	# Send SMS length
 	$me->atsend( qq[AT+CMGS=$len] . Device::Modem::CR );
