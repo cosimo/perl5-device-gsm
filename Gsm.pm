@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.23 2003-12-15 23:03:19 cosimo Exp $
+# $Id: Gsm.pm,v 1.24 2004-01-10 22:14:32 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.23 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -50,8 +50,8 @@ sub connect {
 	# | Falcom Swing (A2D)  |      9600 |
 	# | Siemens C35/C45     |     19200 |
 	# | Nokia phones        |     19200 |
-	# | Digicom             |      9600 |
 	# | Nokia Communicator  |      9600 |
+	# | Digicom             |      9600 |
 	# `---------------------------------'
 	#
 	# GSM class defaults to 19200 baud
@@ -71,7 +71,7 @@ sub datetime {
 	my @time     = ();               # array in "localtime" format
 
 	# Test support for clock function
-	if( $self->test_command('CCLK') ) {
+	if( $self->test_command('+CCLK') ) {
 
 		if( @_ ) {
 
@@ -142,7 +142,7 @@ sub manufacturer() {
 	my($ok, $man);
 
 	# Test if manufacturer code command is supported
-	if( $self->test_command('CGMI') ) {
+	if( $self->test_command('+CGMI') ) {
 
 		$self->atsend( 'AT+CGMI' . Device::Modem::CR );
 		($ok, $man) = $self->parse_answer();
@@ -163,7 +163,7 @@ sub model() {
 	my($code, $model);
 
 	# Test if manufacturer code command is supported
-	if( $self->test_command('CGMM') ) {
+	if( $self->test_command('+CGMM') ) {
 
 		$self->atsend( 'AT+CGMM' . Device::Modem::CR );
 		($code, $model) = $self->parse_answer();
@@ -183,7 +183,7 @@ sub imei() {
 	my($code,$imei);
 
 	# Test if manufacturer code command is supported
-	if( $self->test_command('CGSN') ) {
+	if( $self->test_command('+CGSN') ) {
 
 		$self->atsend( 'AT+CGSN' . Device::Modem::CR );
 		($code, $imei) = $self->parse_answer();
@@ -207,7 +207,7 @@ sub signal_quality() {
 	my($code, $dBm, $ber);
 
 	# Test if signal quality command is implemented
-	if( $self->test_command('CSQ') ) {
+	if( $self->test_command('+CSQ') ) {
 
 		$self->atsend( 'AT+CSQ' . Device::Modem::CR );
 		($code, $dBm) = $self->parse_answer();
@@ -250,7 +250,7 @@ sub software_version() {
 	my($code, $ver);
 
 	# Test if manufacturer code command is supported
-	if( $self->test_command('CGMR') ) {
+	if( $self->test_command('+CGMR') ) {
 
 		$self->atsend( 'AT+CGMR' . Device::Modem::CR );
 		($code, $ver) = $self->parse_answer();
@@ -268,9 +268,15 @@ sub software_version() {
 sub test_command {
 	my($self, $command) = @_;
 
+	# Support old code adding a `+' if not specified
+	# TODO to be removed in 1.30 ?
+	if( $command =~ /^[a-zA-Z]/ ) {
+		$command = '+'.$command;
+	}
+
 	# Standard test procedure for every command
 	$self->log->write('info', 'testing support for command ['.$command.']');
-	$self->atsend( "AT+$command=?" . Device::Modem::CR );
+	$self->atsend( "AT$command=?" . Device::Modem::CR );
 
 	# If answer is ok, command is supported
 	my $ok = ($self->answer() || '') =~ /OK/o;
@@ -817,51 +823,11 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   # Register to GSM network (you must supply PIN number in above new() call)
   $gsm->register();
 
-  # Get the manufacturer and model code of device
-  my $mnf   = $gsm->manufacturer();
-  my $model = $gsm->model();
-  print "soft version is ", $gsm->software_version(), "\n";
-
-  my $imei = $gsm->imei() or
-	$imei = $gsm->serial_number();
-
-  # Test for command support
-  if( $gsm->test_command('CGMI') ) {
-      # `AT+CGMI' is supported!
-  } else {
-      # No luck, CGMI command not available
-  }
-
-
-  print 'Service number is now: ', $gsm->service_center(), "\n";
-  $gsm->service_center( '+001505050' );   # Sets new number
-
-
   # Send quickly a short text message
   $gsm->send_sms(
       recipient => '+3934910203040',
       content   => 'Hello world! from Device::Gsm'
   );
-
-
-  # The long way...
-  $gsm->send_sms(
-
-      recipient => '34910203040',
-      content   => 'Hello world again, with more args',
-
-      # SMS sending mode
-      # try `text' on old phones or GSM modems
-      # `pdu' is the default nowadays
-      mode      => 'pdu',
-
-      # SMS Class (can be `normal' or `flash')
-      # `flash' mode delivers instantly!
-      class     => 'normal'
-  );
-
-  # Test network signal
-  print "Signal power seems to be ", $gsm->signal_quality(), " dBm\n";
 
   # Get list of Device::Gsm::Sms message objects
   # see `examples/read_messages.pl' for all the details
@@ -872,20 +838,44 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
 C<Device::Gsm> class implements basic GSM functions, network registration and SMS sending.
 
 This class supports also C<PDU> mode to send C<SMS> messages, and should be
-fairly usable. I'm developing and testing it under C<Linux RedHat 7.1>
-with a 16550 serial port and C<Siemens C35i> / C<C45> GSM phones attached with
-a Siemens-compatible serial cable.
+fairly usable. In the past, I have developed and tested it under Linux RedHat 7.1
+with a 16550 serial port and Siemens C35i/C45 GSM phones attached with
+a Siemens-compatible serial cable. Currently, I'm developing and testing this stuff
+with Linux Slackware 9.1 and a B<Cambridge Silicon Radio> (CSR) USB
+bluetooth dongle, connecting to a Nokia 6600 phone.
 
 Please be kind to the universe and contact me if you have troubles or you are
 interested in this.
 
 Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
-use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
+use the C<examples/send_to_cosimo.pl> script to make me know that Device::Gsm works
 with your device (thanks!).
+
 
 =head1 METHODS
 
-=head2 XXX TO BE COMPLETED XXX
+The following documents all supported methods with simple examples of usage.
+
+=head2 connect()
+
+This is the main call that connects to the appropriate device. After the
+connection has been established, you can start issuing commands.
+The list of accepted parameters (to be specified as hash keys and values) is
+the same of C<Device::SerialPort> (or C<Win32::SerialPort> on Windows platform),
+as all parameters are passed to those classes' connect() method.
+
+The default value for C<baudrate> parameter is C<19200>.
+
+Example:
+
+	my $gsm = Device::Gsm->new( port=>'/dev/ttyS0', log=>'syslog' );
+	# ...
+	if( $gsm->connect(baudrate => 19200) ) {
+		print "Connected!";
+	} else {
+		print "Could not connect, sorry!";
+	}
+	# ...
 
 =head2 datetime()
 
@@ -909,6 +899,73 @@ Another variant allows to pass a C<localtime> array to set the correspondent dat
 
 (Note the list context). Again you can read the details for C<localtime> function
 with C<perldoc -f localtime>.
+
+If your device does not support this command, an B<undefined> value will be returned
+in either case.
+
+
+=head2 hangup()
+
+Hangs up the phone, terminating the active calls, if any.
+This method has been never tested on real "live" conditions, but it needs to be
+specialized for GSM phones, because it relies on C<+HUP> GSM command.
+Example:
+
+	$gsm->hangup();
+
+
+=head2 manufacturer()
+
+Returns the device manufacturer, usually only the first word (example: C<Nokia>,
+C<Siemens>, C<Falcom>, ...). Example:
+
+	my $man_name = $gsm->manufacturer();
+	if( $man_name eq 'Nokia' ) {
+		print "We have a nokia phone...";
+	} else {
+		print "We have a $man_name phone...";
+	}
+
+
+=head2 model()
+
+Returns phone/device model name or number. Example:
+
+	my $model = $gsm->model();
+
+For example, for Siemens C45, C<$model> holds C<C45>; for Nokia 6600, C<$model>
+holds C<6600>.
+
+
+=head2 imei()
+
+Returns the device own IMEI number (International Mobile Equipment Identifier ???).
+This identifier is numeric and should be unique among all GSM mobile devices and phones.
+This is not really true, but ... . Example:
+
+	my $imei = $gsm->imei();
+
+
+=head2 signal_quality()
+
+Returns the measure of signal quality expressed in dBm units, where near to zero is better.
+An example value is -91 dBm, and reported value is C<-91>. Values should range from
+-113 to -51 dBm, where -113 is the minimum signal quality and -51 is the theorical maximum quality.
+
+	my $level = $gsm->signal_quality();
+
+If signal quality can't be read or your device does not support this command,
+an B<undefined> value will be returned.
+
+=head2 software_version()
+
+Returns the device firmare version, as stored by the manufacturer. Example:
+
+	my $rev = $gsm->software_revision();
+
+For example, for my Siemens C45, C<$rev> holds C<06>.
+
+=head2 test_command( [cmd] )
 
 =head2 XXX TO BE COMPLETED XXX
 
