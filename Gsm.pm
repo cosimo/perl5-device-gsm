@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.20 2003-03-25 06:35:37 cosimo Exp $
+# $Id: Gsm.pm,v 1.21 2003-03-25 22:50:03 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -559,6 +559,54 @@ sub service_center(;$) {
 
 	# Status flag or service center number
 	return $lOk;
+
+}
+
+# Transform ascii char set to gsm 3.38 charset
+{
+
+	# The following is the GSM 3.38 standard charset, as shown
+	# on some Siemens documentation found on the internet
+	my $gsm_charset = join('',
+		'@»$»»»»»»»'."\n".'»»'."\r".'»»',
+		'?»?????????»ß»',
+		' !"# %&‘()*+,-./',
+		'0123456789:;<=>?',
+		'-ABCDEFGHIJKLMNO',
+		'PQRSTUVWXYZÄÖ»Ü»',
+		'¨abcdefghijklmno',
+		'pqrstuvwxyzäö»ü»'
+	);
+
+sub _ascii2gsm {
+	my $self = shift;
+	my $ascii = shift;
+
+	return '' unless $ascii;
+
+	my $gsm = '';
+	my $n = 0;
+	for( ; $n < length($ascii) ; $n++ ) {
+		$gsm .= chr index($gsm_charset, substr($ascii, $n, 1));
+	}
+
+	return $gsm;
+}
+
+sub _gsm2ascii {
+	my $self = shift;
+	my $gsm = shift;
+	return '' unless $gsm;
+
+	my $ascii = '';
+	my $n = 0;
+
+	for( ; $n < length($gsm) ; $n++ ) {
+		$ascii .= substr( $gsm_charset, ord( substr($gsm,$n,1) ), 1 );
+	}
+
+	return $ascii;
+}
 
 }
 
