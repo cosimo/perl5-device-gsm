@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.15 2002-05-22 20:45:37 cosimo Exp $
+# $Id: Gsm.pm,v 1.16 2002-09-03 21:36:53 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -521,6 +521,10 @@ a Siemens-compatible serial cable.
 
 Please be kind to the universe and contact me if you have troubles or you are
 interested in this.
+
+Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
+use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
+with your device (thanks!).
 
 =head2 REQUIRES
 
