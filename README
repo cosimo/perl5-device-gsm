@@ -10,20 +10,26 @@ SYNOPSIS
       use Device::Gsm;
 
       # NOT YET DEFINED!
-      my $modem = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
+      my $gsm = new Device::Gsm( port => '/dev/ttyS1', PIN => '0124' );
 
-      if( $modem->connect() ) {
+      if( $gsm->connect() ) {
           print "connected!\n";
       } else {
-          print "sorry, no connection with serial port!\n';
+          print "sorry, no connection with gsm phone on serial port!\n';
       }
 
       # Register to GSM network (you must supply PIN number in above new() call)
-      $modem->register();
-
+      $gsm->register();
+ 
+      # Set service center number (depends on your network operator)
+      $gsm->service_number( '+001505050' );   # This one is fake, not usable!
+ 
+      # Retrieve actual stored service number
+      print 'Service number is now: ', $gsm->service_number(), "\n";
+ 
       # Send a short text message (SMS)
       $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
-
+ 
 DESCRIPTION
     Device::Gsm class implements basic GSM network registration and SMS
     sending functions. For now, it is only an example that inherits from

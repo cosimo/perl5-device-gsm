@@ -44,17 +44,27 @@
   use Device::Gsm;</PRE>
 <PRE>
   # NOT YET DEFINED!
-  my $modem = new Device::Gsm( port =&gt; '/dev/ttyS1', PIN =&gt; '0124' );</PRE>
+  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', PIN =&gt; '0124' );</PRE>
 <PRE>
-  if( $modem-&gt;connect() ) {
+  if( $gsm-&gt;connect() ) {
       print &quot;connected!\n&quot;;
   } else {
-      print &quot;sorry, no connection with serial port!\n';
+      print &quot;sorry, no connection with gsm phone on serial port!\n';
   }</PRE>
 <PRE>
   # Register to GSM network (you must supply PIN number in above new() call)
-  $modem-&gt;register();</PRE>
+  $gsm-&gt;register();
+</PRE>
 <PRE>
+
+  # Set service center number (depends on your network operator)
+  $gsm-&gt;service_number( '+001505050' );   # This one is fake, not usable!</PRE>
+<PRE>
+
+  # Retrieve actual stored service number
+  print 'Service number is now: ', $gsm-&gt;service_number(), &quot;\n&quot;;</PRE>
+<PRE>
+
   # Send a short text message (SMS)
   $modem-&gt;send_sms( '0123456789', 'A little message from Device::Gsm' );</PRE>
 <P>
