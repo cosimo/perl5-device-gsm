@@ -9,13 +9,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.8 2004-03-23 22:27:14 cosimo Exp $
+# $Id: Sms.pm,v 1.9 2004-08-18 07:08:47 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
 use integer;
+
 use constant SMS_DELIVER => 0x00;
 use constant SMS_SUBMIT  => 0x01;
+use constant SMS_STATUS  => 0x02;
 
 use Device::Gsm::Pdu;
 use Device::Gsm::Sms::Structure;
@@ -206,7 +208,7 @@ sub decode {
 		}
 
 		# If decoding is completed successfully, add token object to message
-#_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
+_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
 
 		if( $token->decode(\$cPdu) ) {
 
@@ -214,28 +216,41 @@ sub decode {
 			$self->{'tokens'}->{ $token->name() } = $token;
 
 			# Catch message type indicator (MTI) and re-load structure
-			if( $token->name() eq 'PDUTYPE' && $token->MTI() != $type ) {
+            # We must also skip message types 0x02 and 0x03 because we don't handle them currently
+			if( $token->name() eq 'PDUTYPE' ) {
+            
+                my $mti = $token->MTI();
 
+=cut
+                # If MTI has bit 1 on, this could be a SMS-STATUS message (0x02), or (0x03???)
+                if( $mti >= SMS_STATUS ) {
+                    _log('skipping unhandled message type ['.$mti.']');
+                    return undef;
+                }
+=cut
+
+                if( $mti != $type ) {
 #_log('token PDUTYPE, data='.$token->data().' MTI='.$token->get('MTI').' ->MTI()='.$token->MTI());
+                    #
+                    # This is a SMS-SUBMIT message, so:
+                    #
+                    # 1) change type
+                    # 2) restore original PDU message
+                    # 3) reload token structure
+                    # 4) restart decoding
+                    #
+                    $self->type( $type = $mti );
 
-				#
-				# This is a SMS-SUBMIT message, so:
-				#
-				# 1) change type
-				# 2) restore original PDU message
-				# 3) reload token structure
-				# 4) restart decoding
-				#
-				$self->type( $type = SMS_SUBMIT );    # (!) ++
-				$cPdu = $cPduCopy;
-				@token_names = $self->structure();
+                    $cPdu = $cPduCopy;
+                    @token_names = $self->structure();
 
-#_log('RESTARTING DECODING AFTER MTI DETECTION');
-#<STDIN>;
-				redo;
-			}
+#_log('RESTARTING DECODING AFTER MTI DETECTION'); #<STDIN>;
+    				redo;
+	    		}
 
 #_log('       ', $token->name(), ' DATA = ', $token->toString() );
+
+            }
 
 		}
 
