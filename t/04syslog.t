@@ -1,4 +1,4 @@
-# $Id: 04syslog.t,v 1.1 2002-04-03 20:59:13 cosimo Exp $
+# $Id: 04syslog.t,v 1.2 2002-04-03 21:41:18 cosimo Exp $
 #
 # test syslog mechanism
 #
@@ -10,5 +10,5 @@ ok(1);
 
 my $gsm = new Device::Gsm( port => '/dev/ttyS0', log => 'syslog' );
 
-ok( $gsm->log->write('syslog test here') );
+ok( $gsm->log->write('info', 'syslog test here') );
 
