@@ -12,6 +12,7 @@ examples/send_to_cosimo.pl
 examples/sync_time.pl
 Gsm.pm
 INSTALL
+lib/Device/Gsm/Charset.pm
 lib/Device/Gsm/Pdu.pm
 lib/Device/Gsm/Sms.pm
 lib/Device/Gsm/Sms/Structure.pm
