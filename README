@@ -72,7 +72,7 @@ connected to the serial port.
 I normally test it with both Linux and Win32 and
 it works equally well. It is known to work also on Solaris,
 FreeBSD, NetBSD (packaged with NetBSD perl installation
-as Feb 2003), and Commodore 64 :-)
+as Feb 2003), OpenBSD and Commodore 64 :-)
 
 
 ,-------------------------.
@@ -85,6 +85,19 @@ As with 99,9% of perl extensions, can be installed with:
 - make
 - make test
 - make install (normally, as super-user)
+
+
+,-------------------------.
+|    LICENSING TERMS      |
+`-------------------------'
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+Additionally, this is BETA software, so use it at your own risk,
+and without ANY warranty!
+For any need of commercial support and/or licensing, please contact
+me directly: Cosimo Streppone <cosimo@cpan.org>
+
 
 
 Have fun.
