@@ -3,14 +3,14 @@
 # Short example of use for Device::Gsm class
 # Get date and time from phone 
 #
-# $Id: sync_time.pl,v 1.1 2003-12-15 22:39:42 cosimo Exp $
+# $Id: sync_time.pl,v 1.2 2003-12-15 22:50:12 cosimo Exp $
 
 use strict;
 use lib 'blib/arch';
 use lib 'blib';
 use Device::Gsm;
 
-print "\nthis is ", '$Id: sync_time.pl,v 1.1 2003-12-15 22:39:42 cosimo Exp $', "\n";
+print "\nthis is ", '$Id: sync_time.pl,v 1.2 2003-12-15 22:50:12 cosimo Exp $', "\n";
 print "This script tries to set phone date/time to that of your PC clock\n";
 
 my $gsm = conn();
@@ -37,7 +37,7 @@ sub conn {
 	print "Select your serial port [$port] : ";
 	chomp( $myport = <STDIN> );
 	$myport ||= $port;
-	my $gsm = new Device::Gsm( port => $myport, log => 'file,synctime.log', loglevel=>'info' );
+	my $gsm = new Device::Gsm( port => $myport, log => 'file,sync_time.log', loglevel=>'info' );
 	die "cannot create Device::Gsm object!" unless $gsm;
 	$gsm->connect( baudrate => 19200 ) or die "cannot connect to GSM device on [$myport]\n";
 	return $gsm;
