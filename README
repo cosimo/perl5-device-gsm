@@ -55,7 +55,7 @@ SYNOPSIS
           class     => 'normal',
 
           # SMS sending mode
-          # try `text' or old phones or GSM modems (as Falcom or Digicom),
+          # try `text' or old phones or GSM modems
           # `pdu' is the default nowadays
           mode      => 'pdu'
       );
@@ -76,7 +76,7 @@ DESCRIPTION
 
     *   Device::Modem, which in turn requires
 
-    *   Device::SerialPort
+    *   Device::SerialPort (or Win32::SerialPort on Windows machines)
 
   EXPORT
 
@@ -96,5 +96,6 @@ AUTHOR
     Cosimo Streppone, cosimo@cpan.org
 
 SEE ALSO
-    Device::Modem(3), Device::SerialPort(3), perl(1)
+    the Device::Modem manpage, the Device::SerialPort manpage, the
+    Win32::SerialPort manpage, perl(1)
 
