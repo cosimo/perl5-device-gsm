@@ -37,3 +37,8 @@ Revision history for Perl extension Device::Gsm.
 	  _send_sms_pdu() and _send_sms_text() to allow text and PDU modes
 	- send_sms() now works! (with siemens C25/35/45)
 
+1.14  Mon Apr 29 18:54:36 CEST 2002
+	- fixed errors in debugging
+	- fixed errors in AT command response handling (still to-do)
+	- included network registration test (must supply PIN in t/30register.t)
+
