@@ -1,0 +1,65 @@
+Subject: Device GSM module question
+Date: Wed, 5 Feb 2003 10:34:05 +0100
+From: Haris Bjelak <haris.bjelak@ic-mp.org>
+To: "'cosimo@cpan.org'" <cosimo@cpan.org>
+
+Hi Cosimo,
+
+Thanks for your very usefull module, I've used it to build SMS 2 E-mail
+bidirectional gateway, and today I'm going to test it within my company,
+just to see how it behaves in high volume environment.
+I did add a couple of subroutines to your module (receive and delmessage) to
+be able to get SMS messages out of my Nokia 6210, and it works lika a charm.
+Please find them at the end of this e-mail if you want to include them in
+new version of Device::GSM.
+
+Anyway, I have a couple of questions that you may be able to answer, as I
+believe you have much more experience here:
+
+1. If I send e-mail with "@" character in message body to GSM user, when SMS
+is received, "@" is converted somehow into "i". Example:
+        "Hi X, here is the e-mail address : someone@com.com" would become
+"Hi X, here is the e-mail address : someoneicom.com" when received on
+mobile.
+ Any idea why this is happening? If I send SMS with the same message to
+mailbox, message arrives as it is, correctly. I'm using the same mechanism
+to parse message, so I'm kinda confused.
+
+2. When sending multiple lines of text from e-mail to sms, like this:
+
+Hi,
+here
+I am
+
+It will arrive fine to GSM device, but if this message is replied to with
+"include original message" turned on, the newline characters will become
+visible.
+
+Any ideas welcome.
+
+Thanks,
+Haris
+
+********************************************
+# Receive
+sub receive() {
+
+        my $self = shift;
+        my(@mess);
+        $self->atsend( 'AT+CMGF=1' . Device::Modem::CR );
+        (@mess) = $self->parse_answer();
+        $self->atsend( 'AT+CMGR='."@_" . Device::Modem::CR );
+        (@mess) = $self->parse_answer();
+        return @mess;
+}
+
+# Delete Message
+sub delmessage() {
+        my $self = shift;
+        my(@mess);
+        $self->atsend( 'AT+CMGF=1' . Device::Modem::CR );
+        (@mess) = $self->parse_answer();
+        $self->atsend( 'AT+CMGD='."@_" . Device::Modem::CR );
+        (@mess) = $self->parse_answer();
+        return @mess;
+}

@@ -1,0 +1,694 @@
+
+sub usagefile_log {
+    my $msg = shift;
+    my $usagefile = "/tmp/sms-log.txt";
+    open(HB,">> $usagefile");
+    print HB $msg."\n";
+    close(HB);
+    print $msg."\n";
+}
+
+#
+# poll and receive messages from modem
+# return array of messages
+# useful params in hash: $msg->{'sender_number'}, $msg->{'msg_content'}, $msg->{'timestamp'}
+#
+
+sub receive_messages {
+  my $me = shift;
+  $me->atsend( "AT+CMGL=4" . Device::Modem::CR );
+
+  # 30 seconds. Listing of all messages can be slow.
+  my $buff = read_till_ok($me,30000);
+
+  # Separate response code from information
+  my @res = split(/[\r\n]+/, $buff);
+  my @allmsg;
+
+  # scan the lines
+  # we should only grab the msg numbers to play safe because
+  # nokia 6210 does not list the full messages for the last few
+  # when there are a lot to be listed.
+  # but we don't do that here
+  # don't care about msg if msg_incomplete detected
+  for (my $l=0; $l<=$#res; $l++) {
+    if ($res[$l] =~ /^\+CMGL\:\s*(\d+)\,(\d*)\,(\d*)\,(\d+)/i) {
+      my $msg = {};
+      $msg->{'msgnum'} = $1;
+      $msg->{'msg_seen'} = $2;
+      $msg->{'unknow_param'} = $3;
+      $msg->{'msg_length'} = $4;
+
+	usagefile_log("Reading message ".$msg->{'msgnum'});
+
+      if ($l<$#res) {
+        $msg->{'msg_pdu'} = $res[$l+1];
+	usagefile_log("  message content ".$msg->{'msg_pdu'});
+	# remove all illegal chars
+	$msg->{'msg_pdu'} =~ s/[^0-9A-Fa-f]//g;
+
+	# decode to get the sender_number, msg_content, etc
+	$msg = decode_pdu($msg);
+
+      }
+      if ($msg->{'msg_incomplete'} != 1) {
+        push(@allmsg,$msg);
+      } else {
+	usagefile_log("  message incomplete. Not processed.");
+      }
+    }
+  }
+
+  # process the messages
+  # we should be looking for multipart messages
+  # those with   $msg->{'TP-DPORT'} = hex($1);
+  #              $msg->{'TP-SPORT'} = hex($2);				
+  #              $msg->{'TP-DATAGRAM'} = hex($3);
+  #              $msg->{'TP-FRAGMAX'} =  hex($4);
+  #              $msg->{'TP-FRAGSQN'} =  hex($5);
+  # very easy. check for any not '' $msg->{'TP-DATAGRAM'}
+  # if yes, scan if all $msg->{'TP-FRAGSQN'} are present from 1 to $msg->{'TP-FRAGMAX'}
+  # assemble them as 1 message.
+  # otherwise, discard them from @okmsg, try again next time
+  # effectively, we leave the partial messages in modem until everyone's here
+  #
+
+  my %datagrams;
+  my %arrsum;
+
+  my @okmsg;
+
+  foreach my $msg (@allmsg) {
+    if ($msg->{'TP-DATAGRAM'} ne '') {
+      if ($datagrams{$msg->{'TP-DATAGRAM'}} eq '') {
+	my $tsum = 0;
+	for (my $b=1; $b<=$msg->{'TP-FRAGMAX'}; $b++) {
+	  $tsum += $b;
+	}
+	$datagrams{$msg->{'TP-DATAGRAM'}} = $tsum;
+      }
+      $arrsum{$msg->{'TP-DATAGRAM'}} += $msg->{'TP-FRAGSQN'};
+    } else {
+      # stand alone messages got no problem
+      # place them in return array
+      push(@okmsg,$msg);
+    }
+  }
+
+  foreach my $n (keys %datagrams) {
+    if ($datagrams{$n} == $arrsum{$n}) {
+      my %asm;
+      my %order;
+      my $max;
+      for (my $k=0; $k<=$#allmsg; $k++) {
+	if ($allmsg[$k]->{'TP-DATAGRAM'} eq $n) {
+	  $order{$allmsg[$k]->{'TP-FRAGSQN'}} = $k;
+	  $max = $allmsg[$k]->{'TP-FRAGMAX'};
+	}
+      }
+      for (my $d=1; $d<=$max; $d++) {
+	$k = $order{$d};
+	$asm{'msg_content'} .= $allmsg[$k]->{'msg_content'};
+	$asm{'sender_number'} = $allmsg[$k]->{'sender_number'};
+	$asm{'timestamp'} .= $allmsg[$k]->{'timestamp'};
+	$asm{'csca_number'} .= $allmsg[$k]->{'csca_number'};
+	$asm{'TP-DPORT'} .= $allmsg[$k]->{'TP_DPORT'};
+      }
+      push(@okmsg,\%asm);
+    } else {
+      # not all arrived
+      # we need to check if messages are too old and discard them from modem
+    }
+  }
+
+  # we need to delete all those in @okmsg from the modem
+  foreach my $d (@okmsg) {
+    my $mid = $d->{'msgnum'};
+    $me->atsend( "AT+CMGD=$mid" . Device::Modem::CR );
+
+    my $buff = read_till_ok($me,5000);
+    if ($buff =~ /OK/i) {
+      usagefile_log("message $mid delete OK");
+    } else {
+      usagefile_log("message $mid delete Fail");
+    }
+  }
+
+
+  return @okmsg;
+}
+
+# decode the pdu message
+sub decode_pdu {
+  my $msg = shift;
+  my @pdu = split(//,$msg->{'msg_pdu'});
+
+  # service center number first
+  $msg->{'csca_length'} = hex(shift(@pdu).shift(@pdu));
+  if ($msg->{'csca_length'} >= 1) {
+    $msg->{'csca_type'} = shift(@pdu).shift(@pdu);
+
+    # 91 means international format
+    if ($msg->{'csca_type'} eq '91') {
+      $msg->{'csca_number'} = '+';
+    }
+
+    # need to reverse each pair of numbers
+    # we have already eaten up 1 octec for type
+    for (my $n=1; $n<$msg->{'csca_length'}; $n++) {
+      my $f = shift(@pdu);
+      $msg->{'csca_number'} .= shift(@pdu).$f;
+    }
+  }
+
+  # check the message length now
+  if (($msg->{'msg_length'}*2) != ($#pdu +1)) {
+    $msg->{'msg_incomplete'} = 1;
+    usagefile_log("  message length wrong ".$msg->{'msg_length'}." *2 != ".$#pdu." +1");
+  }
+
+  usagefile_log("  CSCA ".$msg->{'csca_number'});
+
+  # PDU type
+  $msg->{'pdu_type'} = hex(shift(@pdu).shift(@pdu));
+
+ if ($msg->{'pdu_type'} == 6) {
+  # status report
+  $msg->{'message_type'} = 'status report';
+
+  # the byte after PDU (0xB7)
+  # need to check the specs for the meaning?
+  $msg->{'after_pdu'} = hex(shift(@pdu).shift(@pdu));
+
+  # sender number
+  $msg->{'sender_length'} = hex(shift(@pdu).shift(@pdu));
+  $msg->{'sender_type'} = shift(@pdu).shift(@pdu);
+
+  usagefile_log("  sender length ".$msg->{'sender_length'});
+
+  # 91 means international format
+  if ($msg->{'sender_type'} eq '91') {
+    $msg->{'sender_number'} = '+';
+  }
+
+  # need to reverse each pair of numbers
+  # sender length is number of digits, not pairs
+  for (my $n=1; $n<=$msg->{'sender_length'}; $n+=2) {
+    my $f = shift(@pdu);
+    $msg->{'sender_number'} .= shift(@pdu).$f;
+    # remove the last number for odd number length
+    if ($n>$msg->{'sender_length'}) {
+      chop($msg->{'sender_number'});
+    }
+  }
+
+  usagefile_log("  sender number ".$msg->{'sender_number'});
+
+  # timestamp of message YYMMDDHHMMSSTZ
+  # need to reverse pairs
+  for (my $n=1; $n<=7; $n++) {
+    my $f = shift(@pdu);
+    $msg->{'timestamp_send'} .= shift(@pdu).$f;
+  }
+
+  # timestamp of message YYMMDDHHMMSSTZ
+  # need to reverse pairs
+  for (my $n=1; $n<=7; $n++) {
+    my $f = shift(@pdu);
+    $msg->{'timestamp_receive'} .= shift(@pdu).$f;
+  }
+  
+
+ } else {
+  # normal message
+
+  # sender number
+  $msg->{'sender_length'} = hex(shift(@pdu).shift(@pdu));
+  $msg->{'sender_type'} = shift(@pdu).shift(@pdu);
+
+  usagefile_log("  sender length ".$msg->{'sender_length'});
+
+  # 91 means international format
+  if ($msg->{'sender_type'} eq '91') {
+    $msg->{'sender_number'} = '+';
+  }
+
+  # need to reverse each pair of numbers
+  # sender length is number of digits, not pairs
+  for (my $n=1; $n<=$msg->{'sender_length'}; $n+=2) {
+    my $f = shift(@pdu);
+    $msg->{'sender_number'} .= shift(@pdu).$f;
+    # remove the last number for odd number length
+    if ($n>$msg->{'sender_length'}) {
+      chop($msg->{'sender_number'});
+    }
+  }
+
+  usagefile_log("  sender number ".$msg->{'sender_number'});
+
+  # protocol identifier (PID)
+  $msg->{'PID'} = hex(shift(@pdu).shift(@pdu));
+
+  # data coding scheme (DCS)
+  $msg->{'DCS'} = hex(shift(@pdu).shift(@pdu));
+  usagefile_log("  DCS ".$msg->{'DCS'});
+
+  # timestamp of message YYMMDDHHMMSSTZ
+  # need to reverse pairs
+  for (my $n=1; $n<=7; $n++) {
+    my $f = shift(@pdu);
+    $msg->{'timestamp'} .= shift(@pdu).$f;
+  }
+
+  # user data length (UDL)
+  # length is after decoding.
+  # if text is 7bit encoded, this is 8/7 times longer than $#pdu now
+  $msg->{'UDL'} = hex(shift(@pdu).shift(@pdu));
+
+  if ($msg->{'DCS'} == 0) { 	
+    # decode 7 bit
+    $msg->{'msg_content'} = decode_7bit(join('',@pdu),$msg->{'UDL'});
+
+    usagefile_log("  unpack content ".$msg->{'msg_content'});
+
+    # truncate to reported length
+    if ($msg->{'UDL'} > length($msg->{'msg_content'})) {
+      usagefile_log("UDL length $msg->{'UDL'} greater than decoded length $msg->{'msg_content'}!");
+    } elsif ($msg->{'UDL'} < length($msg->{'msg_content'})) {
+      $msg->{'msg_content'} = substr($msg->{'msg_content'},0,$msg->{'UDL'});
+    }
+
+    # translate content
+    $msg->{'msg_content'} =~ tr (\x00\x02) (\@\$);
+    $msg->{'msg_content'} =~ tr (\x07\x0f\x7f\x04\x05\x1f\x5c\x7c\x5e\x7e) (iaaeeEOoUu);	
+
+	# Do we have NBS with Text based headers?
+	if ($msg->{'msg_content'} =~ /^\/\/SCK/) {
+		# print "We have a text encoded NBS\n";
+		$msg->{'TP-SCK'} = 1;
+		if ($msg->{'msg_content'} =~ /^\/\/SCK(\w\w)(\w\w)(\w\w)(\w\w)(\w\w)\s/) {
+			# print "D: $1, S: $2, DATAGRAM: $3, MAX: $4, SQN: $5\n";
+                $msg->{'TP-DPORT'} = hex($1);
+                $msg->{'TP-SPORT'} = hex($2);				
+                $msg->{'TP-DATAGRAM'} = hex($3);
+                $msg->{'TP-FRAGMAX'} =  hex($4);
+                $msg->{'TP-FRAGSQN'} =  hex($5);
+			}
+			if ($msg->{'msg_content'} =~ /^\/\/SCKL(\w\w\w\w)(\w\w\w\w)(\w\w)(\w\w)(\w\w)\s/) {
+                # print "D: $1, S: $2, DATAGRAM: $3, MAX: $4, SQN: $5\n";
+                $msg->{'TP-DPORT'} = hex($1);
+                $msg->{'TP-SPORT'} = hex($2);        
+                $msg->{'TP-DATAGRAM'} = hex($3);
+                $msg->{'TP-FRAGMAX'} =  hex($4);
+                $msg->{'TP-FRAGSQN'} =  hex($5);
+            }
+			if ($msg->{'msg_content'} =~ /^\/\/SCK(\w\w)\s/) {
+				# print "D: $1, S: $1\n";
+                $msg->{'TP-DPORT'} = hex($1);
+                $msg->{'TP-SPORT'} = hex($1);        
+                $msg->{'TP-DATAGRAM'} = 1;
+                $msg->{'TP-FRAGMAX'} =  1;
+                $msg->{'TP-FRAGSQN'} = 1; 
+			}
+			if ($msg->{'msg_content'} =~ /^\/\/SCKL(\w\w\w\w)\s/) {
+				# print "D: $1, S: $1\n";
+                $msg->{'TP-DPORT'} = hex($1);
+                $msg->{'TP-SPORT'} = hex($1);
+                $msg->{'TP-DATAGRAM'} = 1;
+                $msg->{'TP-FRAGMAX'} =  1;
+                $msg->{'TP-FRAGSQN'} = 1;
+			}
+
+	  # remove the header
+	  $msg->{'msg_content'} =~ s/^\/\/SCK[^\s]+\s//;
+	
+	}
+  } elsif (($msg->{'DCS'} & 0xF0) == 0xF0) {
+    # Do we have a user data header UDH?
+    if (($msg->{'pdu_type'} & 0x40) == 0x40) {
+	my $udh_length = hex(shift(@pdu).shift(@pdu));
+	my @ud = splice(@pdu, 0, $udh_length*2);
+	while ($#ud>-1) {
+		my $iei = shift(@ud).shift(@ud);
+		my $lei = hex(shift(@ud).shift(@ud));
+		my @dei = splice(@ud, 0, $lei*2);
+		# print "UDHL: $udhl, IEI: $iei, LEI: $lei, DATA:".join ( "", @dei ) . "\n";
+		if (hex($iei) == 5) {
+			# 16 bit port
+			my $dport = hex( shift(@dei).shift(@dei).shift(@dei).shift(@dei) );
+			my $sport = hex( shift(@dei).shift(@dei).shift(@dei).shift(@dei) );
+			# print "16 bit @ D:$dport S:$sport\n";				
+			$msg->{'TP-DPORT'} = $dport;
+			$msg->{'TP-SPORT'} = $sport;
+				
+			# When receivingwe do not have necessarily the Fragment idenetifier!, so if not already defined
+			# (FI maybe! can come b4 PORTS), set them to a bogus number (1,1,1)
+			if (!$msg->{'TP-DATAGRAM'}) {
+				$msg->{'TP-DATAGRAM'} = 1;
+				$msg->{'TP-FRAGMAX'} = 1;
+				$msg->{'TP-FRAGSQN'} = 1;
+			}
+		}
+		if (hex($iei) == 0) {
+			# Fragment identifier
+			my $fdatagram = hex( shift(@dei).shift(@dei) );
+			my $fmax = hex( shift(@dei).shift(@dei) );
+			my $fid = hex( shift(@dei).shift(@dei) );
+			# print "datagram $fdatagram fragment $fid from $fmax\n";
+                    $msg->{'TP-DATAGRAM'} = $fdatagram;
+                    $msg->{'TP-FRAGMAX'} =  $fmax;
+                    $msg->{'TP-FRAGSQN'} =  $fid;
+				}
+			}
+    }
+    # decode 8 bit
+    # pop @pdu;
+    my $pair = '';
+    foreach my $n (@pdu) {
+      $pair .= $n;
+      if (length($pair) == 2) {
+        $msg->{'msg_content'} .= pack('H2',$pair);
+        $pair = '';
+      }
+    }
+
+    # truncate to reported length
+    if ($msg->{'UDL'} > length($msg->{'msg_content'})) {
+      usagefile_log("UDL length $msg->{'UDL'} greater than decoded length $msg->{'msg_content'}!");
+    } elsif ($msg->{'UDL'} < length($msg->{'msg_content'})) {
+      $msg->{'msg_content'} = substr($msg->{'msg_content'},0,$msg->{'UDL'});
+    }
+
+
+    # translate content
+    $msg->{'msg_content'} =~ tr (\x00\x02) (\@\$);
+    $msg->{'msg_content'} =~ tr (\x07\x0f\x7f\x04\x05\x1f\x5c\x7c\x5e\x7e) (iaaeeEOoUu);	
+
+  } else {
+    $msg->{'msg_content'} = '';
+  }
+ }
+  return $msg;
+}
+
+#####################################
+#
+# sending routines
+#
+#
+#####################################
+
+sub send_simple_text {
+  my $me = shift;
+  my $target_phone = shift;
+  my $message = shift;
+  my $need_report = shift;
+
+  # encode_tpdu($target_phone,$message,$codec,$need_header,$need_report);
+  my $tpdu = encode_tpdu($target_phone,$message,'7bit',0,$need_report);
+
+  my $msg_id = send_pdu_message($me,$target_phone,$tpdu);
+
+  return $msg_id;
+}
+
+# 
+# assume vcard is shorter than 160 char
+#
+
+sub send_vcard {
+  my $me = shift;
+  my $target_phone = shift;
+  my $need_report = shift;
+
+  my $lastname = shift;
+  my $firstname = shift;
+  my $tel = shift;
+
+  $lastname =~ s/([,;:])/\\$1/g;
+  $firstname =~ s/([,;:])/\\$1/g;
+  $tel =~ s/([,;:])/\\$1/g;
+
+  my $vcard=<<EOT;
+BEGIN:VCARD
+VERSION:2.1
+N:$lastname,$firstname
+TEL;PREF:$tel
+END:VCARD
+EOT
+
+  my $message = encode_user_header(0,0x23F4,0x0000);
+  $message .= OTAencode_8bit($vcard);
+
+  my $tpdu = encode_tpdu($target_phone,$message,'8bitm',1,$need_report);
+
+  my $msg_id = send_pdu_message($me,$target_phone,$tpdu);
+
+  return $msg_id;
+}
+
+
+sub OTAencode_8bit {
+        my $ud = shift;
+        my $msg;
+
+        while (length($ud)) {
+               $msg .= sprintf("%.2X", ord(substr($ud,0,1)));
+               $ud = substr($ud,1);
+        }
+        return $msg;
+}
+
+
+# encode the user header
+# 
+
+sub encode_user_header {
+  my $multipart = shift;
+  my $destination = shift;
+  my $source = shift;
+
+  # for multipart only
+  my $datagram_id = shift;
+  my $max_frag = shift;
+  my $seq_num = shift;
+
+  my @NBS_HEADER;
+  if ($multipart) {
+	$NBS_HEADER[0]  = 11;		# header length, without this byte
+  } else {
+	$NBS_HEADER[0]  = 6;		# header length, without this byte
+  }
+	$NBS_HEADER[1]  = 5;		# Port address information element, 16bit
+	$NBS_HEADER[2]  = 4;		# 	Length of the info element
+	$NBS_HEADER[3]  = ($destination & 0xff00) >> 8; 	# high byte destination
+	$NBS_HEADER[4]  = $destination & 0xff;				# low byte destination
+	$NBS_HEADER[5]  = ($source & 0xff00) >> 8;			# high byte source
+	$NBS_HEADER[6]  = $source & 0xff; 					# low byte source
+
+  if ($multipart) {
+	$NBS_HEADER[7]  = 0;		# Fragmentation information element
+	$NBS_HEADER[8]  = 3;		# Length of Info el
+	$NBS_HEADER[9]  = $datagram_id;		# fragment id
+	$NBS_HEADER[10] = $max_frag; 	# max amount of frags
+	$NBS_HEADER[11] = $seq_num;		# sequence number fragment
+  }
+  my $len=$NBS_HEADER[0]+1;
+  my $out;
+
+	for (my $j=0; $j<$len; $j++) {
+		my $i=$NBS_HEADER[$j];
+		$out.=sprintf("%02x", $i);	
+	}
+
+	return $out;
+}
+
+#
+# encode tpdu
+# for 1 SMS only
+# the $message should already contain the 'User Data Header'
+# the $message should already be in hex digits for 8bit format
+#
+
+sub encode_tpdu {
+  my $target_phone = shift;
+  my $message = shift;
+  my $codec = shift;
+  my $need_header = shift;
+  my $need_report = shift;
+
+  # PDU type
+  my $pdutype = 1;		# TP-Message -Type-Indicator: SMS-SUBMIT '01' bits 1,0
+
+  # TP-Rejected -Dublicates: Do not reject '0' (bit 2)
+  # Vailidity period format set to '00' for "Relative format" (bits 4,3)
+  $pdutype|=0x10;	 	# Vailidity period
+  $pdutype|=0x20 if ($need_report);		# Need delivery report (bit 5)
+  $pdutype|=0x40 if ($need_header);		# User data header present (bit 6)
+
+  my $tpdu = sprintf("%02x", $pdutype);
+
+  # message reference, always 00 for here
+  $tpdu .= '00';
+
+  # target number
+  $tpdu .= Device::Gsm::Pdu::encode_address( $target_phone );
+
+  # protocol Identifier, 00 means "simple MS-to-SC short message transfer"
+  $tpdu .= '00';
+
+  # Data coding scheme 
+	#	We use 	'00' for 7bit, SIM specific			'7bit'	(default)
+	#			'F0' for 7bit, immediate display	'7biti'
+	#			'F6' for 8bit, SIM specific			'8bit'
+	#			'F4' for 8bit, immediate display	'8biti'
+	#			'F5' for 8bit, ME specific			'8bitm'	
+
+  # for ring tone, etc,
+  # bit 7-4: '1111'
+  # bit 3: 0 (reserve)
+  # bit 2: 1 (8bit)
+  # bit 1,0: '01' (ME specific)
+  #
+  #7 0 TP-Data -Coding-Scheme used in TP-User -Data, consist one octet. See GSM 3.38 Functionality (bits 7 and 6) related to usage of bits 4-0. 
+  #6 0   Functionality (bits 7 and 6) related to usage of bits 4-0. 
+  #5 0   Indicates that text is uncompressed. 
+  #4 0   Indicated that bits 1 and 0 have no message class meaning. 
+  #3 0 Alphabet being used (bits 3 and 2) 7bit message 
+  #2 0 Alphabet being used (bits 3 and 2) 7bit message 
+  #1 0 Reserved No meaning, indicated by bit 4 
+  #0 0 Reserved No meaning, indicated by bit 4 
+
+  my $dcs = '00';
+  if ($codec eq '7biti') {
+    $dcs = 'F0';
+  } elsif ($codec eq '8bit') {
+    $dcs = 'F6';
+  } elsif ($codec eq '8biti') {
+    $dcs = 'F4';
+  } elsif ($codec eq '8bitm') {
+    $dcs = 'F5';
+  }
+
+  $tpdu .= $dcs;
+  
+  # valid period "Relative format"
+  # A7 - 24 hrs
+  # AA - 4 days
+  $tpdu .= 'A7';
+
+  # encoded msg with length info
+  # for 8bit data, the message should have already been encoded as '01AF....' format
+  my $enc_msg;
+  if (($codec eq '8bit') || ($codec eq '8biti' || ($codec eq '8bitm'))) {
+    $enc_msg = sprintf("%02X", length($message)/2);
+    $enc_msg .= substr($message,0,160*2);
+  } else {
+    $enc_msg = Device::Gsm::Pdu::encode_text7( substr($message,0,160) );
+  }	
+  $tpdu .= $enc_msg;
+
+
+  return $tpdu;
+}
+
+#
+# Send a PDU message
+# return msg_id
+# msg_id -1:error, 0:unknown, >0:msg_id
+#
+
+sub send_pdu_message {
+  my $me = shift;
+  my $target_phone = shift;
+  my $tpdu = shift;
+
+  # treat Service Center address as optional now
+  my $enc_da = '00';
+  my $len = int(length($tpdu)/2);
+
+  my $pdu = $enc_da.$tpdu;
+
+  # Select PDU format for messages
+  $me->atsend(  q[AT+CMGF=0] . Device::Modem::CR );
+  my $buff = read_till_ok($me,1000);
+
+    usagefile_log("set PDU [$buff]" );
+
+  # Send SMS length
+  $me->atsend( qq[AT+CMGS=$len] . Device::Modem::CR );
+  $me->wait(200);
+
+    usagefile_log("length [$len] PDU [$pdu]" );
+
+
+  # Sending SMS content encoded as PDU	
+  $me->atsend( $pdu . Device::Modem::CTRL_Z );
+  $me->wait(2000);
+
+  $buff = read_till_ok($me,10000);
+
+  # Get reply and check for errors
+  my $msg_id = 0;
+  if ($buff =~ /ERROR/i ) {
+    $msg_id = -1;
+    usagefile_log("ERROR in sending SMS [$pdu] [$buff]" );
+  } elsif ($buff =~ /\+CMGS\:\s*(\d+)/i) {
+    $msg_id = $1;
+    usagefile_log("Sent SMS (pdu mode) msg_id=$msg_id" );
+  } else {
+    usagefile_log("Unknown reply after send [$buff]" );
+  }
+
+  return $msg_id;
+}
+
+# read until OK or ERROR
+# default limit to 5sec
+# can set to lower or higher using input
+
+sub read_till_ok {
+  my $me = shift;
+  my $limit = shift;
+
+  my $buff;
+  my $msec = 100;
+  if ($limit !~ /^\d+$/) {
+    $limit = 5000;
+  }
+  my $now = 0;
+
+  while ($now < $limit) {
+    my($howmany, $what) = $me->port->read($msec);
+    $buff .= $what;
+    $now += $msec;
+    # we are using PDU so we are confident OK or ERROR are the real ending
+    if (($buff =~ /OK/i) || ($buff =~ /ERROR/i)) {
+      $now += $limit;
+    }
+  }
+
+  # Flush receive and trasmit buffers
+  $me->port->purge_all;
+
+  return $buff;  
+}
+
+sub decode_7bit {
+	my ($ud, $len) = @_;
+	my ($msg,$bits);
+	my $cnt=0;
+	my $byte = unpack('b8', pack('H2', substr($ud, 0, 2)));
+	while (($cnt<length($ud)) && (length($msg)<$len)) {
+		$msg.= pack('b7', $byte);
+		$byte = substr($byte,7,length($byte)-7);
+		if (length($byte)<7) {
+			$cnt+=2; 
+			$byte = $byte.unpack('b8', pack('H2', substr($ud, $cnt, 2)));
+		}
+	}
+	return $msg;
+}
+
+

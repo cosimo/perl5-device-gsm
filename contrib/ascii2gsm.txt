@@ -1,0 +1,43 @@
+Subject: Device::Gsm - conversion routines ASCII <=> GSM
+Date: Fri, 21 Feb 2003 13:00:59 +0100
+From: cosimo@cpan.org
+To: Haris Bjelak <haris.bjelak@ic-mp.org>
+CC: cosimo@cpan.org
+
+Sorry, here is the routines I mentioned in the last message... ;-)
+
+---------------8<--------------------------
+
+use strict;
+my @Ascii2Gsm;
+my @Gsm2Ascii;
+
+@Ascii2Gsm = @Gsm2Ascii = map { chr } 0 .. 255;
+
+$Ascii2Gsm[  0] = '@';
+$Ascii2Gsm[  2] = '$';
+$Ascii2Gsm[  4] = 'e';
+$Ascii2Gsm[  5] = 'e';
+$Ascii2Gsm[  7] = 'i';
+$Ascii2Gsm[ 15] = 'a';
+$Ascii2Gsm[ 31] = 'E';
+$Ascii2Gsm[ 92] = 'O';
+$Ascii2Gsm[ 94] = 'U';
+$Ascii2Gsm[124] = 'o';
+$Ascii2Gsm[126] = 'u';
+$Ascii2Gsm[127] = 'a';
+
+$Gsm2Ascii[ ord('@') ] = 0;
+$Gsm2Ascii[ ord('$') ] = 2;
+
+sub ascii2gsm {
+        my $str = shift;
+        return join( '', map { $Ascii2Gsm[ ord($_) ] } split('',$str) );
+}
+
+sub gsm2ascii {
+        my $str = shift;
+        return join( '', map { $Gsm2Ascii[ ord($_) ] } split('',$str) );
+}
+
+---------------8<--------------------------

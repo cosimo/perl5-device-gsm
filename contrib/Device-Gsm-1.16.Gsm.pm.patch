@@ -1,0 +1,153 @@
+*** Gsm.old	Mon Mar 17 14:05:09 2003
+--- Gsm.pm	Mon Mar 17 14:03:57 2003
+***************
+*** 13,22 ****
+  # testing and support for custom GSM commands, so use it at your own risk,
+  # and without ANY warranty! Have fun.
+  #
+! # $Id: Device-Gsm-1.16.Gsm.pm.patch,v 1.1 2003-03-23 08:14:29 cosimo Exp $
+  
+  package Device::Gsm;
+! $Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
+  
+  use strict;
+  use Device::Modem;
+--- 13,22 ----
+  # testing and support for custom GSM commands, so use it at your own risk,
+  # and without ANY warranty! Have fun.
+  #
+! # $Id: Device-Gsm-1.16.Gsm.pm.patch,v 1.1 2003-03-23 08:14:29 cosimo Exp $
+  
+  package Device::Gsm;
+! $Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
+  
+  use strict;
+  use Device::Modem;
+***************
+*** 381,386 ****
+--- 381,450 ----
+  }
+  
+  
++ #Receive Text SMS
++ sub rcv_sms_text{
++ 	my($me, %opt) = @_;
++ 
++ 	my($ok,$mrows,@mrows);
++ 	my @results=();
++ 
++ 	# Get options
++ 	my $autodelete =  $opt{'autodelete'};
++ 
++ 	#Get messages
++ 	$me->atsend( 'AT+CMGL="ALL"' . Device::Modem::CR );
++ 	($ok, @mrows) = $me->parse_answer();
++ 	@mrows=split(/[\r\n]/,join("",@mrows));
++ 
++ 	my $i;
++ 	for($i=0;$i<$#mrows;$i+=2){
++ 		my $row = $me->_rcv_sms_text_parse($mrows[$i]);
++ 		$row->{Message}=$mrows[$i+1];
++ 		push(@results,$row);
++ 		if($opt{autodelete} == 1){
++ 			$me->rcv_sms_text_del($row->{number});
++ 		}
++ 	}
++ 
++ 	@results;
++ }
++ 
++ #Parse row and return hash
++ sub _rcv_sms_text_parse {
++ 	my($me,$row) = @_;
++ 
++ 	my $lhash = undef;
++ 
++ 	if($row =~ /^\+CMGL\:(..),\"([^\"]+)\",\"([^\"]+)\",\"(........),(........)(...)\"/ ){
++ 		$lhash = {
++ 			number => $1,
++ 			status => $2,
++ 			sender => $3,
++ 			date   => $4,
++ 			time   => $5,
++ 			sub    => $6			
++ 		 }
++ 	}
++ 
++ 	$lhash;
++ }
++ 
++ 
++ #Delete received SMS
++ sub rcv_sms_text_del {
++ 	my($me, $nms) = @_;
++ 
++ 	my($ok,$man);
++ 	my $lOK=0;
++ 
++ 	$me->atsend( "AT+CMGD=$nms" . Device::Modem::CR );
++ 	($ok, $man) = $me->parse_answer();
++ 	$lOK = 1 if $ok =~ /OK/ ;
++ 	
++ 	$lOK;
++ }
++ 
++ 
+  #
+  # Set or request service center number
+  #
+***************
+*** 488,500 ****
+    $gsm->service_center( '+001505050' );   # Sets new number
+    
+    # Send quickly a short text message
+!   $modem->send_sms(
+        recipient => '+3934910203040',
+        content   => 'Hello world! from Device::Gsm'
+    );
+  
+    # The long way...
+!   $modem->send_sms(
+  
+        recipient => '34910203040',
+        content   => 'Hello world again, with more args',
+--- 552,564 ----
+    $gsm->service_center( '+001505050' );   # Sets new number
+    
+    # Send quickly a short text message
+!   $gsm->send_sms(
+        recipient => '+3934910203040',
+        content   => 'Hello world! from Device::Gsm'
+    );
+  
+    # The long way...
+!   $gsm->send_sms(
+  
+        recipient => '34910203040',
+        content   => 'Hello world again, with more args',
+***************
+*** 510,515 ****
+--- 574,596 ----
+    );
+   
+  
++   #Receive Text SMS  With autodelete
++   my @received = $gsm->rcv_sms_text( autodelete => 1 );
++   my $ms;
++   foreach $ms (@received){
++     print "Number=$ms->{number} Status=$ms->{status} Sender=$ms->{sender} Date=$ms->{date} Time=$ms->{Time} Sub=$ms->{sub}";
++     print    "Message=$ms->{text}";
++   }
++ 
++   #Recevice Text with no delete
++   my @received = $gsm->rcv_sms_text();
++   ...
++   #Now delete messages
++   my $ms;
++   foreach $ms (@received){
++     $gsm->rcv_sms_text_del($ms->{number});
++   }
++ 
+  =head1 DESCRIPTION
+  
+  C<Device::Gsm> class implements basic GSM functions, network registration and SMS sending.

@@ -1,0 +1,450 @@
+Subject: RE: Device GSM module question
+Date: Thu, 13 Feb 2003 11:23:40 +0100
+From: Haris Bjelak <haris.bjelak@ic-mp.org>
+To: "'Cosimo Streppone'" <cosimo@streppone.it>
+
+Hi again,
+
+Here is what I've came up with so far; please find code below.
+
+I'm about to include some error-checking in this, but I'll need your
+expertise on this, as I'm fairly new to all this:
+
+Is there a way to get return code from GSM when sending SMS and to use it to
+determine wheather the SMS is sent or not? What I have not is this: If I use
+module to send SMS to, say, +23 (which is invalid number), I get "SMS OK",
+because (lOk) is defined (I'm using your example script). If I do this
+manually, I get error. How can I get this error when sending by script?
+
+Another thing is the translation table between ASCII and 7 bit. Can you
+provide any links to translation table so I can include that in my code?
+
+Any suggestions welcome.
+Thanks a lot.
+
+Here is the code, and this is what it does: The first part is SMTP module
+(Net::SMTP) with my clumsy code to filter HTML messages into something
+usefull; I'm filtering Outlook 2000, OE6 and SquirrelMail headers (all
+different ;-(), I don't know if other e-mail clients will work, I was to
+lazy to go thru RFCs.
+
+The second part is everything else, with basic log file, and LDAP connection
+to our MS Exchange 5.5 server for e-mail to username and vice-versa
+resolution.
+
+I'm running them in two separate windows.
+
+Again, there is much to do, but it works ;-)
+
+Cheers,
+Haris
+
+********************************
+SMTP module
+********************************
+
+#!/usr/local/bin/perl
+
+use Carp;
+use Net::SMTP::Server;
+use Net::SMTP::Server::Client2;
+
+my $server = new Net::SMTP::Server('192.168.10.192', 25) or die "Unable to
+open port";
+        while($conn = $server->accept()) {
+           fork and last;
+           $conn->close;
+        };
+
+        my $client = new Net::SMTP::Server::Client2($conn) || croak "can't
+handle client";
+
+        $client->greet;
+
+        while($client->get_message){
+
+                my $counter = 0;
+                my $dir = 'C:\PERL\SCRIPTS\SMSOUT';
+                while (-e "$dir\\SMSOUT$counter.txt") {
+                        $counter++;
+                        }
+
+                my $filename = ("$dir\\SMSOUT$counter.txt");
+
+                $mailfrom = $client->{FROM};
+                @mailto = @{$client->{TO}};
+                $grom = $client->{MSG};
+                $message = $grom.'BREAK_LINE_NEED_HERE_FOR_DETECTION_';
+                @mymsg = split (/\n/, $message);
+
+                $start = 0;
+                foreach $line (@mymsg) {
+                        chop $line;
+
+                        $line =~ /.[^;]+(?=;)/o;
+
+                        if ($& eq 'Content-Type: text/plain') {
+                                $start = 1;
+                                }
+                        if ($start == 1){
+                                        if ($line eq "") {
+                                                $start=2; #THE MESSAGE
+STARTS HERE
+                                                }
+                                        }
+
+                        if ($start == 2) {
+                                $line =~ /[-=]+(?=_)/o;
+                                last if ($& eq '------'); #Outlook 2000 HTML
+                                last if ($& eq '------='); #Outlook Express
+6 HTML
+                                last if ($line eq
+'BREAK_LINE_NEED_HERE_FOR_DETECTION'); #Plain / Rich text
+                                push (@finalmsg, "$line\n");
+                                }
+                        }
+
+                shift @finalmsg;
+
+                open (MOUT, ">$filename");
+                print MOUT ("$mailfrom\n", "@mailto[0]\n", @finalmsg);
+                close MOUT;
+
+                $module = 'EMAIL TO TXT';
+                &log ($module, $mailfrom, @mailto[0]);
+
+                $client->okay("message saved for relay");
+         }
+
+sub log {
+
+$logfile = 'C:\PERL\SCRIPTS\SMSLOG\SMSLOG.TXT';
+my ($module, $from, $to) = @_;
+
+open (LOG, ">>$logfile");
+select (LOG);
+
+$time = localtime;
+$~ = "LOG";
+write;
+
+format LOG =
+@<<<<<<<<<<<<<<<<<<<<<<<   @<<<<<<<<<<<<   @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$time, $module, $from, $to
+.
+close LOG;
+select (STDOUT);
+}
+
+*****************************
+EVERYTHING ELSE
+*****************************
+
+#!/usr/local/bin/perl
+
+use Carp;
+use Net::SMTP;
+use Net::LDAP;
+use Device::Gsm;
+
+# $logfile = 'C:\PERL\SCRIPTS\SMSLOG\SMSLOG.TXT';
+# $smsoutfolder = 'C:\PERL\SCRIPTS\SMSOUT';
+# $smsinfolder = 'C:\PERL\SCRIPTS\SMSIN';
+
+while (1) {
+$time = localtime();
+print "\n$time\n";
+print "GSM 2 TXT\n";
+&izsms2smsin;
+sleep (2);
+print "TXT 2 EMAIL\n";
+&izsmsintoemail;
+sleep (2);
+print "TXT 2 GSM\n";
+&izsmsouttogsm;
+sleep (2);
+
+}
+
+# TXT TO GSM DEVICE
+
+sub izsmsouttogsm {
+
+        my $dir= 'C:\PERL\SCRIPTS\SMSOUT';
+        opendir(DIR, $dir);
+
+        while (my $filename = readdir(DIR)) {
+
+                next if not($filename =~ /.txt/);
+
+                open (in, "$dir\\$filename");
+                my @all=<in>;
+                close in;
+
+                my ($emailsender, $smsrecip, @message) = @all;
+                chop $emailsender;
+
+                @realsender = &ldap_email_to_UN ($emailsender);
+
+                $smsrecip =~ /\w+(?=@)/o;
+                $smsrecip = '+'.$&;
+
+                foreach $cvangla (@message) {
+                                chop $cvangla;
+                                }
+
+                $mess = join (" ",@message);
+
+                @all = ($smsrecip, "@realsender: $mess");
+
+                &sendsms (@all);
+                unlink ("$dir\\$filename");
+
+                $module = 'TXT TO SMS';
+                &log ($module, $emailsender, $smsrecip);
+
+                }
+        closedir(DIR);
+
+}
+
+
+sub sendsms {
+
+        my ($number, $kontenat) = @_;
+
+        $content = substr ($kontenat, 0, 160);
+
+        $myport = 'COM1';
+        $mypin = '0000';
+
+        my $gsm = new Device::Gsm( port => $myport, pin => $mypin);
+
+        $gsm->connect( baudrate => 9600 );
+        $gsm->register();
+
+        my $gsmok = $gsm->send_sms(
+        content => $content,
+        recipient => $number,
+        mode      => 'pdu',
+        class     => 'normal');
+
+}
+
+# TAKE SMS FROM GSM AND CREATE TXT
+
+sub izsms2smsin {
+
+        my $myport = 'COM1';
+        my $mypin  = '0000';
+        my $count;
+        my $gsm = new Device::Gsm( port => $myport, pin => $mypin);
+        $gsm->connect();
+        $gsm->register();
+
+        for ($count=1; $count <= 100; $count++) {
+
+# I GUESS NOT MORE THAN 100 MESSAGES WILL BE RECEIVED IN UNDER 20 SECONDS,
+WHICH IS THE TIME IT TAKES FOR FULL CYCLE
+
+                my (@poruka) = $gsm->receive($count);
+                last if (@poruka[0] eq "+CMS ERROR: 321");
+                my $intcount=0;
+                my $filename = 'C:\PERL\SCRIPTS\SMSIN\SMSIN';
+
+                while (-e "$filename$intcount.txt") {
+                        $intcount++;
+                        }
+
+                open (out, ">$filename$intcount.txt");
+
+                #SENDER
+
+                my @sender = split (/,/,@poruka[1]);
+                @sender[1] =~ tr/"//d;
+                print out "@sender[1]".'@SMS.IC-MP.ORG'."\n";
+
+                #TIMESTAMP
+
+                my @timestamp = split (/,/,@poruka[1]);
+                @timestamp[3] =~ tr/"//d;
+                @timestamp[4] =~ tr/"//d;
+                @timestamp[4] =~ s/\+00//;
+
+                print out "@timestamp[3]\n";
+                print out "@timestamp[4]";
+
+                #SMS MESSAGE
+
+                print out "@poruka[2]";
+
+                close out;
+                my (@delete) = $gsm->delmessage($count);
+
+                @poruka[2] =~ /\w+(?= )/o;
+                my $recipient = $&;
+
+                $module = 'SMS TO TXT';
+                &log ($module, @sender[1], $recipient);
+
+        }
+}
+
+# TXT TO E-MAIL
+
+sub izsmsintoemail {
+
+        my $dir = 'C:\PERL\SCRIPTS\SMSIN';
+        opendir(DIR, $dir);
+
+        while (my $filename = readdir(DIR)) {
+                next if not($filename =~ /.txt/);
+
+                open (in, "$dir\\$filename");
+                my @all=<in>;
+                close in;
+
+                my ($smssender, $date, $time, @message) = @all;
+                @intdate = split (/\//, $date);
+
+                @intdate[0]='20'.@intdate[0];
+
+                if (@intdate[1] eq "01") { @intdate[1] = "Jan";}
+                if (@intdate[1] eq "02") { @intdate[1] = "Feb";}
+                if (@intdate[1] eq "03") { @intdate[1] = "Mar";}
+                if (@intdate[1] eq "04") { @intdate[1] = "Apr";}
+                if (@intdate[1] eq "05") { @intdate[1] = "May";}
+                if (@intdate[1] eq "06") { @intdate[1] = "Jun";}
+                if (@intdate[1] eq "07") { @intdate[1] = "Jul";}
+                if (@intdate[1] eq "08") { @intdate[1] = "Aug";}
+                if (@intdate[1] eq "09") { @intdate[1] = "Sep";}
+                if (@intdate[1] eq "10") { @intdate[1] = "Oct";}
+                if (@intdate[1] eq "11") { @intdate[1] = "Nov";}
+                if (@intdate[1] eq "12") { @intdate[1] = "Dec";}
+
+                $date = "@intdate";
+
+                @message[0] =~ /\w+(?= )/o;
+
+                my $recipient = $&;
+                @message[0] =~ s/$&//o;
+                @message[0] =~ s/ //o;
+                chop ($smssender, $date, $time);
+
+                $to = &ldap_UN_to_email ($recipient);
+
+
+                if ($to ne "UNKNOWN") {
+                        @all = ($to, $smssender, $date, $time, @message);
+                        &sendmail (@all);
+                        $module = 'TXT TO EMAIL';
+
+                }else{
+
+# LDAP COULDN'T RESOLVE, SO WE'LL DISCARD (SENDER'S ERROR)
+
+                        $module = 'SILENT DISCARD';
+                        }
+
+                &log ($module, $smssender, $to);
+                unlink ("$dir\\$filename");
+                }
+
+        closedir(DIR);
+}
+
+sub sendmail {
+
+        $|++;
+
+        my ($to, $from, $date, $time, @message) = @_;
+
+        $smtp = Net::SMTP->new('192.168.10.10');
+
+        $smtp->mail($from);
+        $smtp->to($to);
+        $smtp->data () ;
+        $smtp->datasend ("From: $from\n") ;
+        $smtp->datasend ("To: $to\n") ;
+        $smtp->datasend ("Subject: Message from : $from\n\n");
+        $smtp->datasend ("SMS Received : $date, at $time\n\n");
+        $smtp->datasend (@message);
+        $smtp->dataend ;
+        $smtp->quit;
+        }
+
+sub ldap_UN_to_email {
+
+        $ldap = Net::LDAP->new('192.168.10.10');
+
+# CHANGE CN TO NT USERNAME WITH LDAP PERMISIONS, AND ENTER PROPER PASSWORD
+BELOW
+
+        $ldap->bind ('cn=USERNAME, o=Sarajevo, c=us', password =>
+'PASSWORD');
+        $mesg = $ldap->search ( base => "o=ICMP", filter => "uid=@_");
+        $entry = $mesg->entry;
+
+        if ($entry) {
+                $attr = $entry->get_value( mail, asref => 1 );
+                $retval = "@$attr";
+        }else{
+
+# LDAP CAN'T RESOLVE
+
+                $retval = 'UNKNOWN';
+        }
+
+        $ldap->unbind;
+        $retval;
+}
+
+sub ldap_email_to_UN {
+
+        my $filter = 'mail='."@_";
+        $ldap = Net::LDAP->new('192.168.10.10');
+        $ldap->bind ('cn=USERNAME, o=Sarajevo, c=us', password =>
+'PASSWORD');
+        $mesg = $ldap->search ( base => "o=ICMP", filter => $filter);
+        $entry = $mesg->entry;
+
+        if ($entry) {
+                $attr = $entry->get_value(uid, asref => 1 );
+                $username = "@$attr";
+                $attr = $entry->get_value(cn, asref => 1 );
+                $fullname = "@$attr";
+                @data = ($username, $fullname);
+        }else{
+
+# LDAP CAN'T RESOLVE
+
+                @data = "@_";
+        }
+
+        $ldap->unbind;
+        @data;
+
+}
+
+sub log {
+
+$logfile = 'C:\PERL\SCRIPTS\SMSLOG\SMSLOG.TXT';
+my ($module, $from, $to) = @_;
+
+open (LOG, ">>$logfile");
+select (LOG);
+
+$time = localtime;
+$~ = "LOG";
+write;
+
+format LOG =
+@<<<<<<<<<<<<<<<<<<<<<<<   @<<<<<<<<<<<<   @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$time, $module, $from, $to
+.
+close LOG;
+select(STDOUT);
+
+}
