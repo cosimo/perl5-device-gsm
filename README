@@ -19,7 +19,7 @@ SYNOPSIS
  
       # Register to GSM network (you must supply PIN number in above new() call)
       $gsm->register();
- 
+
       # Get the manufacturer and model code of device
       my $mnf   = $gsm->manufacturer();
       my $model = $gsm->model();
@@ -34,10 +34,10 @@ SYNOPSIS
       } else {
           # No luck, CGMI command not available
       }
- 
+
       print 'Service number is now: ', $gsm->service_center(), "\n";
       $gsm->service_center( '+001505050' );   # Sets new number
-  
+ 
       # Send quickly a short text message
       $gsm->send_sms(
           recipient => '+3934910203040',
@@ -60,15 +60,16 @@ SYNOPSIS
           class     => 'normal'
       );
 
+      # Test network signal
       print "Signal power seems to be ", $gsm->signal_quality(), " dBm\n";
 
 DESCRIPTION
-    `Device::Gsm' class implements basic GSM functions, network registration
+    "Device::Gsm" class implements basic GSM functions, network registration
     and SMS sending.
 
-    This class supports also `PDU' mode to send `SMS' messages, and should
-    be fairly usable. I'm developing and testing it under `Linux RedHat 7.1'
-    with a 16550 serial port and `Siemens C35i' / `C45' GSM phones attached
+    This class supports also "PDU" mode to send "SMS" messages, and should
+    be fairly usable. I'm developing and testing it under "Linux RedHat 7.1"
+    with a 16550 serial port and "Siemens C35i" / "C45" GSM phones attached
     with a Siemens-compatible serial cable.
 
     Please be kind to the universe and contact me if you have troubles or
@@ -79,13 +80,11 @@ DESCRIPTION
     know that Device::Gsm works with your device (thanks!).
 
   REQUIRES
-
     *   Device::Modem, which in turn requires
 
     *   Device::SerialPort (or Win32::SerialPort on Windows machines)
 
   EXPORT
-
     None
 
 TO-DO
@@ -94,18 +93,17 @@ TO-DO
         special queue (that could be a simple filesystem folder).
 
     Validity Period
-        Support `validity period' option on SMS sending. Tells how much time
+        Support "validity period" option on SMS sending. Tells how much time
         the SMS Service Center must hold the SMS for delivery.
 
     Profiles
         Build a profile of the GSM device used, so that we don't have to
-        `always' test each command to know whether it is supported or not,
+        "always" test each command to know whether it is supported or not,
         because this takes too time to be done every time.
 
 AUTHOR
     Cosimo Streppone, cosimo@cpan.org
 
 SEE ALSO
-    the Device::Modem manpage, the Device::SerialPort manpage, the
-    Win32::SerialPort manpage, perl(1)
+    Device::Modem, Device::SerialPort, Win32::SerialPort, perl(1)
 

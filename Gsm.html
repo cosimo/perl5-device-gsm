@@ -1,162 +1,174 @@
-<HTML>
-<HEAD>
-<TITLE>Device::Gsm - Perl extension to interface GSM cellular / modems</TITLE>
-<LINK REV="made" HREF="mailto:cosimo@cpan.org">
-</HEAD>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Device::Gsm - Perl extension to interface GSM cellular / modems</title>
+<link rev="made" href="mailto:cosimo@cpan.org" />
+</head>
 
-<BODY>
+<body style="background-color: white">
 
-<A NAME="__index__"></A>
+<p><a name="__index__"></a></p>
 <!-- INDEX BEGIN -->
 
-<UL>
+<ul>
 
-	<LI><A HREF="#name">NAME</A></LI>
-	<LI><A HREF="#warning">WARNING</A></LI>
-	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
-	<LI><A HREF="#description">DESCRIPTION</A></LI>
-	<UL>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#warning">WARNING</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<ul>
 
-		<LI><A HREF="#requires">REQUIRES</A></LI>
-		<LI><A HREF="#export">EXPORT</A></LI>
-	</UL>
+		<li><a href="#requires">REQUIRES</a></li>
+		<li><a href="#export">EXPORT</a></li>
+	</ul>
 
-	<LI><A HREF="#todo">TO-DO</A></LI>
-	<LI><A HREF="#author">AUTHOR</A></LI>
-	<LI><A HREF="#see also">SEE ALSO</A></LI>
-</UL>
+	<li><a href="#todo">TO-DO</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
 <!-- INDEX END -->
 
-<HR>
-<P>
-<H1><A NAME="name">NAME</A></H1>
-<P>Device::Gsm - Perl extension to interface GSM cellular / modems</P>
-<P>
-<HR>
-<H1><A NAME="warning">WARNING</A></H1>
-<PRE>
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>Device::Gsm - Perl extension to interface GSM cellular / modems</p>
+<p>
+</p>
+<hr />
+<h1><a name="warning">WARNING</a></h1>
+<pre>
    This is C&lt;PRE-ALPHA&gt; software, still needs extensive testing and
    support for custom GSM commands, so use it at your own risk,
-   and without C&lt;ANY&gt; warranty! Have fun.</PRE>
-<P>
-<HR>
-<H1><A NAME="synopsis">SYNOPSIS</A></H1>
-<PRE>
-  use Device::Gsm;</PRE>
-<PRE>
-  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', pin =&gt; 'xxxx' );</PRE>
-<PRE>
+   and without C&lt;ANY&gt; warranty! Have fun.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+  use Device::Gsm;</pre>
+<pre>
+  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', pin =&gt; 'xxxx' );</pre>
+<pre>
   if( $gsm-&gt;connect() ) {
       print &quot;connected!\n&quot;;
   } else {
       print &quot;sorry, no connection with gsm phone on serial port!\n&quot;;
   }
-</PRE>
-<PRE>
-
+ 
   # Register to GSM network (you must supply PIN number in above new() call)
-  $gsm-&gt;register();</PRE>
-<PRE>
-
+  $gsm-&gt;register();</pre>
+<pre>
   # Get the manufacturer and model code of device
   my $mnf   = $gsm-&gt;manufacturer();
   my $model = $gsm-&gt;model();
-  print &quot;soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
-<PRE>
+  print &quot;soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</pre>
+<pre>
   my $imei = $gsm-&gt;imei() or
         $imei = $gsm-&gt;serial_number();
-</PRE>
-<PRE>
-
+ 
   # Test for command support
   if( $gsm-&gt;test_command('CGMI') ) {
       # `AT+CGMI' is supported!
   } else {
       # No luck, CGMI command not available
-  }</PRE>
-<PRE>
-
+  }</pre>
+<pre>
+ 
   print 'Service number is now: ', $gsm-&gt;service_center(), &quot;\n&quot;;
-  $gsm-&gt;service_center( '+001505050' );   # Sets new number</PRE>
-<PRE>
-
+  $gsm-&gt;service_center( '+001505050' );   # Sets new number
+ 
+ 
   # Send quickly a short text message
   $gsm-&gt;send_sms(
       recipient =&gt; '+3934910203040',
       content   =&gt; 'Hello world! from Device::Gsm'
-  );</PRE>
-<PRE>
+  );</pre>
+<pre>
   # The long way...
-  $gsm-&gt;send_sms(</PRE>
-<PRE>
+  $gsm-&gt;send_sms(</pre>
+<pre>
       recipient =&gt; '34910203040',
-      content   =&gt; 'Hello world again, with more args',</PRE>
-<PRE>
+      content   =&gt; 'Hello world again, with more args',</pre>
+<pre>
       # SMS sending mode
       # try `text' on old phones or GSM modems
       # `pdu' is the default nowadays
-      mode      =&gt; 'pdu',</PRE>
-<PRE>
+      mode      =&gt; 'pdu',</pre>
+<pre>
       # SMS Class (can be `normal' or `flash')
       # `flash' mode delivers instantly!
       class     =&gt; 'normal'
-  );</PRE>
-<PRE>
-  print &quot;Signal power seems to be &quot;, $gsm-&gt;signal_quality(), &quot; dBm\n&quot;;</PRE>
-<P>
-<HR>
-<H1><A NAME="description">DESCRIPTION</A></H1>
-<P><CODE>Device::Gsm</CODE> class implements basic GSM functions, network registration and SMS sending.</P>
-<P>This class supports also <CODE>PDU</CODE> mode to send <CODE>SMS</CODE> messages, and should be
-fairly usable. I'm developing and testing it under <CODE>Linux RedHat 7.1</CODE>
-with a 16550 serial port and <CODE>Siemens C35i</CODE> / <CODE>C45</CODE> GSM phones attached with
-a Siemens-compatible serial cable.</P>
-<P>Please be kind to the universe and contact me if you have troubles or you are
-interested in this.</P>
-<P>Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
+  );</pre>
+<pre>
+  # Test network signal
+  print &quot;Signal power seems to be &quot;, $gsm-&gt;signal_quality(), &quot; dBm\n&quot;;</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p><code>Device::Gsm</code> class implements basic GSM functions, network registration and SMS sending.</p>
+<p>This class supports also <code>PDU</code> mode to send <code>SMS</code> messages, and should be
+fairly usable. I'm developing and testing it under <code>Linux RedHat 7.1</code>
+with a 16550 serial port and <code>Siemens C35i</code> / <code>C45</code> GSM phones attached with
+a Siemens-compatible serial cable.</p>
+<p>Please be kind to the universe and contact me if you have troubles or you are
+interested in this.</p>
+<p>Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
 use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
-with your device (thanks!).</P>
-<P>
-<H2><A NAME="requires">REQUIRES</A></H2>
-<UL>
-<LI>
+with your device (thanks!).</p>
+<p>
+</p>
+<h2><a name="requires">REQUIRES</a></h2>
+<ul>
+<li></li>
 Device::Modem, which in turn requires
-<P></P>
-<LI>
+<p></p>
+<li></li>
 Device::SerialPort (or Win32::SerialPort on Windows machines)
-<P></P></UL>
-<P>
-<H2><A NAME="export">EXPORT</A></H2>
-<P>None</P>
-<P>
-<HR>
-<H1><A NAME="todo">TO-DO</A></H1>
-<DL>
-<DT><STRONG><A NAME="item_Spooler">Spooler</A></STRONG><BR>
-<DD>
+<p></p></ul>
+<p>
+</p>
+<h2><a name="export">EXPORT</a></h2>
+<p>None</p>
+<p>
+</p>
+<hr />
+<h1><a name="todo">TO-DO</a></h1>
+<dl>
+<dt><strong><a name="item_spooler">Spooler</a></strong><br />
+</dt>
+<dd>
 Build a simple spooler program that sends all SMS stored in a special
 queue (that could be a simple filesystem folder).
-<P></P>
-<DT><STRONG><A NAME="item_Validity_Period">Validity Period</A></STRONG><BR>
-<DD>
-Support <CODE>validity period</CODE> option on SMS sending. Tells how much time the SMS
+</dd>
+<p></p>
+<dt><strong><a name="item_validity_period">Validity Period</a></strong><br />
+</dt>
+<dd>
+Support <code>validity period</code> option on SMS sending. Tells how much time the SMS
 Service Center must hold the SMS for delivery.
-<P></P>
-<DT><STRONG><A NAME="item_Profiles">Profiles</A></STRONG><BR>
-<DD>
-Build a profile of the GSM device used, so that we don't have to <CODE>always</CODE>
+</dd>
+<p></p>
+<dt><strong><a name="item_profiles">Profiles</a></strong><br />
+</dt>
+<dd>
+Build a profile of the GSM device used, so that we don't have to <code>always</code>
 test each command to know whether it is supported or not, because this takes
 too time to be done every time.
-<P></P></DL>
-<P>
-<HR>
-<H1><A NAME="author">AUTHOR</A></H1>
-<P>Cosimo Streppone, <A HREF="mailto:cosimo@cpan.org">cosimo@cpan.org</A></P>
-<P>
-<HR>
-<H1><A NAME="see also">SEE ALSO</A></H1>
-<P><A HREF="/Device/Modem.html">the Device::Modem manpage</A>, <A HREF="/Device/SerialPort.html">the Device::SerialPort manpage</A>, <A HREF="/Win32/SerialPort.html">the Win32::SerialPort manpage</A>, <CODE>perl(1)</CODE></P>
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Cosimo Streppone, <a href="mailto:cosimo@cpan.org">cosimo@cpan.org</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p><a href="/Device/Modem.html">the Device::Modem manpage</a>, <a href="/Device/SerialPort.html">the Device::SerialPort manpage</a>, <a href="/Win32/SerialPort.html">the Win32::SerialPort manpage</a>, <code>perl(1)</code></p>
 
-</BODY>
+</body>
 
-</HTML>
+</html>
