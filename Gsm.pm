@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.26 2004-01-22 23:34:21 cosimo Exp $
+# $Id: Gsm.pm,v 1.27 2004-01-22 23:45:41 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.27 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -851,6 +851,13 @@ Please be monstruosly kind to the universe and (if you don't mind spending an SM
 use the C<examples/send_to_cosimo.pl> script to make me know that Device::Gsm works
 with your device (thanks!).
 
+Recent versions of C<Device::Gsm> have also an utility called C<autoscan> in
+the C<bin/> folder, that creates a little profile of the devices it runs
+against, that contains information about supported commands and exact output
+of commands to help recognize similar devices.
+
+Be sure to send me your profile by email (if you want to),
+so I can add better support for your device in the future!
 
 =head1 METHODS
 
@@ -1118,6 +1125,19 @@ you use instead of C</dev/ttyS1>).
 Try switching C<baudrate> parameter from 19200 (the default value)
 to 9600 or viceversa. This one is the responsible of 80% of the problems,
 because there is no baudrate auto-detection.
+
+=item Device autoscan
+
+If all else fails, please use the B<autoscan> utility in the C<bin/> folder
+of the C<Device::Gsm> distribution. Try running this autoscan utility and
+examine the log file produced in the current directory.
+
+If you lose any hope, send me this log file so I can eventually
+have any clue about the problem / failure.
+
+Also this is a profiling tool, to know which commands are supported
+by your device, so please send me profiles of your devices, so
+I can add better support for all devices in the future!
 
 =back
 

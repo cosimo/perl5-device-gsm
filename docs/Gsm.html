@@ -100,6 +100,12 @@ interested in this.</p>
 <p>Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
 use the <code>examples/send_to_cosimo.pl</code> script to make me know that Device::Gsm works
 with your device (thanks!).</p>
+<p>Recent versions of <code>Device::Gsm</code> have also an utility called <code>autoscan</code> in
+the <code>bin/</code> folder, that creates a little profile of the devices it runs
+against, that contains information about supported commands and exact output
+of commands to help recognize similar devices.</p>
+<p>Be sure to send me your profile by email (if you want to),
+so I can add better support for your device in the future!</p>
 <p>
 </p>
 <hr />
@@ -345,6 +351,23 @@ you use instead of <code>/dev/ttyS1</code>).
 Try switching <code>baudrate</code> parameter from 19200 (the default value)
 to 9600 or viceversa. This one is the responsible of 80% of the problems,
 because there is no baudrate auto-detection.
+</dd>
+<p></p>
+<dt><strong><a name="item_device_autoscan">Device autoscan</a></strong><br />
+</dt>
+<dd>
+If all else fails, please use the <strong>autoscan</strong> utility in the <code>bin/</code> folder
+of the <code>Device::Gsm</code> distribution. Try running this autoscan utility and
+examine the log file produced in the current directory.
+</dd>
+<dd>
+<p>If you lose any hope, send me this log file so I can eventually
+have any clue about the problem / failure.</p>
+</dd>
+<dd>
+<p>Also this is a profiling tool, to know which commands are supported
+by your device, so please send me profiles of your devices, so
+I can add better support for all devices in the future!</p>
 </dd>
 <p></p></dl>
 <p>
