@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.28 2004-01-23 00:01:30 cosimo Exp $
+# $Id: Gsm.pm,v 1.29 2004-03-23 22:11:26 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.28 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.29 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -122,6 +122,28 @@ sub datetime {
 }
 
 #
+# Delete a message from sim card
+#
+sub delete_sms {
+    my $self      = $_[0];
+    my $msg_index = $_[1];
+    my $ok;
+
+    if( ! defined $msg_index || ! $msg_index ) {
+        $self->log->write('warn', 'undefined message number. cannot delete sms message');
+        return 0;
+    }
+       
+    $self->atsend( qq{AT+CMGD="$msg_index"} . Device::Modem::CR );
+    $self->wait(250);
+    $ok = $self->parse_answer();
+
+    $self->log->write('info', 'deleting sms n.'.$msg_index.' from sim card => ' . ($ok ? 'ok' : '*FAILED*') );
+
+    return $ok;
+}
+
+#
 # Hangup and terminate active call(s)
 # this overrides the `Device::Modem::hangup()' method
 #
@@ -152,6 +174,31 @@ sub manufacturer() {
 	}
 
 	return $man || $ok;
+
+}
+
+#
+# Set text or pdu mode for gsm devices. If no parameter passed, returns current mode
+#
+sub mode {
+    my $self = shift;
+
+    if( @_ ) {
+        my $mode = lc $_[0];
+        if( $mode eq 'text' ) {
+            $mode = 1;
+        } else {
+            $mode = 0;
+        }
+        $self->{'_mode'} = $mode ? 'text' : 'pdu';
+        $self->log->write('info', 'setting mode to ['.$self->{'_mode'}.']');
+        $self->atsend( qq{AT+CMGF=$mode} . Device::Modem::CR );
+        $self->wait(100);
+
+        return $self->parse_answer();
+    }
+
+    return($self->{'_mode'}||'');
 
 }
 
@@ -288,65 +335,25 @@ sub test_command {
 #
 # Read all messages on SIM card (XXX must be registered on network)
 #
-sub messages() {
+sub messages {
 	my $self = shift;
-	$self->log->write('info', 'reading messages on SIM card');
+    my @messages;
+    $self->log->write('info', 'reading messages on SIM card');
 
-	# Register on network (give your PIN number for this!)
-	#return undef unless $self->register();
-	$self->register();
+    # Register on network (give your PIN number for this!)
+    #return undef unless $self->register();
+    $self->register();
 
-	#
-	# Read messages (XXX need to check if device supports CMGL with `stat'=4)
-	#
-	$self->atsend('AT+CMGL=4'.Device::Modem::CR);
-	my($messages) = $self->answer();
+    #
+    # Read messages (TODO need to check if device supports CMGL with `stat'=4)
+    #
+    if( $self->mode() eq 'text' ) {
+        @messages = $self->_read_messages_text();
+    } else {
+	    @messages = $self->_read_messages_pdu();
+    }
 
-	#if( $code =~ /ERROR/ ) {
-	#	$self->log->write('error', 'cannot read SMS messages on SIM: ['.$code.']');
-	#	return ();
-	#}
-
-	# Ok, messages read, now convert from PDU and store in object
-	$self->log->write('debug', 'messages='.$messages );
-
-	my @data = split /\r+\n*/m, $messages;
-
-	# Check for errors on SMS reading
-	my $code;
-	if( ($code = pop @data) =~ /ERROR/ ) {
-		$self->log->write('error', 'cannot read SMS messages on SIM: ['.$code.']');
-		return ();
-	}
-
-	my @message = ();
-	my $current;
-
-	#
-	# Parse received data (result of +CMGL command)
-	#
-	while( @data ) {
-
-		$self->log->write('debug', 'data[] = ', $data[0] );
-
-		# Instance new message object
-		my $msg = new Device::Gsm::Sms(
-			header => shift @data,
-			pdu    => shift @data
-		);
-
-		# Check if message has been instanced correctly
-		if( ref $msg ) {
-			push @message, $msg;
-		} else {
-			$self->log->write('info', 'could not instance message!');
-		}
-
-	}
-
-	$self->log->write('info', 'found '.(scalar @message).' messages on SIM. Reading.');
-
-	return @message;
+    return @messages;
 }
 
 #
@@ -457,6 +464,63 @@ sub send_sms {
 }
 
 #
+#
+# read sim messages in pdu mode
+#
+#
+sub _read_messages_pdu {
+    my $self = $_[0];
+
+    $self->mode('pdu');
+    $self->atsend( q{AT+CMGL=4} . Device::Modem::CR);
+	my($messages) = $self->answer();
+
+	# Ok, messages read, now convert from PDU and store in object
+	$self->log->write('debug', 'messages='.$messages );
+
+	my @data = split /\r+\n*/m, $messages;
+
+	# Check for errors on SMS reading
+	my $code;
+	if( ($code = pop @data) =~ /ERROR/ ) {
+		$self->log->write('error', 'cannot read SMS messages on SIM: ['.$code.']');
+		return ();
+	}
+
+	my @message = ();
+	my $current;
+
+	#
+	# Parse received data (result of +CMGL command)
+	#
+	while( @data ) {
+
+		$self->log->write('debug', 'data[] = ', $data[0] );
+
+		# Instance new message object
+		my $msg = new Device::Gsm::Sms(
+			header => shift @data,
+			pdu    => shift @data,
+            # XXX mode   => $self->mode(),
+            parent => $self                  # Ref to parent Device::Gsm class
+		);
+
+		# Check if message has been instanced correctly
+		if( ref $msg ) {
+			push @message, $msg;
+		} else {
+			$self->log->write('info', 'could not instance message!');
+		}
+
+	}
+
+	$self->log->write('info', 'found '.(scalar @message).' messages on SIM. Reading.');
+
+	return @message;
+
+}
+
+#
 # _send_sms_text( %options ) : sends message in text mode
 #
 sub _send_sms_text {
@@ -471,7 +535,7 @@ sub _send_sms_text {
 	my $cReply;
 
 	# Select text format for messages
-	$me->atsend(  q[AT+CMGF=1] . Device::Modem::CR );
+	$me->mode('text');
 	$me->log->write('info', 'Selected text format for message sending');
 
 	# Send sms in text mode
@@ -792,6 +856,7 @@ sub _gsm2ascii {
 }
 
 
+
 2703;
 
 
@@ -911,6 +976,14 @@ If your device does not support this command, an B<undefined> value will be retu
 in either case.
 
 
+=head2 deleteMessage()
+
+This method deletes a message from your SIM card, given the message index number.
+Example:
+
+    $gsm->deleteMessage(3);
+
+
 =head2 hangup()
 
 Hangs up the phone, terminating the active calls, if any.
@@ -949,6 +1022,18 @@ This method is a somewhat unstable and subject to change, but for now it seems t
 It is meant to extract all text SMS messages stored on your SIM card.
 In list context, it returns a list of messages (or undefined value if no message or errors),
 every message being a C<Device::Gsm::Sms> object.
+
+
+=head2 mode()
+
+Sets the device GSM command mode. Accepts one parameter to set the new mode that can
+be the string C<text> or C<pdu>. Example:
+
+	# Set text mode
+    $gsm->mode('text');
+    
+    # Set pdu mode
+    $gsm->mode('pdu');
 
 
 =head2 model()
