@@ -1,39 +1,36 @@
 # Device::Gsm - a Perl class to interface GSM devices as AT modems
-# Copyright (C) 2000-2002 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# it only under the terms of Perl itself.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# Perl licensing terms for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-# WARNING
-#
-# This is PRE-ALPHA software, still needs extensive testing and
-# support for custom GSM commads, so use it at your own risk,
+# Additionally, this is now ALPHA software, still needs extensive
+# testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.9 2002-04-08 05:34:20 cosimo Exp $
+# $Id: Gsm.pm,v 1.10 2002-04-09 22:27:49 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
+use Device::Gsm::Pdu;
+
+@Device::Gsm::ISA = ('Device::Modem');
 
 # Connection defaults to 19200 baud. This seems to be the optimal
 # rate for serial links to new gsm devices
 $Device::Gsm::BAUDRATE = 19200;
 
-@Device::Gsm::ISA = ('Device::Modem');
+# Time to wait after network register command (secs)
+$Device::Gsm::REGISTER_DELAY = 2;
+
 
 # Connect on serial port to gsm device
 # see parameters on Device::Modem::connect()
@@ -199,52 +196,162 @@ sub register {
 
 	# Store status in object and return
 	$me->{'REGISTERED'} = $lOk;
-	
+
+	$lOk;
+
 	# XXX Sending number of service provider
 	# $me->log -> write( 'Sending service provider number' );
 	
 }
 
-# send_sms( recipient, text, success )
+
+# send_sms( %options )
 #
-# for now, this works only in text mode, not PDU mode!
-# so it's not very usable nowadays... :-(
+#	recipient => '+39338101010'
+#	class     => 'flash' | 'normal'
+#   validity  => [ default = 4 days ]
+#   content   => 'text-only for now'
+#   mode      => 'text' | 'pdu'        (default = 'pdu')
+# 
 sub send_sms {
-	my($me, $num, $text) = @_;
+
+	my( $me, %opt ) = @_;
+
 	my $lOk = 0;
-	my $cReply;
+
+	return unless $opt{'recipient'} and $opt{'content'};
 
 	# Check if registered to network
-	if( ! $me->{REGISTERED} ) {
+	if( ! $me->{'REGISTERED'} ) {
 		$me->log->write( 'info', 'Not yet registered, doing now...' );
 		$me->register();
+
+		# Wait some time to allow SIM registering to network
+		$me->wait( $Device::Gsm::REGISTER_DELAY << 10 );
 	}
 
-	# Again check if registered
-	if( ! $me->{REGISTERED} ) {
+	# Again check if now registered
+	if( ! $me->{'REGISTERED'} ) {
 		
 		$me->log->write( 'warning', 'ERROR in registering to network' );
 		return $lOk;
 		
+	}
+
+	# Ok, registered. Select mode to send SMS
+	$opt{'mode'} ||= 'PDU';
+	if( uc $opt{'mode'} ne 'TEXT' ) {
+
+		$lOk = $me->_send_sms_pdu( %opt );
+
 	} else {
-		
-		# Send sms in text mode
-		$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
-		$me->atsend( $text . Device::Modem::CTRL_Z );
-		
-		# Get reply and check for errors
-		$cReply = $me->answer();
-		if( $cReply =~ /ERROR/i ) {
-			$me->log->write( 'warning', "ERROR in sending SMS" );
-		} else {
-			$me->log->write( 'info', "Sent SMS to $num!" );
-			$lOk = 1;
-		}
+
+		$lOk = $me->_send_sms_text( %opt );
+	}
+
+	# Return result of sending
+	return $lOk;
+}
+
+
+# _send_sms_text( %options ) : sends message in text mode
+sub _send_sms_text {
+	my($me, %opt) = @_;
+
+	my $num  = $opt{'recipient'};
+	my $text = $opt{'content'};
+
+	return 0 unless $num and $text;
+
+	my $lOk = 0;
+	my $cReply;
+
+	# Send sms in text mode
+	$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
+	$me->wait(500);
+
+	$me->atsend( $text . Device::Modem::CTRL_Z );
+	$me->wait(1000);
+
+	# Get reply and check for errors
+	$cReply = $me->answer();
+	if( $cReply =~ /ERROR/i ) {
+		$me->log->write( 'warning', "ERROR in sending SMS" );
+	} else {
+		$me->log->write( 'info', "Sent SMS (text mode) to $num!" );
+		$lOk = 1;
 	}
 	
 	$lOk
 }
 
+
+sub _send_sms_pdu {
+	my($me, %opt) = @_;
+
+	# Get options
+	my $num =  $opt{'recipient'};
+	my $text = $opt{'content'};
+
+	return 0 unless $num and $text;
+
+	# Select class of sms (normal or *flash sms*)
+	my $class = $opt{'class'} || 'normal';
+	$class = $class eq 'normal' ? '00' : 'F0';
+
+	# TODO Validity period (now fixed to 4 days)
+	my $vp = 'AA';
+
+	my $lOk = 0;
+	my $cReply;
+
+	# Send sms in PDU mode
+
+	#
+	# Example of sms send in PDU mode
+	#
+	#AT+CMGS=22
+	#> 0011000A8123988277190000AA0AE8329BFD4697D9EC37
+	#+CMGS: 111
+	#
+	#OK
+
+	# Encode DA
+	my $enc_da = Device::Gsm::Pdu::encodeAddress( $num );
+	$me->log->write('info', 'encoded dest. address is ['.$enc_da.']');
+
+	# Encode text
+	my $enc_msg = Device::Gsm::Pdu::encodeText7( $text );
+	$me->log->write('info', 'encoded 7bit text (w/length) is ['.$enc_msg.']');
+
+	# Build PDU data
+	my $pdu = uc join( '', '00', '11', '00', $enc_da, '00', $class, $vp, $enc_msg );
+
+	$me->log->write('info', 'due to send PDU ['.$pdu.']');
+
+	# Sending main SMS command ( with length )
+	my $len = ( (length $pdu) >> 1 ) - 1; 
+	#$me->log->write('info', 'AT+CMGS='.$len.' string sent');
+	$me->atsend( qq[AT+CMGS=$len] . Device::Modem::CR );
+	$me->wait( 1000 );
+
+	# Sending SMS content encoded as PDU	
+	$me->log->write('info', 'PDU sent ['.$pdu.' + CTRLZ]' );
+	$me->atsend( $pdu . Device::Modem::CTRL_Z );
+	$me->wait( 1000 );
+
+	# Get reply and check for errors
+	$cReply = $me->answer();
+
+	if( $cReply =~ /ERROR/i ) {
+		$me->log->write( 'warning', "ERROR in sending SMS" );
+	} else {
+		$me->log->write( 'info', "Sent SMS (pdu mode) to $num!" );
+		$lOk = 1;
+	}
+	
+	$lOk
+}
 
 
 #
@@ -324,8 +431,7 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
 
   use Device::Gsm;
 
-  # NOT YET DEFINED!
-  my $gsm = new Device::Gsm( port => '/dev/ttyS1', pin => '0124' );
+  my $gsm = new Device::Gsm( port => '/dev/ttyS1', pin => 'xxxx' );
 
   if( $gsm->connect() ) {
       print "connected!\n";
@@ -339,40 +445,55 @@ Device::Gsm - Perl extension to interface GSM cellular / modems
   # Get the manufacturer and model code of device
   my $mnf   = $gsm->manufacturer();
   my $model = $gsm->model();
- 
-  # What GSM software verson ?
-  print 'GSM VERSION is ", $gsm->software_version(), "\n";
+  print 'soft version is ", $gsm->software_version(), "\n";
 
-  # IMEI (serial number) of phone
-  my $imei = $gsm->imei();  # or $imei = $gsm->serial_number();
+  my $imei = $gsm->imei() or
+	$imei = $gsm->serial_number();
  
   # Test for command support
   if( $self->test_command('CGMI') ) {
-      # `AT+CGMI' command supported!
+      # `AT+CGMI' is supported!
   } else {
       # No luck, CGMI command not available
   }
  
-  # Set service center number (depends on your network operator)
-  $gsm->service_number( '+001505050' );   # This one is fake, not usable!
- 
-  # Retrieve actual stored service number
   print 'Service number is now: ', $gsm->service_number(), "\n";
- 
-  # Send a short text message (SMS in text mode *only*, no PDU)
-  $modem->send_sms( '0123456789', 'A little message from Device::Gsm' );
+  $gsm->service_number( '+001505050' );   # Sets new number
+  
+  # Send quickly a short text message
+  $modem->send_sms(
+      recipient => '+3934910203040',
+      content   => 'Hello world! from Device::Gsm'
+  );
+
+  # The long way...
+  $modem->send_sms(
+
+      recipient => '34910203040',
+      content   => 'Hello world again, with more args',
+
+      # SMS Class (can be `normal' or `flash')
+      # `flash' mode delivers instantly!
+      class     => 'normal',
+
+      # SMS sending mode
+      # try `text' or old phones or GSM modems (as Falcom or Digicom),
+      # `pdu' is the default nowadays
+      mode      => 'pdu'
+  );
  
 
 =head1 DESCRIPTION
 
-Device::Gsm class implements basic GSM network registration and SMS sending functions.
-For now, it is only an example that inherits from Device::Modem for all low-level functions.
-It is planned to add more custom GSM commands support, with device identification, and so on...
+C<Device::Gsm> class implements basic GSM functions, network registration and SMS sending.
 
-Actually, this was a rather dated module, that does not support PDU mode
-(for example) and it is now undergoing a major rewrite.
+This class supports also C<PDU> mode to send C<SMS> messages, and should be
+fairly usable. I'm developing and testing it under C<Linux RedHat 7.1>
+with a 16550 serial port and C<Siemens C35i> / C<C45> GSM phones attached with
+a Siemens-compatible serial cable.
 
-So please be patient and contact me if you are interested in this.
+Please be kind to the universe and contact me if you have troubles or you are
+interested in this.
 
 =head2 REQUIRES
 
@@ -397,9 +518,16 @@ None
 
 =over 4
 
-=item *
+=item Validity Period 
 
-Too many things, but your suggestions are welcome...
+Support C<validity period> option on SMS sending. Tells how much time the SMS
+Service Center must hold the SMS for delivery.
+
+=item Profiles
+
+Build a profile of the GSM device used, so that we don't have to C<always>
+test each command to know whether it is supported or not, because this takes
+too time to be done every time.
 
 =back
 
