@@ -3,14 +3,14 @@
 # Short example of use for Device::Gsm class
 # Script that deletes permanently one message from sim
 #
-# $Id: delete_message.pl,v 1.1 2004-08-18 06:09:53 cosimo Exp $
+# $Id: delete_message.pl,v 1.2 2004-08-18 07:02:07 cosimo Exp $
 
 use strict;
 use lib '../lib';
 use lib '../';
 use Gsm;
 
-print "\nthis is ", '$Id: delete_message.pl,v 1.1 2004-08-18 06:09:53 cosimo Exp $', "\n";
+print "\nthis is ", '$Id: delete_message.pl,v 1.2 2004-08-18 07:02:07 cosimo Exp $', "\n";
 print "\nDeletes one sms message from your sim card...\n";
 
 my $port = $ENV{'DEV_GSM_PORT'} || ( $^O =~ /Win/ ? 'COM2' : '/dev/ttyS1' );
@@ -36,7 +36,7 @@ $mypin ||= $pin;
 my $gsm = new Device::Gsm(
 	port => $myport,
 	log => 'file,messages.log',
-    loglevel => 'debug'
+    loglevel => 'info'
 );
 
 die "cannot create Device::Gsm object!" unless $gsm;
@@ -59,32 +59,15 @@ my $lOk = scalar @msg;
 
 if( $lOk ) {
 
-	print "You have messages!\n" ;
-
-=cut
-	my $n = 0;
-	foreach( @msg ) {
-		my $sms = $_;
-		next unless defined $sms;
-		print '-' x 60, "\n", "MESSAGE N. $n\n";
-		print 'Type   ',($sms->type() eq Device::Gsm::Sms::SMS_SUBMIT ? 'SUBMIT' : 'DELIVER'), "\n";
-		print 'Status ', $sms->status(), "\n";
-		print 'From   ', $sms->sender(), "\n";
-		print 'To     ', $sms->recipient(), "\n";
-		print 'Text   [', $sms->text(), "]\n";
-		$n++;
-		<STDIN>;
-	}
-=cut
+	print "You have ", $lOk, " messages!\n" ;
 
     my $idx = -1;
-
     do {
         print "Insert number to be deleted (0-".($#msg)."): ";
         $idx = <STDIN>;
         chomp $idx;
         $idx -= 0;
-    } while ( $idx >= 0 && $idx <= $#msg);
+    } while ($idx < 0 || $idx > $#msg);
 
     print "Ok, going to delete message [$idx]\n";
 
