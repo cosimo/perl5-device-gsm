@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.6 2004-03-23 22:10:39 cosimo Exp $
+# $Id: Sms.pm,v 1.7 2004-03-23 22:23:58 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -424,6 +424,20 @@ Binary encoded sms data
 
 =back
 
+
+=head2 index()
+
+Returns the sms message index number, that is the position of message in the
+internal device memory or sim card.
+This number is used for example to delete the message.
+
+    my $gsm = Device::Gsm->new(port=>'/dev/ttyS0');
+    ...
+    my @messages = $gsm->messages();
+    ...
+    # Delete the first returned message
+    my $msg = shift @messages;
+    $gsm->delete_sms( $msg->index() );
 
 =head2 recipient()
 
