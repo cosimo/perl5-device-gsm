@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Device::Gsm - Perl extension to interface GSM cellular / modems</title>
+<link rev="made" href="mailto:cosimo@cpan.org" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#warning">WARNING</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<ul>
+
+		<li><a href="#requires">REQUIRES</a></li>
+		<li><a href="#export">EXPORT</a></li>
+	</ul>
+
+	<li><a href="#todo">TO-DO</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>Device::Gsm - Perl extension to interface GSM cellular / modems</p>
+<p>
+</p>
+<hr />
+<h1><a name="warning">WARNING</a></h1>
+<pre>
+   This is C&lt;PRE-ALPHA&gt; software, still needs extensive testing and
+   support for custom GSM commands, so use it at your own risk,
+   and without C&lt;ANY&gt; warranty! Have fun.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+  use Device::Gsm;</pre>
+<pre>
+  my $gsm = new Device::Gsm( port =&gt; '/dev/ttyS1', pin =&gt; 'xxxx' );</pre>
+<pre>
+  if( $gsm-&gt;connect() ) {
+      print &quot;connected!\n&quot;;
+  } else {
+      print &quot;sorry, no connection with gsm phone on serial port!\n&quot;;
+  }
+ 
+  # Register to GSM network (you must supply PIN number in above new() call)
+  $gsm-&gt;register();</pre>
+<pre>
+  # Get the manufacturer and model code of device
+  my $mnf   = $gsm-&gt;manufacturer();
+  my $model = $gsm-&gt;model();
+  print &quot;soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</pre>
+<pre>
+  my $imei = $gsm-&gt;imei() or
+        $imei = $gsm-&gt;serial_number();
+ 
+  # Test for command support
+  if( $gsm-&gt;test_command('CGMI') ) {
+      # `AT+CGMI' is supported!
+  } else {
+      # No luck, CGMI command not available
+  }</pre>
+<pre>
+ 
+  print 'Service number is now: ', $gsm-&gt;service_center(), &quot;\n&quot;;
+  $gsm-&gt;service_center( '+001505050' );   # Sets new number
+ 
+ 
+  # Send quickly a short text message
+  $gsm-&gt;send_sms(
+      recipient =&gt; '+3934910203040',
+      content   =&gt; 'Hello world! from Device::Gsm'
+  );</pre>
+<pre>
+  # The long way...
+  $gsm-&gt;send_sms(</pre>
+<pre>
+      recipient =&gt; '34910203040',
+      content   =&gt; 'Hello world again, with more args',</pre>
+<pre>
+      # SMS sending mode
+      # try `text' on old phones or GSM modems
+      # `pdu' is the default nowadays
+      mode      =&gt; 'pdu',</pre>
+<pre>
+      # SMS Class (can be `normal' or `flash')
+      # `flash' mode delivers instantly!
+      class     =&gt; 'normal'
+  );</pre>
+<pre>
+  # Test network signal
+  print &quot;Signal power seems to be &quot;, $gsm-&gt;signal_quality(), &quot; dBm\n&quot;;</pre>
+<pre>
+  # Get list of Device::Gsm::Sms message objects
+  # see `examples/read_messages.pl' for all the details
+  my @messages = $gsm-&gt;messages();</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p><code>Device::Gsm</code> class implements basic GSM functions, network registration and SMS sending.</p>
+<p>This class supports also <code>PDU</code> mode to send <code>SMS</code> messages, and should be
+fairly usable. I'm developing and testing it under <code>Linux RedHat 7.1</code>
+with a 16550 serial port and <code>Siemens C35i</code> / <code>C45</code> GSM phones attached with
+a Siemens-compatible serial cable.</p>
+<p>Please be kind to the universe and contact me if you have troubles or you are
+interested in this.</p>
+<p>Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
+use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
+with your device (thanks!).</p>
+<p>
+</p>
+<h2><a name="requires">REQUIRES</a></h2>
+<ul>
+<li></li>
+Device::Modem, which in turn requires
+<p></p>
+<li></li>
+Device::SerialPort (or Win32::SerialPort on Windows machines)
+<p></p></ul>
+<p>
+</p>
+<h2><a name="export">EXPORT</a></h2>
+<p>None</p>
+<p>
+</p>
+<hr />
+<h1><a name="todo">TO-DO</a></h1>
+<dl>
+<dt><strong><a name="item_spooler">Spooler</a></strong><br />
+</dt>
+<dd>
+Build a simple spooler program that sends all SMS stored in a special
+queue (that could be a simple filesystem folder).
+</dd>
+<p></p>
+<dt><strong><a name="item_validity_period">Validity Period</a></strong><br />
+</dt>
+<dd>
+Support <code>validity period</code> option on SMS sending. Tells how much time the SMS
+Service Center must hold the SMS for delivery.
+</dd>
+<p></p>
+<dt><strong><a name="item_profiles">Profiles</a></strong><br />
+</dt>
+<dd>
+Build a profile of the GSM device used, so that we don't have to <code>always</code>
+test each command to know whether it is supported or not, because this takes
+too time to be done every time.
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Cosimo Streppone, <a href="mailto:cosimo@cpan.org">cosimo@cpan.org</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p><a href="/Device/Modem.html">the Device::Modem manpage</a>, <a href="/Device/SerialPort.html">the Device::SerialPort manpage</a>, <a href="/Win32/SerialPort.html">the Win32::SerialPort manpage</a>, <code>perl(1)</code></p>
+
+</body>
+
+</html>
