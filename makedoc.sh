@@ -1,10 +1,10 @@
 #!/bin/sh
 #
-# $Id: makedoc.sh,v 1.1 2002-09-11 22:24:20 cosimo Exp $
+# $Id: makedoc.sh,v 1.2 2003-03-24 23:03:45 cosimo Exp $
 #
 
-mv README README.old
-pod2text Gsm.pm >README
+#mv README README.old
+#pod2text Gsm.pm >README
 
 mv Gsm.html Gsm.html.old
 pod2html Gsm.pm >Gsm.html
