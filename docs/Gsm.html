@@ -22,13 +22,16 @@
 		<li><a href="#connect__"><code>connect()</code></a></li>
 		<li><a href="#datetime__"><code>datetime()</code></a></li>
 		<li><a href="#hangup__"><code>hangup()</code></a></li>
-		<li><a href="#manufacturer__"><code>manufacturer()</code></a></li>
-		<li><a href="#model__"><code>model()</code></a></li>
 		<li><a href="#imei__"><code>imei()</code></a></li>
+		<li><a href="#manufacturer__"><code>manufacturer()</code></a></li>
+		<li><a href="#messages__"><code>messages()</code></a></li>
+		<li><a href="#model__"><code>model()</code></a></li>
 		<li><a href="#signal_quality__"><code>signal_quality()</code></a></li>
 		<li><a href="#software_version__"><code>software_version()</code></a></li>
-		<li><a href="#test_command___cmd___">test_command( [cmd] )</a></li>
-		<li><a href="#xxx_to_be_completed_xxx">XXX TO BE COMPLETED XXX</a></li>
+		<li><a href="#test_command__"><code>test_command()</code></a></li>
+		<li><a href="#register__"><code>register()</code></a></li>
+		<li><a href="#send_sms__"><code>send_sms()</code></a></li>
+		<li><a href="#service_center__"><code>service_center()</code></a></li>
 	</ul>
 
 	<li><a href="#requires">REQUIRES</a></li>
@@ -152,6 +155,14 @@ Example:</p>
         $gsm-&gt;hangup();</pre>
 <p>
 </p>
+<h2><a name="imei__"><code>imei()</code></a></h2>
+<p>Returns the device own IMEI number (International Mobile Equipment Identifier ???).
+This identifier is numeric and should be unique among all GSM mobile devices and phones.
+This is not really true, but ... . Example:</p>
+<pre>
+        my $imei = $gsm-&gt;imei();</pre>
+<p>
+</p>
 <h2><a name="manufacturer__"><code>manufacturer()</code></a></h2>
 <p>Returns the device manufacturer, usually only the first word (example: <code>Nokia</code>,
 <code>Siemens</code>, <code>Falcom</code>, ...). Example:</p>
@@ -164,20 +175,19 @@ Example:</p>
         }</pre>
 <p>
 </p>
+<h2><a name="messages__"><code>messages()</code></a></h2>
+<p>This method is a somewhat unstable and subject to change, but for now it seems to work.
+It is meant to extract all text SMS messages stored on your SIM card.
+In list context, it returns a list of messages (or undefined value if no message or errors),
+every message being a <code>Device::Gsm::Sms</code> object.</p>
+<p>
+</p>
 <h2><a name="model__"><code>model()</code></a></h2>
 <p>Returns phone/device model name or number. Example:</p>
 <pre>
         my $model = $gsm-&gt;model();</pre>
 <p>For example, for Siemens C45, <code>$model</code> holds <code>C45</code>; for Nokia 6600, <code>$model</code>
 holds <code>6600</code>.</p>
-<p>
-</p>
-<h2><a name="imei__"><code>imei()</code></a></h2>
-<p>Returns the device own IMEI number (International Mobile Equipment Identifier ???).
-This identifier is numeric and should be unique among all GSM mobile devices and phones.
-This is not really true, but ... . Example:</p>
-<pre>
-        my $imei = $gsm-&gt;imei();</pre>
 <p>
 </p>
 <h2><a name="signal_quality__"><code>signal_quality()</code></a></h2>
@@ -197,10 +207,106 @@ an <strong>undefined</strong> value will be returned.</p>
 <p>For example, for my Siemens C45, <code>$rev</code> holds <code>06</code>.</p>
 <p>
 </p>
-<h2><a name="test_command___cmd___">test_command( [cmd] )</a></h2>
+<h2><a name="test_command__"><code>test_command()</code></a></h2>
+<p>This method allows to query the device to know if a specific AT GSM command is supported.
+This is used only with GSM commands (those with <code>AT+</code> prefix).
+For example, I want to know if my device supports the <code>AT+GXXX</code> command.
+All we have to do is:</p>
+<pre>
+        my $gsm = Device::Gsm-&gt;new( port =&gt; '/dev/myport' );</pre>
+<pre>
+        ...</pre>
+<pre>
+        if( $gsm-&gt;test_command('GXXX') ) {
+                # Ok, command is supported
+        } else {
+                # Nope, no GXXX command
+        }</pre>
+<p>Note that if you omit the starting <code>+</code> character, it is automatically added.
+You can also test commands like <code>^SNBR</code> or the like, without <code>+</code> char being added.</p>
+<I>Must be explained better, uh?</I><p>
+</p>
+<h2><a name="register__"><code>register()</code></a></h2>
+<p>``Registering'' on the GSM network is what happens when you turn on your mobile phone or GSM equipment
+and the device tries to reach the GSM operator network. If your device requires a <strong>PIN</strong> number,
+it is used here (but remember to supply the <code>pin</code> parameter in <code>new()</code> object constructor for this
+to work.</p>
+<p>Registration can take some seconds, don't worry for the wait.
+After that, you are ready to send your SMS messages or do some voice calls, ... .
+Normally you don't need to call <code>register()</code> explicitly because it is done automatically for you
+when/if needed.</p>
+<p>If return value is true, registration was successful, otherwise there is something wrong;
+probably you supplied the wrong PIN code or network unreachable.</p>
 <p>
 </p>
-<h2><a name="xxx_to_be_completed_xxx">XXX TO BE COMPLETED XXX</a></h2>
+<h2><a name="send_sms__"><code>send_sms()</code></a></h2>
+<p>Obviously, this sends out SMS text messages. I should warn you that <strong>you cannot send</strong>
+(for now) MMS, ringtone, smart, ota messages of any kind with this method.</p>
+<p>Send out an SMS message quickly:</p>
+<pre>
+        my $sent = $gsm-&gt;send_sms(
+                content   =&gt; 'Hello, world!',   # SMS text
+                recipient =&gt; '+99000123456',    # recipient phone number
+        );</pre>
+<pre>
+        if( $sent ) {
+                print &quot;OK!&quot;;
+        } else {
+                print &quot;Troubles...&quot;;
+        }</pre>
+<p>The allowed parameters to <code>send_sms()</code> are:</p>
+<dl>
+<dt><strong><a name="item_class"><code>class</code></a></strong><br />
+</dt>
+<dd>
+Class parameter can assume two values: <code>normal</code> and <code>flash</code>. Flash (or class zero) messages are
+particular because they are immediately displayed (without user confirm) and never stored
+on phone memory, while <code>normal</code> is the default.
+</dd>
+<p></p>
+<dt><strong><a name="item_content"><code>content</code></a></strong><br />
+</dt>
+<dd>
+This is the text you want to send, consisting of max 160 chars if you use <strong>PDU</strong> mode
+and 140 (?) if in <strong>text</strong> mode (more on this later).
+</dd>
+<p></p>
+<dt><strong><a name="item_mode"><code>mode</code></a></strong><br />
+</dt>
+<dd>
+Can assume two values (case insensitive): <code>pdu</code> and <code>text</code>.
+<code>PDU</code> means <strong>Protocol Data Unit</strong> and it is a sort of <strong>binary</strong> encoding of commands,
+to save time/space, while <code>text</code> is the normal GSM commands text mode.
+</dd>
+<dd>
+<p>Recent mobile phones and GSM equipments surely have support for <code>PDU</code> mode.
+Older OEM modules (like Falcom Swing, for example) don't have PDU mode, but only text mode.
+It is just a matter of trying.</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_recipient"><code>recipient</code></a></strong><br />
+</dt>
+<dd>
+Phone number of message recipient
+</dd>
+<p></p></dl>
+<p>
+</p>
+<h2><a name="service_center__"><code>service_center()</code></a></h2>
+<p>If called without parameters, returns the actual SMS Service Center phone number. This is
+the number your phone automatically calls when receiving and sending SMS text messages, and
+your network operator should tell you what this number is.</p>
+<p>Example:</p>
+<pre>
+        my $gsm = Device::Gsm-&gt;new( port =&gt; 'COM1' );
+        $gsm-&gt;connect() or die &quot;Can't connect&quot;;
+        $srv_cnt = $gsm-&gt;service_center();
+        print &quot;My service center number is: $srv_cnt\n&quot;;</pre>
+<p>If you want to set or change this number (if used improperly this can disable
+sending of SMS messages, so be warned!), you can try something like:</p>
+<pre>
+        my $ok = $gsm-&gt;service_center('+99001234567');
+        print &quot;Service center changed!\n&quot; if $ok;</pre>
 <p>
 </p>
 <hr />
@@ -232,8 +338,8 @@ queue (that could be a simple filesystem folder).
 <dt><strong><a name="item_validity_period">Validity Period</a></strong><br />
 </dt>
 <dd>
-Support <code>validity period</code> option on SMS sending. Tells how much time the SMS
-Service Center must hold the SMS for delivery.
+Support <code>validity</code> period option on SMS sending. Tells how much time the SMS
+Service Center must hold the SMS for delivery when not received.
 </dd>
 <p></p>
 <dt><strong><a name="item_profiles">Profiles</a></strong><br />
