@@ -1,8 +1,8 @@
 ,=======================================.
-| Device::Gsm            perl extension |      24/06/2003
+| Device::Gsm            perl extension |      21/01/2004
 `======================================='
 
-Copyright 2002-2003 (C) Cosimo Streppone, <cosimo@cpan.org>
+Copyright 2002-2004 (C) Cosimo Streppone, <cosimo@cpan.org>
 
 
 This is a perl module extension. If you don't know
@@ -26,8 +26,9 @@ It can read messages stored on your sim card.
 `--------------------------------'
 
 It does not use free internet web portals to send SMS.
-If you want to send SMS, you must have your phone and sim card
-connected to the serial port.
+If you want to send SMS, you must have your mobile phone
+or GSM OEM module and a sim card connected to either
+serial, irda or bluetooth ports.
 
 
 ,-------------------------.
@@ -37,7 +38,7 @@ connected to the serial port.
 - a working perl installation (version 5.005+ recommended, although this
   module has been reported to work also for 5.004)
 
-- Device::Modem perl extension (possibly version >= 1.28)
+- Device::Modem perl extension (possibly version >= 1.30)
   Download this extension from [http://cpan.perl.org/modules/by-module/Device/]
 
 - Device::Modem, in turn, requires Device::SerialPort (for unix-like systems)
@@ -48,6 +49,7 @@ connected to the serial port.
 - a GSM cellular phone or GSM modem. Various models have been
   reported to work. Some of these are:
 
+	Nokia 6600           (19200 baud)
 	Nokia 6310           (19200 baud)
 	Nokia 3310           (19200 baud)
 	Siemens C45          (19200 baud)
@@ -72,7 +74,7 @@ connected to the serial port.
 I normally test it with both Linux and Win32 and
 it works equally well. It is known to work also on Solaris,
 FreeBSD, NetBSD (packaged with NetBSD perl installation
-as Feb 2003), OpenBSD and Commodore 64 :-)
+as Feb 2003), OpenBSD and Commodore 64 eventually :-)
 
 
 ,-------------------------.

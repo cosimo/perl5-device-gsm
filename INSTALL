@@ -23,6 +23,7 @@ http://www.cpan.org/ or http://www.perl.org
 - a GSM cellular phone or GSM modem. Various models have been
   reported to work. Some of these are:
 
+	Nokia 6600           (19200)
 	Nokia 6310           (19200)
 	Nokia 3310           (19200)
 	Siemens C45          (19200)
