@@ -49,7 +49,7 @@
   if( $gsm-&gt;connect() ) {
       print &quot;connected!\n&quot;;
   } else {
-      print &quot;sorry, no connection with gsm phone on serial port!\n';
+      print &quot;sorry, no connection with gsm phone on serial port!\n&quot;;
   }
 </PRE>
 <PRE>
@@ -61,7 +61,7 @@
   # Get the manufacturer and model code of device
   my $mnf   = $gsm-&gt;manufacturer();
   my $model = $gsm-&gt;model();
-  print 'soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
+  print &quot;soft version is &quot;, $gsm-&gt;software_version(), &quot;\n&quot;;</PRE>
 <PRE>
   my $imei = $gsm-&gt;imei() or
         $imei = $gsm-&gt;serial_number();
@@ -76,8 +76,8 @@
   }</PRE>
 <PRE>
 
-  print 'Service number is now: ', $gsm-&gt;service_number(), &quot;\n&quot;;
-  $gsm-&gt;service_number( '+001505050' );   # Sets new number</PRE>
+  print 'Service number is now: ', $gsm-&gt;service_center(), &quot;\n&quot;;
+  $gsm-&gt;service_center( '+001505050' );   # Sets new number</PRE>
 <PRE>
 
   # Send quickly a short text message
@@ -92,14 +92,14 @@
       recipient =&gt; '34910203040',
       content   =&gt; 'Hello world again, with more args',</PRE>
 <PRE>
+      # SMS sending mode
+      # try `text' on old phones or GSM modems
+      # `pdu' is the default nowadays
+      mode      =&gt; 'pdu',</PRE>
+<PRE>
       # SMS Class (can be `normal' or `flash')
       # `flash' mode delivers instantly!
-      class     =&gt; 'normal',</PRE>
-<PRE>
-      # SMS sending mode
-      # try `text' or old phones or GSM modems
-      # `pdu' is the default nowadays
-      mode      =&gt; 'pdu'
+      class     =&gt; 'normal'
   );</PRE>
 <P>
 <HR>
@@ -111,6 +111,9 @@ with a 16550 serial port and <CODE>Siemens C35i</CODE> / <CODE>C45</CODE> GSM ph
 a Siemens-compatible serial cable.</P>
 <P>Please be kind to the universe and contact me if you have troubles or you are
 interested in this.</P>
+<P>Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
+use the `examples/send_to_cosimo.pl' script to make me know that Device::Gsm works
+with your device (thanks!).</P>
 <P>
 <H2><A NAME="requires">REQUIRES</A></H2>
 <UL>
@@ -127,6 +130,11 @@ Device::SerialPort (or Win32::SerialPort on Windows machines)
 <HR>
 <H1><A NAME="todo">TO-DO</A></H1>
 <DL>
+<DT><STRONG><A NAME="item_Spooler">Spooler</A></STRONG><BR>
+<DD>
+Build a simple spooler program that sends all SMS stored in a special
+queue (that could be a simple filesystem folder).
+<P></P>
 <DT><STRONG><A NAME="item_Validity_Period">Validity Period</A></STRONG><BR>
 <DD>
 Support <CODE>validity period</CODE> option on SMS sending. Tells how much time the SMS
