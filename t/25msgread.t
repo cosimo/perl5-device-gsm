@@ -1,4 +1,4 @@
-# $Id: 25msgread.t,v 1.4 2004-09-15 21:02:06 cosimo Exp $
+# $Id: 25msgread.t,v 1.5 2004-09-15 21:12:50 cosimo Exp $
 # test pdu messages decoding
 
 use Test;
@@ -8,8 +8,6 @@ use Device::Gsm::Sms;
 use Device::Gsm::Charset;
 
 BEGIN { plan tests => 12 };
-
-skip(12);
 
 my $msg = new Device::Gsm::Sms( header => 'xxx', pdu=> 'xxx');
 ok( (! defined $msg && ! ref $msg), 1, 'erroneous message (sms object undef)' );
