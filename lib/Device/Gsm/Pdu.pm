@@ -1,6 +1,39 @@
-# $Id: Pdu.pm,v 1.3 2002-04-09 22:25:20 cosimo Exp $
+# Device::Gsm::Pdu - PDU encoding/decoding functions for Device::Gsm class 
+# Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
+#
+# This program is free software; you can redistribute it and/or modify
+# it only under the terms of Perl itself.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# Perl licensing terms for details.
+#
+# $Id: Pdu.pm,v 1.4 2002-04-14 08:50:37 cosimo Exp $
 
 package Device::Gsm::Pdu;
+
+# decode a pdu encoded phone number into human readable format 
+sub decode_address {
+	my $address = shift or return;
+
+	my $number;
+	my($length, $type, $bcd_digits) = unpack('A2 A2 A*', $address);
+
+	# Reverse each pair of bcd digits
+	while( $bcd_digits ) {
+		$number .= reverse substr( $bcd_digits, 0, 2 );
+		$bcd_digits = substr $bcd_digits, 2;
+	}
+
+	# Truncate last `F' if found
+	$number = substr( $number, 0, hex($length) );
+
+	# If number is international, put a '+' sign before
+	$number = '+'.$number if $type == 91;
+
+	return $number;
+}
 
 sub encode_address {
 	my $num = shift();
@@ -23,7 +56,6 @@ sub encode_address {
 
 	uc $len . $type . $encoded;
 }
-
 
 
 {
@@ -83,6 +115,7 @@ Device::Gsm::Pdu - library to manage PDU encoded data for GSM messaging
 
   # DA is destination address
   $DA = Device::Gsm::Pdu::encode_address('+39347101010');
+  $number = Device::Gsm::Pdu::decode_address( $DA );
 
   # Encode 7 bit text to send messages
   $text = Device::Gsm::Pdu::encode_text7('hello');
@@ -93,6 +126,18 @@ C<Device::Gsm::Pdu> module includes a few basic functions to deal with SMS in PD
 such as encoding GSM addresses (phone numbers) and, for now only, 7 bit text.
 
 =head1 FUNCTIONS
+
+=head2 decode_address( pdu_encoded_address )
+
+Takes a PDU encoded address and decodes into human-readable mobile number.
+If number type is international, result will be prepended with a `+' sign.
+
+Clearly, it is intended as an internal function.
+
+=head2 Example
+
+	print Device::Gsm::Pdu::decode_address( '0B919343171010F0' );
+	# prints `+39347101010';
 
 =head2 encode_address( mobile_number )
 
@@ -119,6 +164,11 @@ encode text.
 =head1 AUTHOR
 
 Cosimo Streppone, cosimo@cpan.org
+
+=head1 COPYRIGHT
+
+This library is free software; you can redistribute it and/or modify
+it only under the terms of Perl itself.
 
 =head1 SEE ALSO
 
