@@ -1,5 +1,10 @@
 Revision history for Perl extension Device::Gsm.
 
+1.33  Wed May 26 13:52:43 CEST 2004
+    - added delete_sms() method. For now, works only in PDU mode.
+    - fixed messages() newline regex split pattern (thanks to Vlad
+      <vlad at yandex.ru> for reporting)
+
 1.28
   ||
 1.25  Fri Jan 23 00:59:16 CET 2004
