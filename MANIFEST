@@ -7,6 +7,7 @@ Makefile.PL
 Gsm.pm
 bin/autoscan
 docs/Gsm.html
+docs/GsmSms.html
 lib/Device/Gsm/Pdu.pm
 lib/Device/Gsm/Sms.pm
 lib/Device/Gsm/Sms/Structure.pm
@@ -24,6 +25,7 @@ lib/Device/Gsm/Sms/Token/VP.pm
 examples/send_sms.pl
 examples/send_to_cosimo.pl
 examples/read_messages.pl
+examples/report_signal.pl
 examples/get_time.pl
 examples/sync_time.pl
 t/01basic.t
@@ -33,3 +35,4 @@ t/20pdu.t
 t/25msgread.t
 t/30gsmascii.t
 
+META.yml                                 Module meta-data (added by MakeMaker)
