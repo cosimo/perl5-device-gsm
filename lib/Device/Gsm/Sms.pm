@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.9 2004-08-18 07:08:47 cosimo Exp $
+# $Id: Sms.pm,v 1.10 2004-09-15 20:02:31 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -84,6 +84,17 @@ sub new {
 	}
 
 	return $self;
+}
+
+#
+# time(): returns message time in ascii format
+#
+sub time {
+	my $self = shift;
+	if( my $t = $self->token('SCTS') ) {
+		return $t->toString();
+	}
+	return '';
 }
 
 #
@@ -208,7 +219,7 @@ sub decode {
 		}
 
 		# If decoding is completed successfully, add token object to message
-_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
+#_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
 
 		if( $token->decode(\$cPdu) ) {
 
