@@ -13,15 +13,16 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.35 2004-09-15 21:14:42 cosimo Exp $
+# $Id: Gsm.pm,v 1.36 2004-09-15 21:39:21 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.35 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.36 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
 use Device::Gsm::Sms;
 use Device::Gsm::Pdu;
+use Device::Gsm::Charset;
 
 @Device::Gsm::ISA = ('Device::Modem');
 
@@ -544,10 +545,14 @@ sub _send_sms_text {
 	# Send sms in text mode
 	$me->atsend( qq[AT+CMGS="$num"] . Device::Modem::CR );
 
+	# Encode text
+	$text = Device::Gsm::Charset::iso8859_to_gsm0338( $text );
+
+	# Complete message sending
 	$me->atsend( $text . Device::Modem::CTRL_Z );
 
 	# Get reply and check for errors
-	$cReply = $me->answer('+CMGS', 2000);
+	$cReply = $me->answer('\+CMGS', 2000);
 	if( $cReply =~ /ERROR/i ) {
 		$me->log->write( 'warning', "ERROR in sending SMS" );
 	} else {
@@ -597,6 +602,7 @@ sub _send_sms_pdu {
 	$me->log->write('info', 'encoded dest. address is ['.$enc_da.']');
 
 	# Encode text
+	$text = Device::Gsm::Charset::iso8859_to_gsm0338( $text );
 	my $enc_msg = Device::Gsm::Pdu::encode_text7( $text );
 	$me->log->write('info', 'encoded 7bit text (w/length) is ['.$enc_msg.']');
 
