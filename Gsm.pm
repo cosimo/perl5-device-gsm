@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.33 2004-05-26 12:01:31 cosimo Exp $
+# $Id: Gsm.pm,v 1.34 2004-08-18 07:07:32 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.33 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.34 $ =~ /(\d+)\.(\d+)/;
 
 use strict;
 use Device::Modem;
@@ -133,11 +133,15 @@ sub delete_sms {
         return 0;
     }
        
-    $self->atsend( qq{AT+CMGD="$msg_index"} . Device::Modem::CR );
-    $self->wait(250);
-    $ok = $self->parse_answer();
+    $self->atsend( qq{AT+CMGD=$msg_index} . Device::Modem::CR );
+    $self->wait(500);
 
-    $self->log->write('info', 'deleting sms n.'.$msg_index.' from sim card => ' . ($ok ? 'ok' : '*FAILED*') );
+    my $ans = $self->parse_answer();
+    if( index($ans, 'OK') > -1 || $ans =~ /\+CMGD/ ) {
+        $ok = 1;
+    }
+
+    $self->log->write('info', "deleting sms n.$msg_index from sim card (result: `$ans') => " . ($ok ? 'ok' : '*FAILED*') );
 
     return $ok;
 }
@@ -1256,3 +1260,5 @@ Cosimo Streppone, cosimo@cpan.org
 L<Device::Modem>, L<Device::SerialPort>, L<Win32::SerialPort>, perl(1)
 
 =cut
+
+
