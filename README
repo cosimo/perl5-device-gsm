@@ -1,5 +1,5 @@
 ,=======================================.
-| Device::Gsm            perl extension |      24/03/2003
+| Device::Gsm            perl extension |      24/06/2003
 `======================================='
 
 Copyright 2002-2003 (C) Cosimo Streppone, <cosimo@cpan.org>
@@ -37,7 +37,7 @@ connected to the serial port.
 - a working perl installation (version 5.005+ recommended, although this
   module has been reported to work also for 5.004)
 
-- Device::Modem perl extension (possibly version >= 1.24)
+- Device::Modem perl extension (possibly version >= 1.28)
   Download this extension from [http://cpan.perl.org/modules/by-module/Device/]
 
 - Device::Modem, in turn, requires Device::SerialPort (for unix-like systems)
