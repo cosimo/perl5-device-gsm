@@ -3,6 +3,7 @@ Changes
 docs/Gsm.html
 docs/GSM0338.txt
 docs/GsmSms.html
+examples/delete_message.pl
 examples/get_time.pl
 examples/read_messages.pl
 examples/report_signal.pl
