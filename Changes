@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.37  Sat Aug 27 12:53:00 CEST 2005
+    - fixed regexp to extract sim card sms messages information
+      (thanks to Pierre Hilson <zorglups hotmail com>)
+
 1.36
 1.35  Wed Sep 15 23:43:03 CEST 2004
     - finally added encoding/decoding of sms text between
