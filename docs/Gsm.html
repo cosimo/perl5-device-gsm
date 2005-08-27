@@ -48,7 +48,6 @@
 <hr />
 <p>
 </p>
-<hr />
 <h1><a name="name">NAME</a></h1>
 <p>Device::Gsm - Perl extension to interface GSM cellular / modems</p>
 <p>
@@ -315,6 +314,20 @@ It is just a matter of trying.</p>
 </dt>
 <dd>
 Phone number of message recipient
+</dd>
+<p></p>
+<dt><strong><a name="item_status_report"><code>status_report</code></a></strong><br />
+</dt>
+<dd>
+If present with a true value, it enables sending of SMS messages (only for PDU mode,
+text mode SMS won't be influenced by this parameter) with the status report,
+also known as delivery report, that is a short message that reports the status
+of your sent message.
+Usually this is only available if your mobile company supports this feature,
+and probably you will be charged a small amount for this service.
+</dd>
+<dd>
+<p>More information on this would be welcome.</p>
 </dd>
 <p></p></dl>
 <p>
