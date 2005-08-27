@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Sms.pm,v 1.10 2004-09-15 20:02:31 cosimo Exp $
+# $Id: Sms.pm,v 1.11 2005-08-27 12:36:35 cosimo Exp $
 
 package Device::Gsm::Sms;
 use strict;
@@ -58,8 +58,10 @@ sub new {
 #_log("Header [$opt{header}]");
 #_log("PDU    [$opt{pdu}]");
 
-	# Check for valid msg header
-	if( $opt{'header'} =~ /\+CMGL:\s*(\d+),(\d+),(\w*),(\d+)/o ) {
+	# Check for valid msg header (thanks to Pierre Hilson for his patch
+	# to make this regex work also for Alcatel gsm software)
+	if( $opt{'header'} =~ /\+CMGL:\s*(\d+),\s*(\d+),\s*(\w*),\s*(\d+)/o )
+	{
 
 		$self->{'index'}  = $1;                        # Position of message in SIM card
 		$self->{'status'} = $2;                        # Status of message (REC READ/UNREAD, STO, ...);
