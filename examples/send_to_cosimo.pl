@@ -6,13 +6,13 @@
 # This is a funny experiment to know how many people are
 # using this module out there... :-) 
 #
-# $Id: send_to_cosimo.pl,v 1.3 2002-09-25 21:29:16 cosimo Exp $
+# $Id: send_to_cosimo.pl,v 1.4 2005-08-27 12:40:13 cosimo Exp $
 
 use strict;
 use Config;
 use Device::Gsm;
 
-print "\nthis is ", '$Id: send_to_cosimo.pl,v 1.3 2002-09-25 21:29:16 cosimo Exp $', "\n\n";
+print "\nthis is ", '$Id: send_to_cosimo.pl,v 1.4 2005-08-27 12:40:13 cosimo Exp $', "\n\n";
 print "\n", '-' x 80, "\n";
 print "HEY! I'm sending out an SMS message to the author of Device::Gsm module\n";
 print "(Cosimo Streppone <cosimo\@cpan.org>).\n\n";
@@ -56,7 +56,7 @@ my $number = '+393289287791';
 my $content =
 	'From '.$name.";\n".
 	'Device-Gsm v'.$Device::Gsm::VERSION.','."\n".
-	'installed on '.$Config{'myhostname'}.$Config{'mydomain'}.' ('.$Config{'myarchname'}.'), perl v'.$]."\n".
+	'on '.$Config{'myhostname'}.$Config{'mydomain'}.' ('.$Config{'myarchname'}.'), perl v'.$]."\n".
 	'Mod:' . ($gsm->manufacturer() || '').'/'.($gsm->model() || '').
 	' Ver:'. ($gsm->software_version()||''). "\n" .
 	"-- ".$comment;
