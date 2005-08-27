@@ -13,10 +13,10 @@
 # testing and support for custom GSM commands, so use it at your own risk,
 # and without ANY warranty! Have fun.
 #
-# $Id: Gsm.pm,v 1.36 2004-09-15 21:39:21 cosimo Exp $
+# $Id: Gsm.pm,v 1.37 2005-08-27 12:45:24 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = sprintf "%d.%02d", q$Revision: 1.36 $ =~ /(\d+)\.(\d+)/;
+$Device::Gsm::VERSION = '1.37';
 
 use strict;
 use Device::Modem;
@@ -129,7 +129,7 @@ sub delete_sms {
     my $msg_index = $_[1];
     my $ok;
 
-    if( ! defined $msg_index || ! $msg_index ) {
+    if( ! defined $msg_index || $msg_index eq '' ) {
         $self->log->write('warn', 'undefined message number. cannot delete sms message');
         return 0;
     }
@@ -583,6 +583,13 @@ sub _send_sms_pdu {
 	# TODO Validity period (now fixed to 4 days)
 	my $vp = 'AA';
 
+	# Status report requested?
+	my $status_report = 0;
+	if( exists $opt{'status_report'} && $opt{'status_report'} )
+	{
+		$status_report = 1;
+	}
+
 	my $lOk = 0;
 	my $cReply;
 
@@ -607,7 +614,17 @@ sub _send_sms_pdu {
 	$me->log->write('info', 'encoded 7bit text (w/length) is ['.$enc_msg.']');
 
 	# Build PDU data
-	my $pdu = uc join( '', '00', '11', '00', $enc_da, '00', $class, $vp, $enc_msg );
+	my $pdu = uc join(
+		'',
+		'00',
+		($status_report ? '31' : '11'),
+		'00',
+		$enc_da,
+		'00',
+		$class,
+		$vp,
+		$enc_msg
+	);
 
 	$me->log->write('info', 'due to send PDU ['.$pdu.']');
 
@@ -992,6 +1009,17 @@ It is just a matter of trying.
 =item C<recipient>
 
 Phone number of message recipient
+
+=item C<status_report>
+
+If present with a true value, it enables sending of SMS messages (only for PDU mode,
+text mode SMS won't be influenced by this parameter) with the status report,
+also known as delivery report, that is a short message that reports the status
+of your sent message.
+Usually this is only available if your mobile company supports this feature,
+and probably you will be charged a small amount for this service.
+
+More information on this would be welcome.
 
 =back
 
