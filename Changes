@@ -1,7 +1,6 @@
 Revision history for Perl extension Device::Gsm.
 
-1.39
-1.38  Thu Apr 20 21:52:19 CEST 2006
+1.41  Thu Apr 20 21:52:19 CEST 2006
     - === Now Device::Gsm 1.39+ requires at least Device::Modem v1.47 ===
       Check out on CPAN before upgrading.
     - Some cool fixes for better support of Iridium Satellite phones,
