@@ -1,4 +1,18 @@
-# $Id: Token.pm,v 1.4 2004-08-18 07:09:41 cosimo Exp $
+# Device::Gsm::Sms::Token - SMS PDU message parser token
+# Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
+#
+# This program is free software; you can redistribute it and/or modify
+# it only under the terms of Perl itself.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# Perl licensing terms for details.
+#
+# Commercial support is available. Write me if you are
+# interested in new features or software support.
+#
+# $Id: Token.pm,v 1.5 2006-04-20 20:07:19 cosimo Exp $
 
 package Sms::Token;
 
