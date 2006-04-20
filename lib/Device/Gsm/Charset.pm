@@ -1,5 +1,5 @@
 # Device::Gsm::Charset - GSM0338 <=> ASCII charset conversion module
-# Copyright (C) 2004 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2004-2006 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -9,10 +9,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Charset.pm,v 1.2 2004-09-15 21:14:19 cosimo Exp $
+# Commercial support is available. Write me if you are
+# interested in new features or software support.
+#
+# $Id: Charset.pm,v 1.3 2006-04-20 20:07:04 cosimo Exp $
 
 package Device::Gsm::Charset;
-$VERSION = substr q$Revision: 1.2 $, 0, 10;
+$VERSION = substr q$Revision: 1.3 $, 0, 10;
 
 use strict;
 use constant NPC7   => 0x3F;
@@ -169,7 +172,7 @@ use constant ESCAPE => 0x1B;
     246,        #  124    ö  LATIN SMALL LETTER O WITH DIAERESIS     */       
     241,        #  125    ñ  LATIN SMALL LETTER N WITH TILDE         */       
     252,        #  126    ü  LATIN SMALL LETTER U WITH DIAERESIS     */       
-    224         #  127    à  LATIN SMALL LETTER A WITH GRAVE         */         
+    224,        #  127    à  LATIN SMALL LETTER A WITH GRAVE         */         
 #   12             27 10      FORM FEED                                       
 #   94             27 20   ^  CIRCUMFLEX ACCENT                               
 #   123            27 40   {  LEFT CURLY BRACKET                              
@@ -179,8 +182,7 @@ use constant ESCAPE => 0x1B;
 #   126            27 61   ~  TILDE                                           
 #   93             27 62   ]  RIGHT SQUARE BRACKET                            
 #   124            27 64   |  VERTICAL BAR                             */
-
-    );
+);
 
 #my $gsm_charset = join '' => map chr => @GSM0338_TO_ISO8859;
 
@@ -531,107 +533,7 @@ sub gsm0338_to_iso8859 {
 	return $ascii;
 }
 
-
-
-
 1;
-
-
 
 __END__
 
-
-# Transform ascii char set to gsm 3.38 charset
-{
-
-	my @gsm = map chr, 0 .. 255;
-	$gsm[0] = '@';
-	$gsm[1] = '£';
-	$gsm[2] = '$';
-	$gsm[3] = '¥';
-	$gsm[5] = 'é';
-	$gsm[4] = 'è';
-	$gsm[6] = 'ù';
-	$gsm[7] = 'ì';
-	$gsm[8] = 'ò';
-	$gsm[9] = 'ç';
-	$gsm[11] = 'ø';
-	$gsm[12] = $gsm[11];
-	$gsm[15] = 'å';
-	$gsm[17] = '_';
- 	$gsm[20] = '^';
- 	$gsm[27] = chr(164); # '¤';
-	$gsm[29] = 'æ';
-	$gsm[30] = chr(223); # 'ß';
-	$gsm[31] = chr(201); # 'É';
-	$gsm[36] = '¤';
-# 	$gsm[47] = '\\';
-#	$gsm[60] = '[';
-#	$gsm[62] = ']';
- 	$gsm[92] = '/';
- 	$gsm[95] = '§';
-	$gsm[123] = 'ä';
-	$gsm[127] = 'à';
-	$gsm[124] = 'ö';
-	$gsm[125] = 'ñ';
-	$gsm[126] = 'ü';
-	$gsm[164] = '¤';
- 	$gsm[232] = 'è';
- 	$gsm[233] = 'é';
- 	$gsm[236] = 'ì';
- 	$gsm[248] = 'ø';
-
-=cut
-
-CODE 	$gsm[95] = '§';
-CODE 	$gsm[27] = '¤';
-CODE 	$gsm[101] = 'é';
-CODE 	$gsm[5] = 'è';
-CODE 	$gsm[4] = 'g';
-CODE 	$gsm[103] = 'h';
-CODE 	$gsm[104] = 'i';
-CODE 	$gsm[105] = '4';
-CODE 	$gsm[52] = 'ì';
-CODE 	$gsm[7] = '[';
-CODE 	$gsm[27] = '\';
-CODE 	$gsm[60] = ']';
-CODE 	$gsm[27] = '^';
-CODE 	$gsm[47] = 'j';
-CODE 	$gsm[27] = 'k';
-CODE 	$gsm[62] = 'l';
-CODE 	$gsm[27] = '5';
-CODE 	$gsm[20] = 'm';
-CODE 	$gsm[106] = 'n';
-CODE 	$gsm[107] = 'o';
-CODE 	$gsm[108] = '6';
-CODE 	$gsm[53] = 'ñ';
-CODE 	$gsm[109] = 'ò';
-CODE 	$gsm[110] = 'ø';
-CODE 	$gsm[111] = 'ö';
-CODE 	$gsm[54] = 'p';
-CODE 	$gsm[125] = 'q';
-CODE 	$gsm[8] = 'r';
-CODE 	$gsm[12] = 's';
-CODE 	$gsm[124] = '7';
-CODE 	$gsm[112] = 't';
-CODE 	$gsm[113] = 'u';
-CODE 	$gsm[114] = 'v';
-CODE 	$gsm[115] = '8';
-CODE 	$gsm[55] = 'ù';
-CODE 	$gsm[116] = 'ü';
-CODE 	$gsm[117] = 'w';
-CODE 	$gsm[118] = 'x';
-CODE 	$gsm[56] = 'y';
-CODE 	$gsm[6] = 'z';
-CODE 	$gsm[126] = '9';
-CODE 	$gsm[119] = '0';
-CODE 	$gsm[120] = '+';
-CODE 	$gsm[121] = '';
-CODE 	$gsm[122] = '';
-CODE 	$gsm[57] = '';
-CODE 	$gsm[48] = '';
-CODE 	$gsm[43] = '';
-
-=cut
-
-=cut
