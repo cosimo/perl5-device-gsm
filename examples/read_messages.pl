@@ -3,14 +3,14 @@
 # Short example of use for Device::Gsm class
 # Script that reads all SMS stored on SIM
 #
-# $Id: read_messages.pl,v 1.4 2004-03-23 22:08:32 cosimo Exp $
+# $Id: read_messages.pl,v 1.5 2006-04-20 20:05:45 cosimo Exp $
 
 use strict;
 use lib '../lib';
 use lib '../';
 use Gsm;
 
-print "\nthis is ", '$Id: read_messages.pl,v 1.4 2004-03-23 22:08:32 cosimo Exp $', "\n";
+print "\nthis is ", '$Id: read_messages.pl,v 1.5 2006-04-20 20:05:45 cosimo Exp $', "\n";
 print "\nTrying to read all messages you have on your SIM card...\n";
 
 my $port = $ENV{'DEV_GSM_PORT'} || ( $^O =~ /Win/ ? 'COM2' : '/dev/ttyS1' );
@@ -41,9 +41,11 @@ my $gsm = new Device::Gsm(
 
 die "cannot create Device::Gsm object!" unless $gsm;
 
-print "Connecting on $myport port...";
+my $baud = $ENV{'DEV_GSM_BAUD'} || 9600;
 
-$gsm->connect( baudrate => 19200 ) or die "cannot connect to GSM device on [$myport]\n";
+print "Connecting on $myport port at $baud baud ...";
+
+$gsm->connect( baudrate => $baud ) or die "cannot connect to GSM device on [$myport]\n";
 
 print " ok\n";
 print "Registering on GSM network...";
