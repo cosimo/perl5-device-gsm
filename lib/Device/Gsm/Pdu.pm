@@ -1,5 +1,5 @@
 # Device::Gsm::Pdu - PDU encoding/decoding functions for Device::Gsm class 
-# Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -9,7 +9,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: Pdu.pm,v 1.7 2004-03-23 22:10:07 cosimo Exp $
+# Commercial support is available. Write me if you are
+# interested in new features or software support.
+#
+# $Id: Pdu.pm,v 1.8 2006-04-20 20:06:48 cosimo Exp $
 
 package Device::Gsm::Pdu;
 
@@ -35,7 +38,9 @@ sub decode_address {
 	#$number = substr( $number, 0, hex($length) );
 	chop $number if substr($number, -1) eq 'F';
 
-	#print STDERR "num=$number";
+	# Decode special characters for GPRS dialing
+	$number =~ s/A/\*/;
+	$number =~ s/B/#/;
 
 	# If number is international, put a '+' sign before
 	$number = '+'.$number if $type == 91;
@@ -83,8 +88,10 @@ sub encode_address {
 
 	my $type = index($num,'+') == 0 ? 91 : 81;
 
-	# Remove all non-numbers
-	$num =~ s/\D//g;
+	# Remove all non-numbers. Beware to GPRS dialing chars.
+	$num =~ s/[^\d\*#]//g;
+	$num =~ s/\*/A/g;         # "*" maps to A
+	$num =~ s/#/B/g;          # "#" maps to B
 
 	my $len  = unpack 'H2' => chr( length $num );
 
@@ -142,7 +149,7 @@ Device::Gsm::Pdu - library to manage PDU encoded data for GSM messaging
 
 =head1 WARNING 
 
-   This is C<PRE-ALPHA> software, still needs extensive testing and
+   This is C<BETA> software, still needs extensive testing and
    support for custom GSM commands, so use it at your own risk,
    and without C<ANY> warranty! Have fun.
 
