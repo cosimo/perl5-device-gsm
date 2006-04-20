@@ -12,13 +12,13 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Gsm.pm,v 1.38 2006-04-20 20:08:18 cosimo Exp $
+# $Id: Gsm.pm,v 1.39 2006-04-20 20:11:47 cosimo Exp $
 
 package Device::Gsm;
 $Device::Gsm::VERSION = '1.38';
 
 use strict;
-use Device::Modem;
+use Device::Modem 1.47;
 use Device::Gsm::Sms;
 use Device::Gsm::Pdu;
 use Device::Gsm::Charset;
