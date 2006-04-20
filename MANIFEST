@@ -38,5 +38,4 @@ t/04syslog.t
 t/06msgcodec.t
 t/07tokens.t
 t/20pdu.t
-t/25msgread.t
 t/30gsmascii.t
