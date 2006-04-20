@@ -1,5 +1,10 @@
 Revision history for Perl extension Device::Gsm.
 
+1.38  Thu Apr 20 21:52:19 CEST 2006
+    - some cool fixes for better support of Iridium Satellite phones,
+      GPRS connections and command/response faster cycle.
+      Many thanks to Ed Wildgoose.
+
 1.37  Sat Aug 27 12:53:00 CEST 2005
     - fixed regexp to extract sim card sms messages information
       (thanks to Pierre Hilson <zorglups hotmail com>)
