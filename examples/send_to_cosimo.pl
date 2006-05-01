@@ -6,18 +6,18 @@
 # This is a funny experiment to know how many people are
 # using this module out there... :-) 
 #
-# $Id: send_to_cosimo.pl,v 1.4 2005-08-27 12:40:13 cosimo Exp $
+# $Id: send_to_cosimo.pl,v 1.5 2006-05-01 11:56:54 cosimo Exp $
 
 use strict;
 use Config;
 use Device::Gsm;
 
-print "\nthis is ", '$Id: send_to_cosimo.pl,v 1.4 2005-08-27 12:40:13 cosimo Exp $', "\n\n";
+print "\nthis is ", '$Id: send_to_cosimo.pl,v 1.5 2006-05-01 11:56:54 cosimo Exp $', "\n\n";
 print "\n", '-' x 80, "\n";
 print "HEY! I'm sending out an SMS message to the author of Device::Gsm module\n";
 print "(Cosimo Streppone <cosimo\@cpan.org>).\n\n";
 
-my $port = $^O =~ /Win/ ? 'COM2' : '/dev/ttyS1';
+my $port = $^O =~ /Win/ ? 'COM1' : '/dev/ttyS0';
 my $myport;
 
 my $pin  = '0000';
@@ -56,7 +56,8 @@ my $number = '+393289287791';
 my $content =
 	'From '.$name.";\n".
 	'Device-Gsm v'.$Device::Gsm::VERSION.','."\n".
-	'on '.$Config{'myhostname'}.$Config{'mydomain'}.' ('.$Config{'myarchname'}.'), perl v'.$]."\n".
+	'Device-Modem v'.$Device::Modem::VERSION.','."\n".
+	'on '.$Config{myarchname}.' perl v'.$]."\n".
 	'Mod:' . ($gsm->manufacturer() || '').'/'.($gsm->model() || '').
 	' Ver:'. ($gsm->software_version()||''). "\n" .
 	"-- ".$comment;
