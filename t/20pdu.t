@@ -1,4 +1,4 @@
-# $Id: 20pdu.t,v 1.5 2003-03-23 13:00:58 cosimo Exp $
+# $Id: 20pdu.t,v 1.6 2006-07-23 15:43:03 cosimo Exp $
 # test pdu encoding/decoding functions for sms
 
 use Test;
@@ -33,5 +33,8 @@ for(
 	'The quick brown fox jumps over the lazy dog',
 	'La marianna la va in campagna, quando il sole tramontera\'... chissa\' quando, chissa\' quando ritornera\''
 );
+
+# Alphabetical address decoding
+ok( Device::Gsm::Pdu::decode_address('10D06B7658DE7E8BD36C'), 'klarmobil' ); #7
 
 # end of pdu library test
