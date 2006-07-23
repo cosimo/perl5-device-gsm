@@ -12,10 +12,10 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Gsm.pm,v 1.41 2006-04-20 20:22:58 cosimo Exp $
+# $Id: Gsm.pm,v 1.42 2006-07-23 15:39:57 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = '1.41';
+$Device::Gsm::VERSION = '1.42';
 
 use strict;
 use Device::Modem 1.47;
@@ -124,24 +124,27 @@ sub datetime {
 # Delete a message from sim card
 #
 sub delete_sms {
-    my $self      = $_[0];
-    my $msg_index = $_[1];
+    my $self      = shift;
+    my $msg_index = shift;
+    my $storage   = shift;
     my $ok;
 
     if( ! defined $msg_index || $msg_index eq '' ) {
         $self->log->write('warn', 'undefined message number. cannot delete sms message');
         return 0;
     }
-       
+
+    # Set default SMS storage if supported
+    $self->storage($storage);
+
     $self->atsend( qq{AT+CMGD=$msg_index} . Device::Modem::CR );
-#    $self->wait(500);
 
     my $ans = $self->parse_answer($Device::Modem::STD_RESPONSE);
     if( index($ans, 'OK') > -1 || $ans =~ /\+CMGD/ ) {
         $ok = 1;
     }
 
-    $self->log->write('info', "deleting sms n.$msg_index from sim card (result: `$ans') => " . ($ok ? 'ok' : '*FAILED*') );
+    $self->log->write('info', "deleting sms n.$msg_index from storage ".($storage || "default")." (result: `$ans') => " . ($ok ? 'ok' : '*FAILED*') );
 
     return $ok;
 }
@@ -343,10 +346,15 @@ sub test_command {
 #
 # Read all messages on SIM card (XXX must be registered on network)
 #
-sub messages {
-	my $self = shift;
+sub messages
+{
+    my($self, $storage) = @_;
     my @messages;
-    $self->log->write('info', 'reading messages on SIM card');
+
+    # By default (old behaviour) messages are read from sim card
+    $storage ||= 'SM';
+
+    $self->log->write('info', 'Reading messages on ' . ($storage eq 'SM' ? 'Sim card' : 'phone memory'));
 
     # Register on network (give your PIN number for this!)
     #return undef unless $self->register();
@@ -355,13 +363,38 @@ sub messages {
     #
     # Read messages (TODO need to check if device supports CMGL with `stat'=4)
     #
-    if( $self->mode() eq 'text' ) {
+    if( $self->mode() eq 'text' )
+    {
         @messages = $self->_read_messages_text();
-    } else {
-	    @messages = $self->_read_messages_pdu();
+    }
+    else
+    {
+        # Set default storage if supported
+        $self->storage($storage);
+
+        push @messages, $self->_read_messages_pdu();
     }
 
     return @messages;
+}
+
+sub storage
+{
+    my $self = shift;
+    my $ok = 0;
+
+    # Set default SMS storage if supported by phone
+    if( @_ && (my $storage = uc $_[0]) )
+    {
+        return unless $self->test_command('+CPMS');
+        $self->atsend(qq{AT+CPMS="$storage"} . Device::Modem::CR);
+
+        # Read and discard the answer
+        $self->answer($Device::Modem::STD_RESPONSE, 5000);
+        $self->{_storage} = $storage;
+    }
+
+    return $self->{_storage};
 }
 
 #
@@ -474,22 +507,27 @@ sub send_sms {
 
 #
 #
-# read sim messages in pdu mode
+# read messages in pdu mode
 #
 #
-sub _read_messages_pdu {
-    my $self = $_[0];
+sub _read_messages_pdu
+{
+    my $self = shift;
 
     $self->mode('pdu');
+
     $self->atsend( q{AT+CMGL=4} . Device::Modem::CR);
 	my($messages) = $self->answer($Device::Modem::STD_RESPONSE, 5000);
+
 	# Catch the case that the msgs are returned with gaps between them
 	while (my $more = $self->answer($Device::Modem::STD_RESPONSE, 200)) {
+        #-- $self->answer will chomp trailing newline, add it back
+		$messages .= "\n";
 		$messages .= $more;
 	}
 
 	# Ok, messages read, now convert from PDU and store in object
-	$self->log->write('debug', 'messages='.$messages );
+	$self->log->write('debug', 'Messages='.$messages );
 
 	my @data = split /[\r\n]+/m, $messages;
 
@@ -503,18 +541,23 @@ sub _read_messages_pdu {
 	my @message = ();
 	my $current;
 
+    # Current sms storage memory (ME or SM)
+    my $storage = $self->storage();
+
 	#
 	# Parse received data (result of +CMGL command)
 	#
 	while( @data ) {
 
 		$self->log->write('debug', 'data[] = ', $data[0] );
-
+		my $header=shift @data;
+		my $pdu   =shift @data;
 		# Instance new message object
 		my $msg = new Device::Gsm::Sms(
-			header => shift @data,
-			pdu    => shift @data,
+			header => $header,
+			pdu    => $pdu,
             # XXX mode   => $self->mode(),
+            storage => $storage,
             parent => $self                  # Ref to parent Device::Gsm class
 		);
 
@@ -522,7 +565,7 @@ sub _read_messages_pdu {
 		if( ref $msg ) {
 			push @message, $msg;
 		} else {
-			$self->log->write('info', 'could not instance message!');
+			$self->log->write('info', "could not instance message $header $pdu!");
 		}
 
 	}
@@ -728,22 +771,13 @@ sub service_center(;$) {
 
 }
 
-
-2703;
-
-
+1;
 
 __END__
 
 =head1 NAME
 
-Device::Gsm - Perl extension to interface GSM cellular / modems
-
-=head1 WARNING
-
-   This is C<PRE-ALPHA> software, still needs extensive testing and
-   support for custom GSM commands, so use it at your own risk,
-   and without C<ANY> warranty! Have fun.
+Device::Gsm - Perl extension to interface GSM phones / modems
 
 =head1 SYNOPSIS
 
@@ -778,7 +812,7 @@ This class supports also C<PDU> mode to send C<SMS> messages, and should be
 fairly usable. In the past, I have developed and tested it under Linux RedHat 7.1
 with a 16550 serial port and Siemens C35i/C45 GSM phones attached with
 a Siemens-compatible serial cable. Currently, I'm developing and testing this stuff
-with Linux Slackware 9.1 and a B<Cambridge Silicon Radio> (CSR) USB
+with Linux Slackware 10.2 and a B<Cambridge Silicon Radio> (CSR) USB
 bluetooth dongle, connecting to a Nokia 6600 phone.
 
 Please be kind to the universe and contact me if you have troubles or you are
@@ -855,6 +889,16 @@ Example:
 
     $gsm->delete_sms(3);
 
+An optional second parameter specifies the "storage". It allows to delete messages
+from gsm phone memory or sim card memory. Example:
+
+    # Deletes first message from gsm phone memory
+    $gsm->delete_sms(1, 'ME');
+
+    # Deletes 3rd message from sim card
+    $gsm->delete_sms(3, 'SM');
+
+By default, it uses the currently set storage, via the C<storage()> method.
 
 =head2 hangup()
 
@@ -891,10 +935,39 @@ C<Siemens>, C<Falcom>, ...). Example:
 =head2 messages()
 
 This method is a somewhat unstable and subject to change, but for now it seems to work.
-It is meant to extract all text SMS messages stored on your SIM card.
+It is meant to extract all text SMS messages stored on your SIM card or gsm phone.
 In list context, it returns a list of messages (or undefined value if no message or errors),
 every message being a C<Device::Gsm::Sms> object.
 
+The only parameter specifies the C<storage> where you want to read the messages,
+and can assume some of the following values (but check your phone/modem manual for
+special manufacturer values):
+
+=over 4
+
+=item C<ME>
+
+Means gsm phone B<ME>mory
+
+=item C<MT>
+
+Means gsm phone B<ME>mory on Nokia phones?
+
+=item C<SM>
+
+Means B<S>im card B<M>emory (default value)
+
+=back
+
+Example:
+
+    my $gsm = Device::Gsm->new();
+    $gsm->connect(port=>'/dev/ttyS0') or die "Can't connect!";
+
+    for( $gsm->messages('SM') )
+    {
+        print $_->sender(), ': ', $_->content(), "\n";
+    }
 
 =head2 mode()
 
@@ -936,6 +1009,24 @@ Returns the device firmare version, as stored by the manufacturer. Example:
 	my $rev = $gsm->software_revision();
 
 For example, for my Siemens C45, C<$rev> holds C<06>.
+
+=head2 storage()
+
+Allows to get/set the current sms storage, that is where the sms messages are saved,
+either the sim card or gsm phone memory. Phones/modems that do not support this feature
+(implemented by C<+CPMS> AT command won't be affected by this method.
+
+    my @msg;
+	my $storage = $gsm->storage();
+    print "Current storage is $storage\n";
+
+    # Read all messages on sim card
+    $gsm->storage('SM');
+    @msg = $gsm->messages();
+
+    # Read messages from gsm phone memory
+    $gsm->storage('ME');
+    push @msg, $gsm->messages();
 
 =head2 test_command()
 
