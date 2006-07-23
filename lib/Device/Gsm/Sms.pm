@@ -12,9 +12,11 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Sms.pm,v 1.12 2006-04-20 20:07:19 cosimo Exp $
+# $Id: Sms.pm,v 1.13 2006-07-23 15:42:24 cosimo Exp $
 
 package Device::Gsm::Sms;
+$Device::Gsm::Sms::VERSION = substr q$Revision: 1.13 $, 10;
+
 use strict;
 use integer;
 
@@ -31,8 +33,8 @@ sub _parent { $_[0]->{_parent} }
 
 #
 # new(
-#     header => '+CMGL: .....',
-#     pdu => '[encoded pdu string]'
+#     header  => '+CMGL: .....',
+#     pdu     => '[encoded pdu string]',
 # )
 #
 # creates message object
@@ -47,6 +49,8 @@ sub new {
     # Store gsm parent object reference
     if( exists $opt{'parent'} ) {
         $self->{'_parent'} = $opt{'parent'};
+        # Assume default storage for sms message
+        $opt{'storage'} ||= $self->{'_parent'}->storage();
     }
 
     # Store options into main object
@@ -71,6 +75,7 @@ sub new {
 		$self->{'alpha'}  = $3;                        # Alphanumeric representation of sender
 		$self->{'length'} = $4;                        # Final length of message
 		$self->{'pdu'}    = $opt{'pdu'};               # PDU content
+		$self->{'storage'}= $opt{'storage'};           # Storage (SM or ME)
 
 		bless $self, $class;
 
@@ -290,12 +295,14 @@ sub delete {
 
     # Try to delete message
     my $msg_index = $self->index();
+    my $storage = $self->storage();
 
     # Issue delete command
     if( ref $gsm && $msg_index > 0 ) {
-        $ok = $gsm->deleteMessage($msg_index);
+        $ok = $gsm->delete_sms($msg_index, $storage);
+        $gsm->log->write('info', 'Delete sms n.'.$msg_index.' in storage '.$storage.' => '.($ok?'OK':'*ERROR'));
     } else {
-        $gsm->log->write('could not delete sms n.'.$msg_index.'. Base class not found!');
+        $gsm->log->write('warn', 'Could not delete sms n.'.$msg_index.' in storage '.$storage.'. Internal error.');
         $ok = undef;
     }
 
@@ -306,8 +313,16 @@ sub delete {
 # Returns message own index number (position) 
 #
 sub index {
-	my $self = $_[0];
+    my $self = $_[0];
     return $self->{'index'};
+}
+
+#
+# Returns message storage (SM - SIM card or ME - phone memory)
+#
+sub storage {
+    my $self = $_[0];
+    return $self->{'storage'};
 }
 
 #
@@ -380,6 +395,7 @@ Device::Gsm::Sms - SMS message internal class that represents a single text SMS 
 
     if( @sms ) {
         foreach( @sms ) {
+            print $msg->storage()   , "\n";
             print $msg->recipient() , "\n";
             print $msg->sender()    , "\n";
             print $msg->content()   , "\n";
@@ -391,7 +407,8 @@ Device::Gsm::Sms - SMS message internal class that represents a single text SMS 
     # Or you can instance a sms message from raw PDU data
     my $msg = new Device::Gsm::Sms(
         header => '+CMGL: ...',
-        pdu    => `[encoded pdu data]'
+        pdu    => `[encoded pdu data]',
+        storage=> 'ME', # or 'SC'
     );
 
     if( defined $msg ) {
@@ -453,8 +470,24 @@ issue a B<+CMGL> command
 
 Binary encoded sms data
 
+=item storage
+
+Tells which storage to delete the message from. Check the documentation of your
+phone to know valid storage values. Default values are:
+
+=over 4
+
+=item C<ME>
+
+Deletes messages from gsm phone memory.
+
+=item C<SC>
+
+Deletes messages from sim card.
+
 =back
 
+=back
 
 =head2 index()
 
@@ -489,9 +522,13 @@ Status of the message can be one value from the following list:
 =for pod
 'UNKNOWN', 'REC UNREAD', 'REC READ', 'SENT UNREAD', 'SENT READ'
 
+=head2 storage()
+
+Returns the storage where SMS has been read from.
+
 =head2 text()
 
-Returns the textual content of sms message
+Returns the textual content of sms message.
 
 =head2 token()
 
@@ -539,7 +576,7 @@ Complete and proof-read documentation and examples
 
 Device::Gsm::Sms - SMS message simple class that represents a text SMS message
 
-Copyright (C) 2002-2004 Cosimo Streppone, cosimo@cpan.org
+Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
 
 This program is free software; you can redistribute it and/or modify
 it only under the terms of Perl itself.
