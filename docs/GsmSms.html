@@ -25,6 +25,7 @@
 		<li><a href="#recipient__"><code>recipient()</code></a></li>
 		<li><a href="#sender__"><code>sender()</code></a></li>
 		<li><a href="#status__"><code>status()</code></a></li>
+		<li><a href="#storage__"><code>storage()</code></a></li>
 		<li><a href="#text__"><code>text()</code></a></li>
 		<li><a href="#token__"><code>token()</code></a></li>
 		<li><a href="#type__"><code>type()</code></a></li>
@@ -59,6 +60,7 @@
 <pre>
     if( @sms ) {
         foreach( @sms ) {
+            print $msg-&gt;storage()   , &quot;\n&quot;;
             print $msg-&gt;recipient() , &quot;\n&quot;;
             print $msg-&gt;sender()    , &quot;\n&quot;;
             print $msg-&gt;content()   , &quot;\n&quot;;
@@ -70,7 +72,8 @@
     # Or you can instance a sms message from raw PDU data
     my $msg = new Device::Gsm::Sms(
         header =&gt; '+CMGL: ...',
-        pdu    =&gt; `[encoded pdu data]'
+        pdu    =&gt; `[encoded pdu data]',
+        storage=&gt; 'ME', # or 'SC'
     );</pre>
 <pre>
     if( defined $msg ) {
@@ -131,7 +134,27 @@ issue a <strong>+CMGL</strong> command
 <dd>
 Binary encoded sms data
 </dd>
+<p></p>
+<dt><strong><a name="item_storage">storage</a></strong><br />
+</dt>
+<dd>
+Tells which storage to delete the message from. Check the documentation of your
+phone to know valid storage values. Default values are:
+</dd>
+<dl>
+<dt><strong><a name="item_me"><code>ME</code></a></strong><br />
+</dt>
+<dd>
+Deletes messages from gsm phone memory.
+</dd>
+<p></p>
+<dt><strong><a name="item_sc"><code>SC</code></a></strong><br />
+</dt>
+<dd>
+Deletes messages from sim card.
+</dd>
 <p></p></dl>
+</dl>
 <p>
 </p>
 <h2><a name="index__"><code>index()</code></a></h2>
@@ -161,8 +184,12 @@ as string (ex.: <code>+39012345678</code>).</p>
 <p>Status of the message can be one value from the following list:</p>
 <FORM><SELECT><OPTION>UNKNOWN<OPTION>REC UNREAD<OPTION>REC READ<OPTION>SENT UNREAD<OPTION>SENT READ</SELECT></FORM><p>
 </p>
+<h2><a name="storage__"><a href="#item_storage"><code>storage()</code></a></a></h2>
+<p>Returns the storage where SMS has been read from.</p>
+<p>
+</p>
 <h2><a name="text__"><code>text()</code></a></h2>
-<p>Returns the textual content of sms message</p>
+<p>Returns the textual content of sms message.</p>
 <p>
 </p>
 <h2><a name="token__"><code>token()</code></a></h2>
@@ -206,7 +233,7 @@ Complete and proof-read documentation and examples
 <hr />
 <h1><a name="copyright">COPYRIGHT</a></h1>
 <p>Device::Gsm::Sms - SMS message simple class that represents a text SMS message</p>
-<p>Copyright (C) 2002-2004 Cosimo Streppone, <a href="mailto:cosimo@cpan.org">cosimo@cpan.org</a></p>
+<p>Copyright (C) 2002-2006 Cosimo Streppone, <a href="mailto:cosimo@cpan.org">cosimo@cpan.org</a></p>
 <p>This program is free software; you can redistribute it and/or modify
 it only under the terms of Perl itself.</p>
 <p>This program is distributed in the hope that it will be useful,

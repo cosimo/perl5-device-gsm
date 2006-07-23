@@ -1,5 +1,16 @@
 Revision history for Perl extension Device::Gsm.
 
+1.43  Sun Jul 23 17:40:15 CEST 2006
+    - Added ability to decode alphabetical sender addresses.
+      Thanks to Torsten Mueller for report the issue.
+
+1.42  Mon May  8 21:16:40 CEST 2006
+    - Fixed a bug in Device::Gsm::Sms delete() method that invoked
+      a non-existent Device::Gsm::deleteMessage().
+    - Implemented read and delete of sms messages from different
+      storages (ME, SM, ...). Only for PDU format. Thanks to
+      Jurij Sikorsky for the patch.
+
 1.41  Thu Apr 20 21:52:19 CEST 2006
     - === Now Device::Gsm 1.39+ requires at least Device::Modem v1.47 ===
       Check out on CPAN before upgrading.

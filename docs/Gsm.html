@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Device::Gsm - Perl extension to interface GSM cellular / modems</title>
+<title>Device::Gsm - Perl extension to interface GSM phones / modems</title>
 <link rev="made" href="mailto:cosimo@cpan.org" />
 </head>
 
@@ -13,7 +13,6 @@
 <ul>
 
 	<li><a href="#name">NAME</a></li>
-	<li><a href="#warning">WARNING</a></li>
 	<li><a href="#synopsis">SYNOPSIS</a></li>
 	<li><a href="#description">DESCRIPTION</a></li>
 	<li><a href="#methods">METHODS</a></li>
@@ -30,6 +29,7 @@
 		<li><a href="#model__"><code>model()</code></a></li>
 		<li><a href="#signal_quality__"><code>signal_quality()</code></a></li>
 		<li><a href="#software_version__"><code>software_version()</code></a></li>
+		<li><a href="#storage__"><code>storage()</code></a></li>
 		<li><a href="#test_command__"><code>test_command()</code></a></li>
 		<li><a href="#register__"><code>register()</code></a></li>
 		<li><a href="#send_sms__"><code>send_sms()</code></a></li>
@@ -49,15 +49,7 @@
 <p>
 </p>
 <h1><a name="name">NAME</a></h1>
-<p>Device::Gsm - Perl extension to interface GSM cellular / modems</p>
-<p>
-</p>
-<hr />
-<h1><a name="warning">WARNING</a></h1>
-<pre>
-   This is C&lt;PRE-ALPHA&gt; software, still needs extensive testing and
-   support for custom GSM commands, so use it at your own risk,
-   and without C&lt;ANY&gt; warranty! Have fun.</pre>
+<p>Device::Gsm - Perl extension to interface GSM phones / modems</p>
 <p>
 </p>
 <hr />
@@ -94,7 +86,7 @@
 fairly usable. In the past, I have developed and tested it under Linux RedHat 7.1
 with a 16550 serial port and Siemens C35i/C45 GSM phones attached with
 a Siemens-compatible serial cable. Currently, I'm developing and testing this stuff
-with Linux Slackware 9.1 and a <strong>Cambridge Silicon Radio</strong> (CSR) USB
+with Linux Slackware 10.2 and a <strong>Cambridge Silicon Radio</strong> (CSR) USB
 bluetooth dongle, connecting to a Nokia 6600 phone.</p>
 <p>Please be kind to the universe and contact me if you have troubles or you are
 interested in this.</p>
@@ -159,6 +151,15 @@ in either case.</p>
 Example:</p>
 <pre>
     $gsm-&gt;delete_sms(3);</pre>
+<p>An optional second parameter specifies the ``storage''. It allows to delete messages
+from gsm phone memory or sim card memory. Example:</p>
+<pre>
+    # Deletes first message from gsm phone memory
+    $gsm-&gt;delete_sms(1, 'ME');</pre>
+<pre>
+    # Deletes 3rd message from sim card
+    $gsm-&gt;delete_sms(3, 'SM');</pre>
+<p>By default, it uses the currently set storage, via the <code>storage()</code> method.</p>
 <p>
 </p>
 <h2><a name="hangup__"><code>hangup()</code></a></h2>
@@ -192,9 +193,40 @@ This is not really true, but ... . Example:</p>
 </p>
 <h2><a name="messages__"><code>messages()</code></a></h2>
 <p>This method is a somewhat unstable and subject to change, but for now it seems to work.
-It is meant to extract all text SMS messages stored on your SIM card.
+It is meant to extract all text SMS messages stored on your SIM card or gsm phone.
 In list context, it returns a list of messages (or undefined value if no message or errors),
 every message being a <code>Device::Gsm::Sms</code> object.</p>
+<p>The only parameter specifies the <code>storage</code> where you want to read the messages,
+and can assume some of the following values (but check your phone/modem manual for
+special manufacturer values):</p>
+<dl>
+<dt><strong><a name="item_me"><code>ME</code></a></strong><br />
+</dt>
+<dd>
+Means gsm phone <strong>ME</strong>mory
+</dd>
+<p></p>
+<dt><strong><a name="item_mt"><code>MT</code></a></strong><br />
+</dt>
+<dd>
+Means gsm phone <strong>ME</strong>mory on Nokia phones?
+</dd>
+<p></p>
+<dt><strong><a name="item_sm"><code>SM</code></a></strong><br />
+</dt>
+<dd>
+Means <strong>S</strong>im card <strong>M</strong>emory (default value)
+</dd>
+<p></p></dl>
+<p>Example:</p>
+<pre>
+    my $gsm = Device::Gsm-&gt;new();
+    $gsm-&gt;connect(port=&gt;'/dev/ttyS0') or die &quot;Can't connect!&quot;;</pre>
+<pre>
+    for( $gsm-&gt;messages('SM') )
+    {
+        print $_-&gt;sender(), ': ', $_-&gt;content(), &quot;\n&quot;;
+    }</pre>
 <p>
 </p>
 <h2><a name="mode__"><a href="#item_mode"><code>mode()</code></a></a></h2>
@@ -231,6 +263,24 @@ an <strong>undefined</strong> value will be returned.</p>
 <pre>
         my $rev = $gsm-&gt;software_revision();</pre>
 <p>For example, for my Siemens C45, <code>$rev</code> holds <code>06</code>.</p>
+<p>
+</p>
+<h2><a name="storage__"><code>storage()</code></a></h2>
+<p>Allows to get/set the current sms storage, that is where the sms messages are saved,
+either the sim card or gsm phone memory. Phones/modems that do not support this feature
+(implemented by <code>+CPMS</code> AT command won't be affected by this method.</p>
+<pre>
+    my @msg;
+        my $storage = $gsm-&gt;storage();
+    print &quot;Current storage is $storage\n&quot;;</pre>
+<pre>
+    # Read all messages on sim card
+    $gsm-&gt;storage('SM');
+    @msg = $gsm-&gt;messages();</pre>
+<pre>
+    # Read messages from gsm phone memory
+    $gsm-&gt;storage('ME');
+    push @msg, $gsm-&gt;messages();</pre>
 <p>
 </p>
 <h2><a name="test_command__"><code>test_command()</code></a></h2>
