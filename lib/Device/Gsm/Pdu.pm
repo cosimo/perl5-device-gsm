@@ -12,7 +12,9 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Pdu.pm,v 1.8 2006-04-20 20:06:48 cosimo Exp $
+# $Id: Pdu.pm,v 1.9 2006-07-23 15:42:08 cosimo Exp $
+
+# TODO document decode_text8()
 
 package Device::Gsm::Pdu;
 
@@ -25,6 +27,16 @@ sub decode_address {
 
 	# XXX DEBUG
 	#print STDERR "len=$length type=$type bcd=$bcd_digits\n";
+
+    # Manage alphabetical addresses (as per TS 03.38 specs)
+    # Alphabetical addresses begin with 'D0'.
+    # Check also http://smslink.sourceforge.net/pdu.html
+    #
+    if( $type eq 'D0' )
+    {
+        $number = decode_text7($length . $bcd_digits);
+        return $number;
+    }
 
 	# Reverse each pair of bcd digits
 	while( $bcd_digits ) {
@@ -81,29 +93,63 @@ sub decode_text7($) {
 	$decoded;
 }
 
+# decode 8-bit encoded text
+sub decode_text8($) {
+
+	my $text8 = shift();
+	return unless $text8;
+
+	my $str;
+	while( $text8 ) {
+		$str .= chr( hex(substr $text8, 0, 2) );
+		if( length($text8) > 2 ) {
+			$text8 = substr($text8, 2);
+		} else {
+			$text8 = '';
+		}
+	}
+	return $str;
+}
 
 sub encode_address {
-	my $num = shift();
+	my $num  = shift;
+    my $type = '';
+    my $len  = 0;
+    my $encoded = '';
+
 	$num =~ s/\s+//g;
 
-	my $type = index($num,'+') == 0 ? 91 : 81;
+    #warn('encode_address('.$num.')');
 
-	# Remove all non-numbers. Beware to GPRS dialing chars.
-	$num =~ s/[^\d\*#]//g;
-	$num =~ s/\*/A/g;         # "*" maps to A
-	$num =~ s/#/B/g;          # "#" maps to B
+    # Check for alphabetical addresses (TS 03.38)
+    if( $num =~ /[A-Z][a-z]/ )
+    {
+        # Encode clear text in gsm0338 7-bit
+        $type = 'D0';
+        $encoded = encode_text7($num);
+        $len  = unpack 'H2' => chr( length $encoded );
+    }
+    else
+    {
+        $type = index($num,'+') == 0 ? 91 : 81;
 
-	my $len  = unpack 'H2' => chr( length $num );
+        # Remove all non-numbers. Beware to GPRS dialing chars.
+        $num =~ s/[^\d\*#]//g;
+        $num =~ s/\*/A/g;         # "*" maps to A
+        $num =~ s/#/B/g;          # "#" maps to B
 
-	$num .= 'F';
-	my @digit = split // => $num;
-	my $encoded;
+        $len  = unpack 'H2' => chr( length $num );
+    	$num .= 'F';
+        my @digit = split // => $num;
 
-	while( @digit > 1 ) {
-		$encoded .= join '', reverse splice @digit, 0, 2;
-	}
+        while( @digit > 1 ) {
+            $encoded .= join '', reverse splice @digit, 0, 2;
+        }
+    }
 
-	uc $len . $type . $encoded;
+    #warn('   [' . (uc $len . $type . $encoded ) . ']' );
+
+	return (uc $len . $type . $encoded);
 }
 
 
