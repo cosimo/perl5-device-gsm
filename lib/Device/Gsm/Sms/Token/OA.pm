@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: OA.pm,v 1.3 2006-04-20 20:07:19 cosimo Exp $
+# $Id: OA.pm,v 1.4 2006-08-12 08:43:28 cosimo Exp $
 
 package Sms::Token::OA;
 use integer;
@@ -31,26 +31,16 @@ sub decode {
 	# Get number type (0x91=international, 0x81=local)
 	my $oa_type   = substr( $$rMessage, 2, 2 );
 
-	# Get address
+    # Number of octets to remove from message
 	my $oa_octets = (($oa_len + 1) >> 1) << 1;
-	my $reversed_addr = substr( $$rMessage, 4, $oa_octets );
-	my $addr;
 
-	# Reverse octets of OA
-	while( $reversed_addr ) {
-		$addr .= reverse substr $reversed_addr, 0, 2;
-		$reversed_addr = substr $reversed_addr, 2;
-	}
-
-	# Remove final 'filler' if addr ends with 0xF
-	chop $addr if substr($addr, -1) eq 'F';
+	# Get address
+    my $addr = Device::Gsm::Pdu::decode_address($$rMessage);
 
 	$self->set('length'  => $oa_len);
 	$self->set('type'    => $oa_type);
 	$self->set('address' => $addr);
-
 	$self->data( $oa_len, $oa_type, $addr );
-
 	$self->state( Sms::Token::DECODED );
 
 	# Remove OA from message
