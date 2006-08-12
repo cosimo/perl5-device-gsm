@@ -1,14 +1,14 @@
-# $Id: 06msgcodec.t,v 1.7 2006-08-12 08:29:32 cosimo Exp $
+# $Id: 06msgcodec.t,v 1.8 2006-08-12 08:57:19 cosimo Exp $
 #
 # test sim card message encoding/decoding functions 
 #
-use Test;
-BEGIN { plan tests => 7 };
+use Test::More;
+BEGIN { plan tests => 8 };
 use lib '../lib';
-use Device::Gsm; 
-ok(1);
-use Device::Gsm::Sms;
-ok(1);
+
+use_ok('Device::Gsm');
+use_ok('Device::Gsm::Sms');
+use_ok('Device::Gsm::Pdu');
 
 my @messages = (
 	[ '+CMGL: 3,3,,36'  => '079193235058580011A50A8123988277790000AD1AC33468FE76BF41B19A0B068381E065F9FCED2E8342A110', 'Ci sono 15.000 persone !!!' ],
@@ -20,14 +20,14 @@ my @messages = (
 );
 
 foreach my $m ( @messages ) {
-#	print '-' x 72, "\n", "HEADER: $m->[0]\n", "PDU   : $m->[1]\n";
+	diag('-' x 72, "\n", "Header: $m->[0]\n", "PDU   : $m->[1]\n");
 	my $msg = new Device::Gsm::Sms( header => $m->[0], pdu => $m->[1] );
-#	print 'TEXT  : `', $msg->text(), "'\n";
-
+    diag('Sender `', $msg->sender(), '\'');
+#    diag('Text   `', $msg->text(), '\'');
 	if( $m->[2] ) {
-		ok( $m->[2], $msg->text(), 'check of decoded message' );
+		is( $m->[2], $msg->text(), 'check of decoded message' );
 	} else {
-		ok( $m->[2], $m->[2], 'missing decoded message text' );
+		is( $m->[2], $m->[2], 'missing decoded message text' );
 	}
 }
 
