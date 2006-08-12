@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: OA.pm,v 1.4 2006-08-12 08:43:28 cosimo Exp $
+# $Id: OA.pm,v 1.5 2006-08-12 08:57:52 cosimo Exp $
 
 package Sms::Token::OA;
 use integer;
@@ -35,7 +35,9 @@ sub decode {
 	my $oa_octets = (($oa_len + 1) >> 1) << 1;
 
 	# Get address
-    my $addr = Device::Gsm::Pdu::decode_address($$rMessage);
+    my $addr = Device::Gsm::Pdu::decode_address(
+        substr($$rMessage, 0, 4 + $oa_octets)
+    );
 
 	$self->set('length'  => $oa_len);
 	$self->set('type'    => $oa_type);

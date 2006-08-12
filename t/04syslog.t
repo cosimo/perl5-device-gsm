@@ -1,4 +1,4 @@
-# $Id: 04syslog.t,v 1.4 2004-05-25 20:53:23 cosimix Exp $
+# $Id: 04syslog.t,v 1.5 2006-08-12 08:57:52 cosimo Exp $
 #
 # test syslog mechanism
 #
@@ -11,9 +11,7 @@ ok(1);
 SKIP: {
 
         if( $^O =~ /Win/i ) {
-
                 skip('Syslog tests for Windows do not make sense', 1);
-       
         }
 
         my $gsm = new Device::Gsm( log => 'syslog' );
