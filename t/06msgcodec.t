@@ -1,9 +1,9 @@
-# $Id: 06msgcodec.t,v 1.6 2006-07-23 15:43:03 cosimo Exp $
+# $Id: 06msgcodec.t,v 1.7 2006-08-12 08:29:32 cosimo Exp $
 #
 # test sim card message encoding/decoding functions 
 #
 use Test;
-BEGIN { plan tests => 6 };
+BEGIN { plan tests => 7 };
 use lib '../lib';
 use Device::Gsm; 
 ok(1);

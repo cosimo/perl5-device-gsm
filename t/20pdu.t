@@ -1,10 +1,10 @@
-# $Id: 20pdu.t,v 1.6 2006-07-23 15:43:03 cosimo Exp $
+# $Id: 20pdu.t,v 1.7 2006-08-12 08:29:32 cosimo Exp $
 # test pdu encoding/decoding functions for sms
 
 use Test;
 use lib '../blib/lib';
 use Device::Gsm::Pdu;
-BEGIN { plan tests => 15 };
+BEGIN { plan tests => 16 };
 
 # Test encoding mobile numbers
 ok( Device::Gsm::Pdu::encode_address('3289287791'),    '0A812398827719'   ); #1
