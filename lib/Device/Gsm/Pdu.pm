@@ -12,7 +12,7 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Pdu.pm,v 1.9 2006-07-23 15:42:08 cosimo Exp $
+# $Id: Pdu.pm,v 1.10 2006-08-12 08:43:05 cosimo Exp $
 
 # TODO document decode_text8()
 
@@ -152,6 +152,20 @@ sub encode_address {
 	return (uc $len . $type . $encoded);
 }
 
+sub decode_text_UCS2 {
+	my $encoded= shift;
+	return undef unless $encoded;
+	
+	my $len = hex substr( $encoded, 0, 2 );
+	$encoded  = substr $encoded, 2;
+	
+	my $decoded="";
+	while( $encoded ) {
+		$decoded.=pack("U",hex(substr($encoded,0,4)));
+		$encoded = substr($encoded,4);		
+	}
+	return $decoded;
+}
 
 {
 	my( %b2h, %h2b );

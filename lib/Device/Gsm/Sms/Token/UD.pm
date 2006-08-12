@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: UD.pm,v 1.4 2006-04-20 20:07:19 cosimo Exp $
+# $Id: UD.pm,v 1.5 2006-08-12 08:43:05 cosimo Exp $
 
 package Sms::Token::UD;
 use integer;
@@ -31,11 +31,17 @@ sub decode {
 	my $ud_len = hex substr($$rMessage, 0, 2);
 
 	# Finally get text of message
-	# XXX Here assume that DCS == 0x00 (7 bit coding)
-	my $text   = Device::Gsm::Pdu::decode_text7($$rMessage);
+	my $dcs= $self->get('_messageTokens')->{'DCS'}->get('_data')->[0];
+	my $text;
+	if ($dcs == 8) {
+		$text = Device::Gsm::Pdu::decode_text_UCS2($$rMessage);
+	} else {
+		# XXX Here assume that DCS == 0x00 (7 bit coding)
+		$text   = Device::Gsm::Pdu::decode_text7($$rMessage);
 
-	# Convert text from GSM 03.38 to Latin 1
-	$text      = Device::Gsm::Charset::gsm0338_to_iso8859($text);
+  		# Convert text from GSM 03.38 to Latin 1
+		$text      = Device::Gsm::Charset::gsm0338_to_iso8859($text);
+	} 
 
 	$self->set( 'length' => $ud_len );
 	$self->set( 'text'   => $text   );
