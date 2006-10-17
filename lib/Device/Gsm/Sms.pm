@@ -12,10 +12,10 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Sms.pm,v 1.13 2006-07-23 15:42:24 cosimo Exp $
+# $Id: Sms.pm,v 1.14 2006-10-17 15:53:18 cosimo Exp $
 
 package Device::Gsm::Sms;
-$Device::Gsm::Sms::VERSION = substr q$Revision: 1.13 $, 10;
+$Device::Gsm::Sms::VERSION = substr q$Revision: 1.14 $, 10;
 
 use strict;
 use integer;
@@ -347,6 +347,11 @@ sub sender {
 	}
 }
 
+# Alias for text()
+sub content {
+	return $_[0]->text();
+}
+
 sub text {
 	my $self = shift;
 	my $t = $self->token('UD');
@@ -414,7 +419,7 @@ Device::Gsm::Sms - SMS message internal class that represents a single text SMS 
     if( defined $msg ) {
         print $msg->recipient() , "\n";
         print $msg->sender()    , "\n";
-        print $msg->content()   , "\n";
+        print $msg->content()   , "\n";  # or $msg->text()
         print $msg->time()      , "\n";
         print $msg->type()      , "\n";
     }
@@ -429,6 +434,9 @@ friendly high-level object.
 
 The following is a list of methods applicable to C<Device::Gsm::Sms> objects.
 
+=head2 content()
+
+See text() method.
 
 =head2 decode()
 
