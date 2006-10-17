@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.45  Tue Oct 17 18:01:43 CEST 2006
+    - Fixed CPAN RT bugs #21991, #21992, #22025.
+      Thanks to Troels Jensen for accurate reporting and patch suggestions.
+
 1.44  Wed Aug 16 08:25:50 CEST 2006
     - Fixed decoding of alphabetical sender addresses.
     - Added correct decoding of UCS languages (Russian for example).
