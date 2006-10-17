@@ -18,6 +18,7 @@
 	<li><a href="#methods">METHODS</a></li>
 	<ul>
 
+		<li><a href="#content__"><code>content()</code></a></li>
 		<li><a href="#decode__"><code>decode()</code></a></li>
 		<li><a href="#delete__"><code>delete()</code></a></li>
 		<li><a href="#new__"><code>new()</code></a></li>
@@ -79,7 +80,7 @@
     if( defined $msg ) {
         print $msg-&gt;recipient() , &quot;\n&quot;;
         print $msg-&gt;sender()    , &quot;\n&quot;;
-        print $msg-&gt;content()   , &quot;\n&quot;;
+        print $msg-&gt;content()   , &quot;\n&quot;;  # or $msg-&gt;text()
         print $msg-&gt;time()      , &quot;\n&quot;;
         print $msg-&gt;type()      , &quot;\n&quot;;
     }</pre>
@@ -95,6 +96,10 @@ friendly high-level object.</p>
 <hr />
 <h1><a name="methods">METHODS</a></h1>
 <p>The following is a list of methods applicable to <code>Device::Gsm::Sms</code> objects.</p>
+<p>
+</p>
+<h2><a name="content__"><code>content()</code></a></h2>
+<p>See <code>text()</code> method.</p>
 <p>
 </p>
 <h2><a name="decode__"><code>decode()</code></a></h2>
