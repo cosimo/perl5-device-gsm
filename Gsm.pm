@@ -12,7 +12,7 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Gsm.pm,v 1.44 2006-08-12 08:57:52 cosimo Exp $
+# $Id: Gsm.pm,v 1.45 2006-10-17 15:57:16 cosimo Exp $
 
 package Device::Gsm;
 $Device::Gsm::VERSION = '1.44';
@@ -256,21 +256,28 @@ sub imei() {
 sub signal_quality() {
 	my $self = shift;
 	# Error code, dBm (signal power), bit error rate
-	my($code, $dBm, $ber);
+	my($code, @dBm, $dBm, $ber);
 
 	# Test if signal quality command is implemented
 	if( $self->test_command('+CSQ') ) {
 
 		$self->atsend( 'AT+CSQ' . Device::Modem::CR );
-		($code, $dBm) = $self->parse_answer($Device::Modem::STD_RESPONSE, 15000);
+		($code, @dBm) = $self->parse_answer($Device::Modem::STD_RESPONSE, 15000);
 
-		if( $dBm =~ /\+CSQ:\s*(\d+)/ ) {
+		# Vodafone data cards send out response to commands with
+		# many empty lines in between, so +CSQ response is not the very
+		# first line of answer. 
+		for(@dBm)
+		{
+			if( /\+CSQ:/ )
+			{
+				$dBm = $_;
+				last;
+			}
+		}
 
-			$dBm = $1;
-			
-			$self->log->write('info', 'signal is ['.$dBm.'] "bars"');
-
-		} elsif( $dBm =~ /\+CSQ:\s*(\d+),(\d+)/ ) {
+		# Some gsm software send CSQ command result as "+CSQ: xx,yy"
+		if( $dBm =~ /\+CSQ:\s*(\d+),(\d+)/ ) {
 
 			($dBm, $ber) = ($1, $2);
 
@@ -282,6 +289,13 @@ sub signal_quality() {
 			}
 
 			$self->log->write('info', 'signal dBm power is ['.$dBm.'], bit error rate ['.$ber.']');
+
+		# Other versions put out "+CSQ: xx" only...
+		} elsif( $dBm =~ /\+CSQ:\s*(\d+)/ ) {
+
+			$dBm = $1;
+			
+			$self->log->write('info', 'signal is ['.$dBm.'] "bars"');
 
 		} else {
 
