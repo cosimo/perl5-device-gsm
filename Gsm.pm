@@ -12,10 +12,10 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Gsm.pm,v 1.45 2006-10-17 15:57:16 cosimo Exp $
+# $Id: Gsm.pm,v 1.46 2006-12-19 21:00:43 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = '1.44';
+$Device::Gsm::VERSION = '1.46';
 
 use strict;
 use Device::Modem 1.47;
@@ -785,6 +785,45 @@ sub service_center(;$) {
 
 }
 
+sub network
+{
+    my $self = $_[0];
+    my $network;
+
+    #if( ! $self->test_command('COPS') )
+    #{
+    #    print 'NO COMMAND';
+    #    return undef;
+    #}
+
+    $self->atsend('AT+COPS?' . Device::Modem::CR);
+
+    # Parse COPS answer, the 3rd string is the network name
+    my $ans = $self->answer();
+    if( $ans =~ /"([^"]*)"/ )
+    {
+        $network = $1;
+        $self->log->write('info', 'Received network name ['.$network.']');
+    }
+    else
+    {
+        $self->log->write('info', 'Received no network name');
+    }
+
+    # Try to decode the network name
+    require Device::Gsm::Networks;
+    my $netname = Device::Gsm::Networks::name($network);
+    if( ! defined $netname || $netname eq 'unknown' )
+    {
+        $netname = undef;
+    }
+
+    return wantarray
+        ? ($netname, $network)
+        : $netname;
+
+}
+
 1;
 
 __END__
@@ -1003,6 +1042,25 @@ Returns phone/device model name or number. Example:
 
 For example, for Siemens C45, C<$model> holds C<C45>; for Nokia 6600, C<$model>
 holds C<6600>.
+
+
+=head2 network()
+
+Returns the current registered or preferred GSM network operator. Example:
+
+	my $net_name = $gsm->network();
+    # Returns 'Wind Telecom Spa'
+
+    my($net_name, $net_code) = $gsm->network();
+    # Returns ('Wind Telecom Spa', '222 88')
+
+This obviously varies depending on country and network operator. For me now,
+it holds "Wind Telecomunicazioni SpA". It is not guaranteed that the mobile
+phone returns the decoded network name. It can also return a gsm network code,
+like C<222 88>. In this case, an attempt to decode the network name is made.
+
+Be sure to call the C<network()> method when already registered to gsm
+network. See C<register()> method.
 
 
 =head2 signal_quality()
