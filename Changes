@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.46  Tue Dec 19 22:05:31 CET 2006
+    - Fixed CPAN RT wishlist #23575.
+      Again thanks to Troels for his ideas.
+
 1.45  Tue Oct 17 18:01:43 CEST 2006
     - Fixed CPAN RT bugs #21991, #21992, #22025.
       Thanks to Troels Jensen for accurate reporting and patch suggestions.
