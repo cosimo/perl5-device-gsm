@@ -1,7 +1,9 @@
+<?xml version="1.0" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Device::Gsm::Sms - SMS message internal class that represents a single text SMS message</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:cosimo@cpan.org" />
 </head>
 
@@ -127,38 +129,39 @@ sms object is instanced and all information filled, to be available
 for subsequent method calls.</p>
 <p>The allowed parameters to <code>new()</code> method are:</p>
 <dl>
-<dt><strong><a name="item_header">header</a></strong><br />
-</dt>
+<dt><strong><a name="item_header">header</a></strong>
+
 <dd>
-This is the raw <strong>+CMGL</strong> header string as modem outputs when you
-issue a <strong>+CMGL</strong> command
+<p>This is the raw <strong>+CMGL</strong> header string as modem outputs when you
+issue a <strong>+CMGL</strong> command</p>
 </dd>
-<p></p>
-<dt><strong><a name="item_pdu">pdu</a></strong><br />
-</dt>
+</li>
+<dt><strong><a name="item_pdu">pdu</a></strong>
+
 <dd>
-Binary encoded sms data
+<p>Binary encoded sms data</p>
 </dd>
-<p></p>
-<dt><strong><a name="item_storage">storage</a></strong><br />
-</dt>
+</li>
+<dt><strong><a name="item_storage">storage</a></strong>
+
 <dd>
-Tells which storage to delete the message from. Check the documentation of your
-phone to know valid storage values. Default values are:
+<p>Tells which storage to delete the message from. Check the documentation of your
+phone to know valid storage values. Default values are:</p>
 </dd>
 <dl>
-<dt><strong><a name="item_me"><code>ME</code></a></strong><br />
-</dt>
+<dt><strong><a name="item_me"><code>ME</code></a></strong>
+
 <dd>
-Deletes messages from gsm phone memory.
+<p>Deletes messages from gsm phone memory.</p>
 </dd>
-<p></p>
-<dt><strong><a name="item_sc"><code>SC</code></a></strong><br />
-</dt>
+</li>
+<dt><strong><a name="item_sc"><code>SC</code></a></strong>
+
 <dd>
-Deletes messages from sim card.
+<p>Deletes messages from sim card.</p>
 </dd>
-<p></p></dl>
+</li>
+</dl>
 </dl>
 <p>
 </p>
@@ -217,9 +220,10 @@ two constants with those names. <code>type()</code> method returns one of these 
 <hr />
 <h1><a name="requires">REQUIRES</a></h1>
 <ul>
-<li></li>
-Device::Gsm
-<p></p></ul>
+<li>
+<p>Device::Gsm</p>
+</li>
+</ul>
 <p>
 </p>
 <hr />
@@ -230,9 +234,10 @@ Device::Gsm
 <hr />
 <h1><a name="todo">TODO</a></h1>
 <ul>
-<li></li>
-Complete and proof-read documentation and examples
-<p></p></ul>
+<li>
+<p>Complete and proof-read documentation and examples</p>
+</li>
+</ul>
 <p>
 </p>
 <hr />
