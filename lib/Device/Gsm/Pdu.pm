@@ -12,7 +12,7 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Pdu.pm,v 1.10 2006-08-12 08:43:05 cosimo Exp $
+# $Id: Pdu.pm,v 1.11 2007-02-28 21:20:35 cosimo Exp $
 
 # TODO document decode_text8()
 
@@ -55,7 +55,10 @@ sub decode_address {
 	$number =~ s/B/#/;
 
 	# If number is international, put a '+' sign before
-	$number = '+'.$number if $type == 91;
+	if( $type == 91 && $number !~ /^\s*\+/ )
+	{
+		$number = '+' . $number;
+	}
 
 	return $number;
 }
