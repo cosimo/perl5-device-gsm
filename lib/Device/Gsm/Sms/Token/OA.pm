@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: OA.pm,v 1.5 2006-08-12 08:57:52 cosimo Exp $
+# $Id: OA.pm,v 1.6 2007-02-28 21:18:14 cosimo Exp $
 
 package Sms::Token::OA;
 use integer;
@@ -67,11 +67,12 @@ sub encode {
 
 sub toString {
 	my $self = shift;
-	my $str;
-
-	$str = '+' if $self->get('type') eq '91';
-	$str .= $self->get('address');
-
+	my $str  = $self->get('address');
+    # Prepend + to number if international
+    if( $str !~ /^\s*\+/ && $self->get('type') eq '91' )
+    {   
+        $str = '+' . $str;
+    }
 	return $str;
 }
 

@@ -1,17 +1,14 @@
-# $Id: 07tokens.t,v 1.1 2004-05-25 20:37:19 cosimo Exp $
+# $Id: 07tokens.t,v 1.2 2007-02-28 21:18:14 cosimo Exp $
 #
 # test new token engine for decoding/encoding sms messages 
 #
-use Test;
-BEGIN { plan tests => 4 };
+use Test::More;
+BEGIN { plan tests => 7 };
 use lib '../lib';
-use Device::Gsm; 
-ok(1);
-use Device::Gsm::Sms;
-use Device::Gsm::Sms::Structure;
-use Device::Gsm::Sms::Token;
-
-ok(1);
+use_ok('Device::Gsm');
+use_ok('Device::Gsm::Sms');
+use_ok('Device::Gsm::Sms::Structure');
+use_ok('Device::Gsm::Sms::Token');
 
 #my @messages = (
 #	[ '+CMGL: 3,3,,36' => '079193235058580011A50A8123988277790000AD1AC33468FE76BF41B19A0B068381E065F9FCED2E8342A110' ],
@@ -24,5 +21,13 @@ my $msg = '0791932350593900';
 my $ok = $sca->decode( \$msg );
 
 ok( $ok );
-ok( $sca->toString(), '+393205959300' );
+is( $sca->toString(), '+393205959300' );
+
+#
+# CPAN Bug #24781 regression test
+# 
+my $oa = new Sms::Token 'OA';
+$oa->set('address', '+3289287791');
+$oa->set('type',    91);
+is($oa->toString(), '+3289287791', 'avoid ++ in sender address (CPAN Bug #24781)');
 
