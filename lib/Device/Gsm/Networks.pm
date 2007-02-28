@@ -388,6 +388,7 @@ our %NETWORKS = (
 sub name
 {
     my $number = $_[0];
+    $number =~ s/\D//;
     return exists $NETWORKS{$number}
         ? $NETWORKS{$number}
         : 'unknown';
@@ -396,6 +397,7 @@ sub name
 sub country
 {
     my $number = $_[0];
+    $number =~ s/\D//;
     return exists $COUNTRIES{$number}
         ? $COUNTRIES{$number}
         : 'unknown';
