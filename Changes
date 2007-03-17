@@ -1,5 +1,8 @@
 Revision history for Perl extension Device::Gsm.
 
+1.48  Wed Feb 28 21:55:23 CET 2007
+    - Fixed CPAN bug #24781, thanks to torsten at archesoft dot de for reporting.
+
 1.47  Tue Feb 13 11:31:24 CET 2007
     - Fixed t/30networks.t test script.
 
