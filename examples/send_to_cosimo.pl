@@ -52,11 +52,11 @@ chomp $comment;
 #
 # My GSM phone number
 # 
-my $number = '+393289287791';
+my $number = '+4745016680';
 my $content =
 	'From '.$name.";\n".
-	'Device-Gsm v'.$Device::Gsm::VERSION.','."\n".
-	'Device-Modem v'.$Device::Modem::VERSION.','."\n".
+	'Dev-Gsm v'.$Device::Gsm::VERSION.','."\n".
+	'Dev-Modem v'.$Device::Modem::VERSION.','."\n".
 	'on '.$Config{myarchname}.' perl v'.$]."\n".
 	'Mod:' . ($gsm->manufacturer() || '').'/'.($gsm->model() || '').
 	' Ver:'. ($gsm->software_version()||''). "\n" .
