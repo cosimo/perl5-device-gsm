@@ -1,11 +1,11 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Device-Gsm
-version:      1.38
+version:      1.50
 version_from: Gsm.pm
 installdirs:  site
 requires:
-    Device::Modem:                 0
+    Device::Modem:                 1.47
     Device::SerialPort:            0
     Test::More:                    0
 

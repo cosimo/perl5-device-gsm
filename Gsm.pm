@@ -1,5 +1,5 @@
 # Device::Gsm - a Perl class to interface GSM devices as AT modems
-# Copyright (C) 2002-2007 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2002-2008 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -15,7 +15,7 @@
 # $Id: Gsm.pm,v 1.48 2007-03-17 16:24:15 cosimo Exp $
 
 package Device::Gsm;
-$Device::Gsm::VERSION = '1.48';
+$Device::Gsm::VERSION = '1.50';
 
 use strict;
 use Device::Modem 1.47;
@@ -631,14 +631,14 @@ sub _send_sms_text {
 
 	# Get reply and check for errors
 	$cReply = $me->answer('\+CMGS', 2000);
-	if( $cReply =~ /ERROR/i ) {
-		$me->log->write( 'warning', "ERROR in sending SMS" );
-	} else {
+	if( $cReply =~ /OK$/i ) {
 		$me->log->write( 'info', "Sent SMS (text mode) to $num!" );
 		$lOk = 1;
+	} else {
+		$me->log->write( 'warning', "ERROR in sending SMS" );
 	}
 
-	$lOk
+	return $lOk;
 }
 
 
@@ -730,15 +730,15 @@ sub _send_sms_pdu {
 	$cReply = $me->answer($Device::Modem::STD_RESPONSE, 30000);
 	$me->log->write( 'debug', "SMS reply: $cReply\r\n" );
 
-	if( $cReply =~ /ERROR/i ) {
-		$cReply =~ /(\+CMGS:.*)/;
-		$me->log->write( 'warning', "ERROR in sending SMS: $1" );
-	} else {
+	if( $cReply =~ /OK$/i ) {
 		$me->log->write( 'info', "Sent SMS (pdu mode) to $num!" );
 		$lOk = 1;
+	} else {
+		$cReply =~ /(\+CMGS:.*)/;
+		$me->log->write( 'warning', "ERROR in sending SMS: $1" );
 	}
 
-	$lOk
+	return $lOk;
 }
 
 
