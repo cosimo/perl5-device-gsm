@@ -1,5 +1,12 @@
 Revision history for Perl extension Device::Gsm.
 
+1.51  Wed Oct 29 22:32:00 CET 2008
+    - Added new method to set/reset call forwarding options
+      (patch contributed by Attila Nagy: thanks!)
+    - Removed the syslog test script (t/04syslog.t).
+      It continuously broke tests on Solaris and basically every
+      other setups where you are not installing as privileged user.
+
 1.50  Tue Sep 30 22:50:00 CEST 2008
     - Sometimes send_sms() could report success but no sms
       has really been sent, and we receive garbage.

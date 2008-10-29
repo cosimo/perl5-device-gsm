@@ -12,10 +12,10 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Gsm.pm,v 1.48 2007-03-17 16:24:15 cosimo Exp $
+# $Id$
 
 package Device::Gsm;
-$Device::Gsm::VERSION = '1.50';
+$Device::Gsm::VERSION = '1.51';
 
 use strict;
 use Device::Modem 1.47;
@@ -150,6 +150,40 @@ sub delete_sms {
 }
 
 #
+# Call forwarding
+#
+sub forward {
+    my ($self, $reason, $mode, $number) = @_;
+
+    $reason = lc $reason || 'unconditional';
+    $mode   = lc $mode   || 'register';
+    $number ||= '';
+
+    my %reasons = (
+        'unconditional' => 0,
+        'busy'          => 1,
+        'no reply'      => 2,
+        'unreachable'   => 3
+    );
+
+    my %modes = (
+        'disable'  => 0,
+        'enable'   => 1,
+        'query'    => 2,
+        'register' => 3,
+        'erase'    => 4
+    );
+
+    my $reasoncode = $reasons{$reason};
+    my $modecode = $modes{$mode};
+
+    $self->log->write('info', qq{setting $reason call forwarding to [$number]});
+    $self->atsend( qq{AT+CCFC=$reasoncode,$modecode,"$number"} . Device::Modem::CR );
+
+    return $self->parse_answer($Device::Modem::STD_RESPONSE);
+}
+
+#
 # Hangup and terminate active call(s)
 # this overrides the `Device::Modem::hangup()' method
 #
@@ -222,7 +256,7 @@ sub mode {
 #
 # What is the model of this device?
 #
-sub model() {
+sub model {
 	my $self = shift;
 	my($code, $model);
 
@@ -242,7 +276,7 @@ sub model() {
 #
 # Get handphone serial number (IMEI number)
 #
-sub imei() {
+sub imei {
 	my $self = shift;
 	my($code,$imei);
 
@@ -265,7 +299,7 @@ sub imei() {
 #
 # Get mobile phone signal quality (expressed in dBm)
 #
-sub signal_quality() {
+sub signal_quality {
 	my $self = shift;
 	# Error code, dBm (signal power), bit error rate
 	my($code, @dBm, $dBm, $ber);
@@ -329,7 +363,7 @@ sub signal_quality() {
 #
 # Get the GSM software version on this device
 #
-sub software_version() {
+sub software_version {
 	my $self = shift;
 	my($code, $ver);
 
@@ -745,7 +779,7 @@ sub _send_sms_pdu {
 #
 # Set or request service center number
 #
-sub service_center(;$) {
+sub service_center {
 
 	my $self = shift;
 	my $nCenter;
@@ -964,6 +998,21 @@ from gsm phone memory or sim card memory. Example:
     $gsm->delete_sms(3, 'SM');
 
 By default, it uses the currently set storage, via the C<storage()> method.
+
+=head2 forward()
+
+Sets call forwarding. Accepts three arguments: reason, mode and number.
+Reason can be the string C<unconditional>, C<busy>, C<no reply> and C<unreachable>.
+Mode can be the string C<disable>, C<enable>, C<query>, C<register>, C<erase>.
+
+Example:
+
+    # Set unconditional call forwarding to +47 123456789
+    $gsm->forward('unconditional','register','+47123456789');
+
+    # Erase unconditional call forwarding
+    $gsm->forward('unconditional','erase');
+
 
 =head2 hangup()
 
