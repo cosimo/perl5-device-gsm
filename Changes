@@ -1,5 +1,8 @@
 Revision history for Perl extension Device::Gsm.
 
+1.52  Tue Nov 25 21:24:00 CET 2008
+    - Added a longer timeout on call forwarding. Thanks to Marek Jaros.
+
 1.51  Wed Oct 29 22:32:00 CET 2008
     - Added new method to set/reset call forwarding options
       (patch contributed by Attila Nagy: thanks!)

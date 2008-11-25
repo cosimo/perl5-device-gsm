@@ -4,13 +4,15 @@
 <head>
 <title>Device::Gsm::Sms - SMS message internal class that represents a single text SMS message</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rev="made" href="mailto:cosimo@cpan.org" />
+<link rev="made" href="mailto:" />
 </head>
 
 <body style="background-color: white">
 
-<p><a name="__index__"></a></p>
+
 <!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
 <ul>
 
@@ -41,9 +43,11 @@
 	<li><a href="#author">AUTHOR</a></li>
 	<li><a href="#see_also">SEE ALSO</a></li>
 </ul>
+
+<hr name="index" />
+</div>
 <!-- INDEX END -->
 
-<hr />
 <p>
 </p>
 <hr />
@@ -129,33 +133,33 @@ sms object is instanced and all information filled, to be available
 for subsequent method calls.</p>
 <p>The allowed parameters to <code>new()</code> method are:</p>
 <dl>
-<dt><strong><a name="item_header">header</a></strong>
+<dt><strong><a name="header" class="item">header</a></strong>
 
 <dd>
 <p>This is the raw <strong>+CMGL</strong> header string as modem outputs when you
 issue a <strong>+CMGL</strong> command</p>
 </dd>
 </li>
-<dt><strong><a name="item_pdu">pdu</a></strong>
+<dt><strong><a name="pdu" class="item">pdu</a></strong>
 
 <dd>
 <p>Binary encoded sms data</p>
 </dd>
 </li>
-<dt><strong><a name="item_storage">storage</a></strong>
+<dt><strong><a name="storage" class="item">storage</a></strong>
 
 <dd>
 <p>Tells which storage to delete the message from. Check the documentation of your
 phone to know valid storage values. Default values are:</p>
 </dd>
 <dl>
-<dt><strong><a name="item_me"><code>ME</code></a></strong>
+<dt><strong><a name="me" class="item"><code>ME</code></a></strong>
 
 <dd>
 <p>Deletes messages from gsm phone memory.</p>
 </dd>
 </li>
-<dt><strong><a name="item_sc"><code>SC</code></a></strong>
+<dt><strong><a name="sc" class="item"><code>SC</code></a></strong>
 
 <dd>
 <p>Deletes messages from sim card.</p>
@@ -192,7 +196,7 @@ as string (ex.: <code>+39012345678</code>).</p>
 <p>Status of the message can be one value from the following list:</p>
 <FORM><SELECT><OPTION>UNKNOWN<OPTION>REC UNREAD<OPTION>REC READ<OPTION>SENT UNREAD<OPTION>SENT READ</SELECT></FORM><p>
 </p>
-<h2><a name="storage__"><a href="#item_storage"><code>storage()</code></a></a></h2>
+<h2><a name="storage__"><a href="#storage"><code>storage()</code></a></a></h2>
 <p>Returns the storage where SMS has been read from.</p>
 <p>
 </p>

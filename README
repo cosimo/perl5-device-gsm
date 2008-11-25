@@ -1,8 +1,8 @@
 ,=======================================.
-| Device::Gsm            perl extension |      28/02/2007
+| Device::Gsm            perl extension |      25/11/2008
 `======================================='
 
-Copyright 2002-2007 (C) Cosimo Streppone, <cosimo@cpan.org>
+Copyright 2002-2008 (C) Cosimo Streppone, <cosimo@cpan.org>
 
 
 This is a perl module extension. If you don't know

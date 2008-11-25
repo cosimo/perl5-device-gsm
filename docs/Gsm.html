@@ -4,13 +4,15 @@
 <head>
 <title>Device::Gsm - Perl extension to interface GSM phones / modems</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rev="made" href="mailto:cosimo@cpan.org" />
+<link rev="made" href="mailto:" />
 </head>
 
 <body style="background-color: white">
 
-<p><a name="__index__"></a></p>
+
 <!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
 <ul>
 
@@ -23,6 +25,7 @@
 		<li><a href="#connect__"><code>connect()</code></a></li>
 		<li><a href="#datetime__"><code>datetime()</code></a></li>
 		<li><a href="#delete_sms__"><code>delete_sms()</code></a></li>
+		<li><a href="#forward__"><code>forward()</code></a></li>
 		<li><a href="#hangup__"><code>hangup()</code></a></li>
 		<li><a href="#imei__"><code>imei()</code></a></li>
 		<li><a href="#manufacturer__"><code>manufacturer()</code></a></li>
@@ -42,13 +45,15 @@
 	<li><a href="#requires">REQUIRES</a></li>
 	<li><a href="#export">EXPORT</a></li>
 	<li><a href="#troubleshooting">TROUBLESHOOTING</a></li>
-	<li><a href="#todo">TO-DO</a></li>
+	<li><a href="#to_do">TO-DO</a></li>
 	<li><a href="#author">AUTHOR</a></li>
 	<li><a href="#see_also">SEE ALSO</a></li>
 </ul>
+
+<hr name="index" />
+</div>
 <!-- INDEX END -->
 
-<hr />
 <p>
 </p>
 <h1><a name="name">NAME</a></h1>
@@ -130,8 +135,8 @@ as all parameters are passed to those classes' <code>connect()</code> method.</p
 </p>
 <h2><a name="datetime__"><code>datetime()</code></a></h2>
 <p>Used to get or set your phone/gsm modem date and time.</p>
-<p>If called without parameters, it gets the current phone/gsm date and time in ``gsm''
-format ``YY/MM/DD,HH:MN:SS''. For example <code>03/12/15,22:48:59</code> means December the 15th,
+<p>If called without parameters, it gets the current phone/gsm date and time in &quot;gsm&quot;
+format &quot;YY/MM/DD,HH:MN:SS&quot;. For example <code>03/12/15,22:48:59</code> means December the 15th,
 at 10:48:59 PM. Example:</p>
 <pre>
         $datestr = $gsm-&gt;datetime();</pre>
@@ -154,7 +159,7 @@ in either case.</p>
 Example:</p>
 <pre>
     $gsm-&gt;delete_sms(3);</pre>
-<p>An optional second parameter specifies the ``storage''. It allows to delete messages
+<p>An optional second parameter specifies the &quot;storage&quot;. It allows to delete messages
 from gsm phone memory or sim card memory. Example:</p>
 <pre>
     # Deletes first message from gsm phone memory
@@ -165,9 +170,22 @@ from gsm phone memory or sim card memory. Example:</p>
 <p>By default, it uses the currently set storage, via the <code>storage()</code> method.</p>
 <p>
 </p>
+<h2><a name="forward__"><code>forward()</code></a></h2>
+<p>Sets call forwarding. Accepts three arguments: reason, mode and number.
+Reason can be the string <code>unconditional</code>, <code>busy</code>, <code>no reply</code> and <code>unreachable</code>.
+Mode can be the string <code>disable</code>, <code>enable</code>, <code>query</code>, <code>register</code>, <code>erase</code>.</p>
+<p>Example:</p>
+<pre>
+    # Set unconditional call forwarding to +47 123456789
+    $gsm-&gt;forward('unconditional','register','+47123456789');</pre>
+<pre>
+    # Erase unconditional call forwarding
+    $gsm-&gt;forward('unconditional','erase');</pre>
+<p>
+</p>
 <h2><a name="hangup__"><code>hangup()</code></a></h2>
 <p>Hangs up the phone, terminating the active calls, if any.
-This method has been never tested on real ``live'' conditions, but it needs to be
+This method has been never tested on real &quot;live&quot; conditions, but it needs to be
 specialized for GSM phones, because it relies on <code>+HUP</code> GSM command.
 Example:</p>
 <pre>
@@ -203,19 +221,19 @@ every message being a <code>Device::Gsm::Sms</code> object.</p>
 and can assume some of the following values (but check your phone/modem manual for
 special manufacturer values):</p>
 <dl>
-<dt><strong><a name="item_me"><code>ME</code></a></strong>
+<dt><strong><a name="me" class="item"><code>ME</code></a></strong>
 
 <dd>
 <p>Means gsm phone <strong>ME</strong>mory</p>
 </dd>
 </li>
-<dt><strong><a name="item_mt"><code>MT</code></a></strong>
+<dt><strong><a name="mt" class="item"><code>MT</code></a></strong>
 
 <dd>
 <p>Means gsm phone <strong>ME</strong>mory on Nokia phones?</p>
 </dd>
 </li>
-<dt><strong><a name="item_sm"><code>SM</code></a></strong>
+<dt><strong><a name="sm" class="item"><code>SM</code></a></strong>
 
 <dd>
 <p>Means <strong>S</strong>im card <strong>M</strong>emory (default value)</p>
@@ -233,7 +251,7 @@ special manufacturer values):</p>
     }</pre>
 <p>
 </p>
-<h2><a name="mode__"><a href="#item_mode"><code>mode()</code></a></a></h2>
+<h2><a name="mode__"><a href="#mode"><code>mode()</code></a></a></h2>
 <p>Sets the device GSM command mode. Accepts one parameter to set the new mode that can
 be the string <code>text</code> or <code>pdu</code>. Example:</p>
 <pre>
@@ -261,7 +279,7 @@ holds <code>6600</code>.</p>
     my($net_name, $net_code) = $gsm-&gt;network();
     # Returns ('Wind Telecom Spa', '222 88')</pre>
 <p>This obviously varies depending on country and network operator. For me now,
-it holds ``Wind Telecomunicazioni SpA''. It is not guaranteed that the mobile
+it holds &quot;Wind Telecomunicazioni SpA&quot;. It is not guaranteed that the mobile
 phone returns the decoded network name. It can also return a gsm network code,
 like <code>222 88</code>. In this case, an attempt to decode the network name is made.</p>
 <p>Be sure to call the <code>network()</code> method when already registered to gsm
@@ -323,7 +341,7 @@ You can also test commands like <code>^SNBR</code> or the like, without <code>+<
 <I>Must be explained better, uh?</I><p>
 </p>
 <h2><a name="register__"><code>register()</code></a></h2>
-<p>``Registering'' on the GSM network is what happens when you turn on your mobile phone or GSM equipment
+<p>&quot;Registering&quot; on the GSM network is what happens when you turn on your mobile phone or GSM equipment
 and the device tries to reach the GSM operator network. If your device requires a <strong>PIN</strong> number,
 it is used here (but remember to supply the <code>pin</code> parameter in <code>new()</code> object constructor for this
 to work.</p>
@@ -352,7 +370,7 @@ probably you supplied the wrong PIN code or network unreachable.</p>
         }</pre>
 <p>The allowed parameters to <code>send_sms()</code> are:</p>
 <dl>
-<dt><strong><a name="item_class"><code>class</code></a></strong>
+<dt><strong><a name="class" class="item"><code>class</code></a></strong>
 
 <dd>
 <p>Class parameter can assume two values: <code>normal</code> and <code>flash</code>. Flash (or class zero) messages are
@@ -360,14 +378,14 @@ particular because they are immediately displayed (without user confirm) and nev
 on phone memory, while <code>normal</code> is the default.</p>
 </dd>
 </li>
-<dt><strong><a name="item_content"><code>content</code></a></strong>
+<dt><strong><a name="content" class="item"><code>content</code></a></strong>
 
 <dd>
 <p>This is the text you want to send, consisting of max 160 chars if you use <strong>PDU</strong> mode
 and 140 (?) if in <strong>text</strong> mode (more on this later).</p>
 </dd>
 </li>
-<dt><strong><a name="item_mode"><code>mode</code></a></strong>
+<dt><strong><a name="mode" class="item"><code>mode</code></a></strong>
 
 <dd>
 <p>Can assume two values (case insensitive): <code>pdu</code> and <code>text</code>.
@@ -380,13 +398,13 @@ Older OEM modules (like Falcom Swing, for example) don't have PDU mode, but only
 It is just a matter of trying.</p>
 </dd>
 </li>
-<dt><strong><a name="item_recipient"><code>recipient</code></a></strong>
+<dt><strong><a name="recipient" class="item"><code>recipient</code></a></strong>
 
 <dd>
 <p>Phone number of message recipient</p>
 </dd>
 </li>
-<dt><strong><a name="item_status_report"><code>status_report</code></a></strong>
+<dt><strong><a name="status_report" class="item"><code>status_report</code></a></strong>
 
 <dd>
 <p>If present with a true value, it enables sending of SMS messages (only for PDU mode,
@@ -441,7 +459,7 @@ sending of SMS messages, so be warned!), you can try something like:</p>
 <h1><a name="troubleshooting">TROUBLESHOOTING</a></h1>
 <p>If you experience problems, please double check:</p>
 <dl>
-<dt><strong><a name="item_device_permissions">Device permissions</a></strong>
+<dt><strong><a name="device_permissions" class="item">Device permissions</a></strong>
 
 <dd>
 <p>Maybe you don't have necessary permissions to access your serial,
@@ -450,7 +468,7 @@ try, if you don't mind, <code>chmod a+rw /dev/ttyS1</code> (or whatever device
 you use instead of <code>/dev/ttyS1</code>).</p>
 </dd>
 </li>
-<dt><strong><a name="item_connection_speed">Connection speed</a></strong>
+<dt><strong><a name="connection_speed" class="item">Connection speed</a></strong>
 
 <dd>
 <p>Try switching <code>baudrate</code> parameter from 19200 (the default value)
@@ -458,7 +476,7 @@ to 9600 or viceversa. This one is the responsible of 80% of the problems,
 because there is no baudrate auto-detection.</p>
 </dd>
 </li>
-<dt><strong><a name="item_device_autoscan">Device autoscan</a></strong>
+<dt><strong><a name="device_autoscan" class="item">Device autoscan</a></strong>
 
 <dd>
 <p>If all else fails, please use the <strong>autoscan</strong> utility in the <code>bin/</code> folder
@@ -479,23 +497,23 @@ I can add better support for all devices in the future!</p>
 <p>
 </p>
 <hr />
-<h1><a name="todo">TO-DO</a></h1>
+<h1><a name="to_do">TO-DO</a></h1>
 <dl>
-<dt><strong><a name="item_spooler">Spooler</a></strong>
+<dt><strong><a name="spooler" class="item">Spooler</a></strong>
 
 <dd>
 <p>Build a simple spooler program that sends all SMS stored in a special
 queue (that could be a simple filesystem folder).</p>
 </dd>
 </li>
-<dt><strong><a name="item_validity_period">Validity Period</a></strong>
+<dt><strong><a name="validity_period" class="item">Validity Period</a></strong>
 
 <dd>
 <p>Support <code>validity</code> period option on SMS sending. Tells how much time the SMS
 Service Center must hold the SMS for delivery when not received.</p>
 </dd>
 </li>
-<dt><strong><a name="item_profiles">Profiles</a></strong>
+<dt><strong><a name="profiles" class="item">Profiles</a></strong>
 
 <dd>
 <p>Build a profile of the GSM device used, so that we don't have to <code>always</code>

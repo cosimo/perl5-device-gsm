@@ -15,7 +15,7 @@
 # $Id$
 
 package Device::Gsm;
-$Device::Gsm::VERSION = '1.51';
+$Device::Gsm::VERSION = '1.52';
 
 use strict;
 use Device::Modem 1.47;
@@ -180,7 +180,7 @@ sub forward {
     $self->log->write('info', qq{setting $reason call forwarding to [$number]});
     $self->atsend( qq{AT+CCFC=$reasoncode,$modecode,"$number"} . Device::Modem::CR );
 
-    return $self->parse_answer($Device::Modem::STD_RESPONSE);
+    return $self->parse_answer($Device::Modem::STD_RESPONSE, 15000);
 }
 
 #
