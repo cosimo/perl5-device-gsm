@@ -12,10 +12,10 @@
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
 #
-# $Id: Sms.pm,v 1.14 2006-10-17 15:53:18 cosimo Exp $
+# $Id$
 
 package Device::Gsm::Sms;
-$Device::Gsm::Sms::VERSION = substr q$Revision: 1.14 $, 10;
+$Device::Gsm::Sms::VERSION = substr q$Revision$, 10;
 
 use strict;
 use integer;
@@ -298,7 +298,7 @@ sub delete {
     my $storage = $self->storage();
 
     # Issue delete command
-    if( ref $gsm && $msg_index > 0 ) {
+    if( ref $gsm && $storage && $msg_index >= 0 ) {
         $ok = $gsm->delete_sms($msg_index, $storage);
         $gsm->log->write('info', 'Delete sms n.'.$msg_index.' in storage '.$storage.' => '.($ok?'OK':'*ERROR'));
     } else {
@@ -423,6 +423,8 @@ Device::Gsm::Sms - SMS message internal class that represents a single text SMS 
         print $msg->time()      , "\n";
         print $msg->type()      , "\n";
     }
+
+	$msg->delete();
 
 =head1 DESCRIPTION
 
@@ -584,7 +586,7 @@ Complete and proof-read documentation and examples
 
 Device::Gsm::Sms - SMS message simple class that represents a text SMS message
 
-Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
+Copyright (C) 2002-2009 Cosimo Streppone, cosimo@cpan.org
 
 This program is free software; you can redistribute it and/or modify
 it only under the terms of Perl itself.

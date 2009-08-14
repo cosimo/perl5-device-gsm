@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.53  Fri Aug 14 21:43:37 CEST 2009
+    - Fixed RT #48700, deleting SMS message with index 0 didn't work.
+	  Thanks to Vytas M. for reporting the bug.
+
 1.52  Tue Nov 25 21:24:00 CET 2008
     - Added a longer timeout on call forwarding. Thanks to Marek Jaros.
 
