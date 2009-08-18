@@ -12,8 +12,10 @@
 # $Id$
 
 package Device::Gsm::Sms;
+
 use strict;
 use integer;
+
 use Device::Gsm::Sms;
 use Device::Gsm::Sms::Token;
 
