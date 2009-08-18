@@ -9,7 +9,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
 #
-# $Id: OA.pm,v 1.6 2007-02-28 21:18:14 cosimo Exp $
+# $Id$
 
 package Sms::Token::OA;
 use integer;

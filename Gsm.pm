@@ -15,7 +15,8 @@
 # $Id$
 
 package Device::Gsm;
-$Device::Gsm::VERSION = '1.53';
+
+$Device::Gsm::VERSION = '1.54';
 
 use strict;
 use Device::Modem 1.47;
