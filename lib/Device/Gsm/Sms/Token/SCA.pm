@@ -38,7 +38,7 @@ sub decode {
 		$self->data( '' );
 		$self->state( Sms::Token::DECODED );
 		# Remove length-octet read from message
-		$$rMessage = substr( $$rMessage, 1 );
+		$$rMessage = substr( $$rMessage, 2 );
 		return 1;
 	}
 
