@@ -1,2 +1,5 @@
 ^\.
 ^CVS
+^pod2
+^makedoc\.sh
+^contrib
