@@ -1,5 +1,5 @@
 # Device::Gsm::Charset - GSM0338 <=> ASCII charset conversion module
-# Copyright (C) 2004-2006 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2004-2009 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -8,9 +8,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for details.
-#
-# Commercial support is available. Write me if you are
-# interested in new features or software support.
 #
 # $Id$
 
@@ -457,14 +454,13 @@ sub iso8859_to_gsm0338 {
 
         # Is this a "replaced" char?
         if( $ch_gsm <= 0xFF ) {
-            $ch_gsm = -$ch_gsm if $ch_gsm < 0;
+            $ch_gsm = abs($ch_gsm);
         }
         else
         {
-            # Pre-add an escape char for extended char
+            # Prepend an escape char for extended char
             $gsm .= chr(ESCAPE);
             # Encode extended char
-            #$ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_gsm - 256];
             $ch_gsm -= 256;
         }
         #warn('char ['.$ch_ascii.'] => ['.$ch_gsm.']');
