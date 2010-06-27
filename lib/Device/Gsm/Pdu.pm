@@ -93,7 +93,7 @@ sub decode_text7($) {
 		$bits = substr $bits, 7;
 	}
 	
-	$decoded;
+	return substr($decoded, 0, $len);
 }
 
 # decode 8-bit encoded text
