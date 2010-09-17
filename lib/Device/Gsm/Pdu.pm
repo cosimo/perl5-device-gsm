@@ -63,37 +63,12 @@ sub decode_address {
 	return $number;
 }
 
-# decode 7-bit encoded text (thanks to kiat@spiralcomms.com)
-sub decode_text7($) {
-
-	my $text7 = shift();
-	return unless $text7;
-
-	my $len = hex substr( $text7, 0, 2 );
-#	print "length = $len\n";
-
-	$text7  = substr $text7, 2;
-#	print "text7  = $text7\n";
-
-	my $bits;
-	while( $text7 ) {
-		$bits .= unpack 'b8' => pack 'H2' => substr $text7, 0, 2;
-		if( length($text7) > 2 ) {
-			$text7 = substr($text7, 2);
-		} else {
-			$text7 = '';
-		}
-	}
-#	print "bits = $bits (length=".length($bits).")\n";
-
-	my $decoded;
-	while( length $bits >= 7 ) {
-		#print "septet = ",substr($bits,0,7), "\n";
-		$decoded .= pack 'b7' => substr($bits, 0, 7);
-		$bits = substr $bits, 7;
-	}
-	
-	return substr($decoded, 0, $len);
+sub decode_text7 {
+	pack '(b*)*',
+    unpack 'C/(a7)',
+	pack 'C a*',
+	unpack 'C b*',
+	pack 'H*', $_[0]
 }
 
 # decode 8-bit encoded text
@@ -170,38 +145,13 @@ sub decode_text_UCS2 {
 	return $decoded;
 }
 
-{
-	my( %b2h, %h2b );
-	foreach ( map { chr } 0 .. 255 ) {
-		my $v = unpack 'b8' => $_;
-		$b2h{$v} = uc unpack 'H2' => $_;
-	}
-
-	foreach ( map { chr } 0 .. 127 ) {
-		$h2b{$_} = unpack 'b7' => $_;
-	}
-
-sub encode_text7($) {
-
-	my($result, $bits);
-	my @char = split // => $_[0];
-
-	# Expand in 8 bit octets
-	map { $bits .= $h2b{$_} } @char; 
-
-	if( $len = length($bits) % 8 ) {
-		$bits .= '0' x ( 8 - $len );
-	}
-
-	while( length $bits ) {
-		$result .= $b2h{ substr $bits, 0, 8 };
-		$bits = substr $bits, 8;
-	}
-
-	uc ( unpack 'H2' => chr(scalar @char) ) .   # length in septets
-		$result                                 # encoded text
-}
-
+sub encode_text7 {
+	uc
+	unpack 'H*',
+	pack 'C b*',
+	length $_[0],
+	join '',
+	unpack '(b7)*', $_[0];
 }
 
 1;
