@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.55  Sun Jun 27 18:07:11 CEST 2010
+	- Fixed RT #58869, incorrect decoding of text7 messages.
+	  Thanks to Alexander Onokhov.
+
 1.54  Sun Sep  6 10:44:53 CEST 2009
 	- Fixed RT #31565, incorrect decoding of outgoing messages
 	  due to incorrect removal of zero-length octet in PDU.
