@@ -1,12 +1,21 @@
 # Test decode/encode text7 
 
+use strict;
+use warnings;
+use utf8;
 use Test::More;
-plan tests => 1;
+
+plan tests => 6;
  
 use Device::Gsm::Pdu;
 
 my @case = (
-    '1234567'
+    '1234567',
+	join("", "A".."Z"),
+	join("", "a".."z"),
+	join("", 0..9),
+	join("", map { chr } 0..127),
+	reverse join("", map { chr } 0..127),
 );
 
 for (@case) {
