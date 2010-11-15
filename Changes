@@ -1,17 +1,26 @@
 Revision history for Perl extension Device::Gsm.
 
+1.56  Mon Nov 15 21:00:00 CET 2010
+    - When sending messages in text mode, now we wait a bit
+      between the +CMSG command and the actual text.
+      Fixes RT #61729. Thanks to Boris Ivanov for the report.
+    - Added clear example of logging to a custom file
+    - Added a warning for not implemented _read_messages_text()
+    - Added a "assume_registered" option to skip GSM network
+      registration on buggy/problematic devices.
+
 1.55  Sun Jun 27 18:07:11 CEST 2010
-	- Fixed RT #58869, incorrect decoding of text7 messages.
-	  Thanks to Alexander Onokhov.
+    - Fixed RT #58869, incorrect decoding of text7 messages.
+      Thanks to Alexander Onokhov.
 
 1.54  Sun Sep  6 10:44:53 CEST 2009
-	- Fixed RT #31565, incorrect decoding of outgoing messages
-	  due to incorrect removal of zero-length octet in PDU.
-	  Thanks to Svami Dhyan Nataraj.
+    - Fixed RT #31565, incorrect decoding of outgoing messages
+      due to incorrect removal of zero-length octet in PDU.
+      Thanks to Svami Dhyan Nataraj.
 
 1.53  Fri Aug 14 21:43:37 CEST 2009
     - Fixed RT #48700, deleting SMS message with index 0 didn't work.
-	  Thanks to Vytas M. for reporting the bug.
+      Thanks to Vytas M. for reporting the bug.
 
 1.52  Tue Nov 25 21:24:00 CET 2008
     - Added a longer timeout on call forwarding. Thanks to Marek Jaros.
@@ -95,78 +104,78 @@ Revision history for Perl extension Device::Gsm.
   ||
 1.25  Fri Jan 23 00:59:16 CET 2004
     - further documentation, troubleshooting and autoscan utility
-	  sections
-	- added all new pdu sms token-oriented decoding classes
-	  (this is an 80% complete implementation, mostly regarding charset
-	  conversion issues)
-	- Device::Gsm::Sms public class is now documented properly
+      sections
+    - added all new pdu sms token-oriented decoding classes
+      (this is an 80% complete implementation, mostly regarding charset
+      conversion issues)
+    - Device::Gsm::Sms public class is now documented properly
 
 1.24
   ||
 1.20  Wed Jan 21 23:32:45 CET 2004
-	- completed full documentation (to be revised)
-	- documented working irda/bluetooth connections (always
-	  through device::serialport :-)
+    - completed full documentation (to be revised)
+    - documented working irda/bluetooth connections (always
+      through device::serialport :-)
 
 1.19
 1.18  Mon Mar 24 23:32:27 CET 2003
-	- added a complete interface to read messages on SIM card
-	  ( $gsm->messages() method and Device::Gsm::Sms objects )
-	- some minor cleanup
+    - added a complete interface to read messages on SIM card
+      ( $gsm->messages() method and Device::Gsm::Sms objects )
+    - some minor cleanup
 
 1.17  Thu Sep 12 00:22:06 CEST 2002
-	- added signal_quality() method to measure gsm signal power (dBm)
-	- added an example script in [examples] folder (`report_signal.pl')
+    - added signal_quality() method to measure gsm signal power (dBm)
+    - added an example script in [examples] folder (`report_signal.pl')
 
 1.15
 1.16  Tue Sep  3 23:37:56 CEST 2002
-	- fixed documentation example (thanks to Domenico Viggiani)
-	- added `examples/send_to_cosimo.pl' script to report successful
-	  installations of Device::Gsm module :-)
-	- improved test scripts; now work also with env vars, and without too
-	  many `connect()'s
+    - fixed documentation example (thanks to Domenico Viggiani)
+    - added `examples/send_to_cosimo.pl' script to report successful
+      installations of Device::Gsm module :-)
+    - improved test scripts; now work also with env vars, and without too
+      many `connect()'s
 
 1.14  Mon Apr 29 18:54:36 CEST 2002
-	- fixed errors in debugging
-	- fixed errors in AT command response handling (still to-do)
-	- included network registration test (must supply PIN in t/30register.t)
-	- added send_sms.pl in examples/
+    - fixed errors in debugging
+    - fixed errors in AT command response handling (still to-do)
+    - included network registration test (must supply PIN in t/30register.t)
+    - added send_sms.pl in examples/
 
 1.10  Wed Apr 10 00:20:28 CEST 2002
-	- fixed and renamed Pdu.pm functions
-	- send_sms() new parameters that dispatch calls to
-	  _send_sms_pdu() and _send_sms_text() to allow text and PDU modes
-	- send_sms() now works! (with siemens C25/35/45)
+    - fixed and renamed Pdu.pm functions
+    - send_sms() new parameters that dispatch calls to
+      _send_sms_pdu() and _send_sms_text() to allow text and PDU modes
+    - send_sms() now works! (with siemens C25/35/45)
 
 1.09  Tue Apr  9 00:19:02 CEST 2002
-	- Pdu.pm added with functions to treat PDU encoded data
-	- added _send_sms_pdu() internal method
+    - Pdu.pm added with functions to treat PDU encoded data
+    - added _send_sms_pdu() internal method
 
 1.08  Sat Apr  6 00:24:29 CEST 2002
-	- hangup() method
-	- imei() / serial_number() method with test case
+    - hangup() method
+    - imei() / serial_number() method with test case
 
 1.07  Wed Apr  3 23:38:51 CEST 2002
-	- removed unnecessary javadoc style tags
-	- made use of new parse_answer() call
-	- now service_center() works
-	- device identification functions now work
-	- improved test suite
-	- fixed logging class mechanism
+    - removed unnecessary javadoc style tags
+    - made use of new parse_answer() call
+    - now service_center() works
+    - device identification functions now work
+    - improved test suite
+    - fixed logging class mechanism
 
 1.06  Sat Mar 30 16:43:55 CET 2002
-	- added manufacturer(), model(), software_version() methods to 
+    - added manufacturer(), model(), software_version() methods to 
       get information about the device
-	- added test_command() to test support for a specific GSM command
+    - added test_command() to test support for a specific GSM command
 
 1.05  Sat Mar 30 15:12:09 CET 2002
-	- added service_number() method
+    - added service_number() method
 
 1.04  Mon Mar 25 07:34:52 CET 2002
     - added pod, html, text docs
 
 0.01  Tue Feb 26 22:15:31 CET 2002
-	- original version; created by h2xs 1.20 with options
-		-A -X -n Device::Gsm -v 0.01
+    - original version; created by h2xs 1.20 with options
+        -A -X -n Device::Gsm -v 0.01
 
 
