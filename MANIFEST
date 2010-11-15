@@ -1,6 +1,5 @@
 bin/autoscan
 Changes
-docs/GSM0338.txt
 examples/delete_message.pl
 examples/get_time.pl
 examples/network.pl
