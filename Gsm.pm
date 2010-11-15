@@ -1,5 +1,5 @@
 # Device::Gsm - a Perl class to interface GSM devices as AT modems
-# Copyright (C) 2002-2009 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2002-2010 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -8,12 +8,10 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Perl licensing terms for more details.
-#
-# $Id$
 
 package Device::Gsm;
 
-$Device::Gsm::VERSION = '1.55';
+$Device::Gsm::VERSION = '1.56';
 
 use strict;
 use Device::Modem 1.47;
@@ -456,7 +454,9 @@ sub messages {
     # Read messages (TODO need to check if device supports CMGL with `stat'=4)
     #
     if ($self->mode() eq 'text') {
-        @messages = $self->_read_messages_text();
+        warn 'Read messages in text mode is not implemented yet.';
+
+        #@messages = $self->_read_messages_text();
     }
     else {
 
@@ -502,6 +502,12 @@ sub register {
         }
     }
 
+    # On some phones, registration doesn't work, so you can skip it entirely
+    # by passing 'assume_registered => 1' to the new() constructor
+    if (exists $me->{'assume_registered'} && $me->{'assume_registered'}) {
+        return 1;
+    }
+
     # Send PIN status query
     $me->log->write('info', 'PIN status query');
     $me->atsend('AT+CPIN?' . Device::Modem::CR);
@@ -542,17 +548,13 @@ sub register {
     # Store status in object and return
     $me->{'REGISTERED'} = $lOk;
 
-    $lOk;
-
-    # XXX Sending number of service provider
-    # $me->log -> write( 'Sending service provider number' );
-
+    return $lOk;
 }
 
 # send_sms( %options )
 #
-#	recipient => '+39338101010'
-#	class     => 'flash' | 'normal'
+#   recipient => '+39338101010'
+#   class     => 'flash' | 'normal'
 #   validity  => [ default = 4 days ]
 #   content   => 'text-only for now'
 #   mode      => 'text' | 'pdu'        (default = 'pdu')
@@ -696,14 +698,15 @@ sub _send_sms_text {
     # Send sms in text mode
     $me->atsend(qq[AT+CMGS="$num"] . Device::Modem::CR);
 
-    # Encode text
-    $text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
+    # Wait a bit before sending the text. Some GSM software needs it.
+    $me->wait($Device::Modem::WAITCMD);
 
     # Complete message sending
+    $text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
     $me->atsend($text . Device::Modem::CTRL_Z);
 
     # Get reply and check for errors
-    $cReply = $me->answer('\+CMGS', 2000);
+    $cReply = $me->answer('+CMGS', 2000);
     if ($cReply =~ /OK$/i) {
         $me->log->write('info', "Sent SMS (text mode) to $num!");
         $lOk = 1;
@@ -935,6 +938,7 @@ Device::Gsm - Perl extension to interface GSM phones / modems
   }
 
   # Register to GSM network (you must supply PIN number in above new() call)
+  # See 'assume_registered' in the new() method documentation
   $gsm->register();
 
   # Send quickly a short text message
@@ -977,6 +981,37 @@ so I can add better support for your device in the future!
 
 The following documents all supported methods with simple examples of usage.
 
+=head2 new()
+
+Inherited from L<Device::Modem>. See L<Device::Modem> documentation
+for more details.
+
+The only mandatory argument is the C<port> you want to use to connect
+to the GSM device:
+
+    my $gsm = Device::Gsm->new(
+        port => '/dev/ttyS0',
+    );
+
+On some phones, you may experience problems in the GSM network registration
+step. For this reasons, you can pass a special C<assume_registered> option
+to have L<Device::Gsm> ignore the registration step and assume the device
+is already registered on the GSM network. Example:
+
+    my $gsm = Device::Gsm->new(
+        port => '/dev/ttyS0',
+        assume_registered => 1,
+    );
+
+If you want to send debugging information to your own log file instead of
+the default setting, you can:
+
+    my $gsm = Device::Gsm->new(
+        port => '/dev/ttyS1',
+        log => 'file,/tmp/myfile.log',
+        loglevel => 'debug',  # default is 'warning'
+    );
+
 =head2 connect()
 
 This is the main call that connects to the appropriate device. After the
@@ -989,14 +1024,14 @@ The default value for C<baudrate> parameter is C<19200>.
 
 Example:
 
-	my $gsm = Device::Gsm->new( port=>'/dev/ttyS0', log=>'syslog' );
-	# ...
-	if( $gsm->connect(baudrate => 19200) ) {
-		print "Connected!";
-	} else {
-		print "Could not connect, sorry!";
-	}
-	# ...
+    my $gsm = Device::Gsm->new( port=>'/dev/ttyS0', log=>'syslog' );
+    # ...
+    if( $gsm->connect(baudrate => 19200) ) {
+        print "Connected!";
+    } else {
+        print "Could not connect, sorry!";
+    }
+    # ...
 
 =head2 datetime()
 
@@ -1006,17 +1041,17 @@ If called without parameters, it gets the current phone/gsm date and time in "gs
 format "YY/MM/DD,HH:MN:SS". For example C<03/12/15,22:48:59> means December the 15th,
 at 10:48:59 PM. Example:
 
-	$datestr = $gsm->datetime();
+    $datestr = $gsm->datetime();
 
 If called with parameters, sets the current phone/gsm date and time to that
 of supplied value. Example:
 
-	$newdate = $gsm->datetime( time() );
+    $newdate = $gsm->datetime( time() );
 
 where C<time()> is the perl's builtin C<time()> function (see C<perldoc -f time> for details).
 Another variant allows to pass a C<localtime> array to set the correspondent datetime. Example:
 
-	$newdate = $gsm->datetime( localtime() );
+    $newdate = $gsm->datetime( localtime() );
 
 (Note the list context). Again you can read the details for C<localtime> function
 with C<perldoc -f localtime>.
@@ -1065,7 +1100,7 @@ This method has been never tested on real "live" conditions, but it needs to be
 specialized for GSM phones, because it relies on C<+HUP> GSM command.
 Example:
 
-	$gsm->hangup();
+    $gsm->hangup();
 
 
 =head2 imei()
@@ -1074,7 +1109,7 @@ Returns the device own IMEI number (International Mobile Equipment Identifier ??
 This identifier is numeric and should be unique among all GSM mobile devices and phones.
 This is not really true, but ... . Example:
 
-	my $imei = $gsm->imei();
+    my $imei = $gsm->imei();
 
 
 =head2 manufacturer()
@@ -1082,12 +1117,12 @@ This is not really true, but ... . Example:
 Returns the device manufacturer, usually only the first word (example: C<Nokia>,
 C<Siemens>, C<Falcom>, ...). Example:
 
-	my $man_name = $gsm->manufacturer();
-	if( $man_name eq 'Nokia' ) {
-		print "We have a nokia phone...";
-	} else {
-		print "We have a $man_name phone...";
-	}
+    my $man_name = $gsm->manufacturer();
+    if( $man_name eq 'Nokia' ) {
+        print "We have a nokia phone...";
+    } else {
+        print "We have a $man_name phone...";
+    }
 
 
 =head2 messages()
@@ -1132,7 +1167,7 @@ Example:
 Sets the device GSM command mode. Accepts one parameter to set the new mode that can
 be the string C<text> or C<pdu>. Example:
 
-	# Set text mode
+    # Set text mode
     $gsm->mode('text');
     
     # Set pdu mode
@@ -1143,7 +1178,7 @@ be the string C<text> or C<pdu>. Example:
 
 Returns phone/device model name or number. Example:
 
-	my $model = $gsm->model();
+    my $model = $gsm->model();
 
 For example, for Siemens C45, C<$model> holds C<C45>; for Nokia 6600, C<$model>
 holds C<6600>.
@@ -1153,7 +1188,7 @@ holds C<6600>.
 
 Returns the current registered or preferred GSM network operator. Example:
 
-	my $net_name = $gsm->network();
+    my $net_name = $gsm->network();
     # Returns 'Wind Telecom Spa'
 
     my($net_name, $net_code) = $gsm->network();
@@ -1174,7 +1209,7 @@ Returns the measure of signal quality expressed in dBm units, where near to zero
 An example value is -91 dBm, and reported value is C<-91>. Values should range from
 -113 to -51 dBm, where -113 is the minimum signal quality and -51 is the theorical maximum quality.
 
-	my $level = $gsm->signal_quality();
+    my $level = $gsm->signal_quality();
 
 If signal quality can't be read or your device does not support this command,
 an B<undefined> value will be returned.
@@ -1183,7 +1218,7 @@ an B<undefined> value will be returned.
 
 Returns the device firmare version, as stored by the manufacturer. Example:
 
-	my $rev = $gsm->software_revision();
+    my $rev = $gsm->software_revision();
 
 For example, for my Siemens C45, C<$rev> holds C<06>.
 
@@ -1194,7 +1229,7 @@ either the sim card or gsm phone memory. Phones/modems that do not support this 
 (implemented by C<+CPMS> AT command won't be affected by this method.
 
     my @msg;
-	my $storage = $gsm->storage();
+    my $storage = $gsm->storage();
     print "Current storage is $storage\n";
 
     # Read all messages on sim card
@@ -1212,15 +1247,15 @@ This is used only with GSM commands (those with C<AT+> prefix).
 For example, I want to know if my device supports the C<AT+GXXX> command.
 All we have to do is:
 
-	my $gsm = Device::Gsm->new( port => '/dev/myport' );
+    my $gsm = Device::Gsm->new( port => '/dev/myport' );
 
-	...
+    ...
 
-	if( $gsm->test_command('GXXX') ) {
-		# Ok, command is supported
-	} else {
-		# Nope, no GXXX command
-	}
+    if( $gsm->test_command('GXXX') ) {
+        # Ok, command is supported
+    } else {
+        # Nope, no GXXX command
+    }
 
 Note that if you omit the starting C<+> character, it is automatically added.
 You can also test commands like C<^SNBR> or the like, without C<+> char being added.
@@ -1253,16 +1288,16 @@ Obviously, this sends out SMS text messages. I should warn you that B<you cannot
 
 Send out an SMS message quickly:
 
-	my $sent = $gsm->send_sms(
-		content   => 'Hello, world!',   # SMS text
-		recipient => '+99000123456',    # recipient phone number
-	);
+    my $sent = $gsm->send_sms(
+        content   => 'Hello, world!',   # SMS text
+        recipient => '+99000123456',    # recipient phone number
+    );
 
-	if( $sent ) {
-		print "OK!";
-	} else {
-		print "Troubles...";
-	}
+    if( $sent ) {
+        print "OK!";
+    } else {
+        print "Troubles...";
+    }
 
 The allowed parameters to send_sms() are:
 
@@ -1314,16 +1349,16 @@ your network operator should tell you what this number is.
 
 Example:
 
-	my $gsm = Device::Gsm->new( port => 'COM1' );
-	$gsm->connect() or die "Can't connect";
-	$srv_cnt = $gsm->service_center();
-	print "My service center number is: $srv_cnt\n";
+    my $gsm = Device::Gsm->new( port => 'COM1' );
+    $gsm->connect() or die "Can't connect";
+    $srv_cnt = $gsm->service_center();
+    print "My service center number is: $srv_cnt\n";
 
 If you want to set or change this number (if used improperly this can disable
 sending of SMS messages, so be warned!), you can try something like:
 
-	my $ok = $gsm->service_center('+99001234567');
-	print "Service center changed!\n" if $ok;
+    my $ok = $gsm->service_center('+99001234567');
+    print "Service center changed!\n" if $ok;
 
 =head1 REQUIRES
 
