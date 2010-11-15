@@ -35,7 +35,7 @@ is( Device::Gsm::Pdu::decode_text7( Device::Gsm::Pdu::encode_text7($_) ), $_ )
     );
 
 # Alphabetical address decoding
-is( Device::Gsm::Pdu::decode_address('10D06B7658DE7E8BD36C'), 'klarmobil' ); #7
+is( Device::Gsm::Pdu::decode_address('10D06B7658DE7E8BD36C'), "klarmobil\0" ); #7
 
 # CPAN Bug #24781 regression test
 my $enc = Device::Gsm::Pdu::encode_address('+393289287791');
