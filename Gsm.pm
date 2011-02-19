@@ -11,7 +11,7 @@
 
 package Device::Gsm;
 
-$Device::Gsm::VERSION = '1.56';
+$Device::Gsm::VERSION = '1.56_01';
 
 use strict;
 use Device::Modem 1.47;
@@ -505,7 +505,7 @@ sub register {
     # On some phones, registration doesn't work, so you can skip it entirely
     # by passing 'assume_registered => 1' to the new() constructor
     if (exists $me->{'assume_registered'} && $me->{'assume_registered'}) {
-        return 1;
+        return $me->{'REGISTERED'} = 1;
     }
 
     # Send PIN status query
