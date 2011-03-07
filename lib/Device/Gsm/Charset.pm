@@ -520,7 +520,13 @@ sub gsm0338_to_iso8859 {
 
 		} else {
 			# Standard GSM 3.38 encoding
-			$ascii .= chr( $Device::Gsm::Charset::GSM0338_TO_ISO8859[$c] );
+			my $latin1 = $Device::Gsm::Charset::GSM0338_TO_ISO8859[$c];
+			if (defined $latin1) {
+				$ascii .= chr($latin1);
+			}
+			else {
+				$ascii .= chr($c);
+			}
 		}
 
         #warn('gsm char ['.$c.'] converted to ascii ['.ord(substr($ascii,-1)).']');
