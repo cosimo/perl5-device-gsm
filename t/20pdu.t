@@ -2,8 +2,8 @@
 # test pdu encoding/decoding functions for sms
 
 use Test::More;
-use lib '../blib/lib';
 use Device::Gsm::Pdu;
+
 BEGIN { plan tests => 17 };
 
 # Test encoding mobile numbers
