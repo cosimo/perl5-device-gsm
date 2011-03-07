@@ -39,4 +39,5 @@ t/20pdu.t
 t/21pdu_latin1.t
 t/30gsmascii.t
 t/30networks.t
+t/31_rt_57585.t
 t/31_rt_58869.t
