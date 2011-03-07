@@ -154,6 +154,32 @@ sub encode_text7 {
     unpack '(b7)*', $_[0];
 }
 
+sub pdu_to_latin1 {
+	# Reattach a length octet.
+	my $s = shift;
+	my $len = length $s;
+	#arn "len=$len, len/2=", $len/2, "\n";
+	my $l = uc unpack("H*", pack("C", int(length($s)/2*8/7)));
+	if (length($l) % 2 == 1) { $l = '0'.$l }
+	my $pdu = $l . $s;
+	#arn "l=$l, pdu=$pdu\n";
+	my $decoded = Device::Gsm::Pdu::decode_text7($pdu);
+	#arn "decoded_text7=$decoded\n";
+	my $latin1 = Device::Gsm::Charset::gsm0338_to_iso8859($decoded);
+	#arn "latin1=$latin1\n";
+	return $latin1;
+}
+
+sub latin1_to_pdu {
+	my $latin1_text = $_[0];
+	#arn "latin1=$latin1_text\n";
+	my $gsm0338 = Device::Gsm::Charset::iso8859_to_gsm0338($latin1_text);
+	#arn "gsm0338=$gsm0338\n";
+	my $fullpdu = Device::Gsm::Pdu::encode_text7($gsm0338);
+	#arn "pdu=$fullpdu\n";
+	return substr($fullpdu, 2); # strip off the length octet
+}
+
 1;
 
 =head1 NAME
@@ -196,7 +222,7 @@ If number type is international, result will be prepended with a `+' sign.
 
 Clearly, it is intended as an internal function.
 
-=head2 Example
+=head3 Example
 
     print Device::Gsm::Pdu::decode_address( '0B919343171010F0' );
     # prints `+39347101010';
@@ -207,7 +233,7 @@ Takes a mobile number and encodes it as DA (destination address).
 If it begins with a `+', as in `+39328101010', it is treated as an international
 number.
 
-=head2 Example
+=head3 Example
 
     print Device::Gsm::Pdu::encode_address( '+39347101010' );
     # prints `0B919343171010F0'
@@ -218,10 +244,30 @@ Encodes some text ASCII string in 7 bits PDU format, including a header byte
 which tells the length is septets. This is the only 100% supported mode to
 encode text.
 
-=head2 Example
+=head3 Example
 
     print Device::Gsm::Pdu::encode_text7( 'hellohello' );
     # prints `0AE832...'
+
+=head2 pdu_to_latin1($pdu)
+
+Converts a PDU (without the initial length octet) into a latin1 string.
+
+=head3 Example
+
+    my $pdu = 'CAFA9C0E0ABBDF7474590E8296E56C103A3C5E97E5';
+    print Device::Gsm::Pdu::pdu_to_latin1($pdu);
+    # prints `Just another Perl hacker'
+
+=head2 latin1_to_pdu($text)
+
+Converts a text string in latin1 encoding (ISO-8859-1) into a PDU string.
+
+=head3 Example
+
+    my $text = "Just another Perl hacker";
+    print Device::Gsm::Pdu::latin1_to_pdu($text);
+    # prints `CAFA9C0E0ABBDF7474590E8296E56C103A3C5E97E5'
 
 =head1 AUTHOR
 
