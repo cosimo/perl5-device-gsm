@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.57  Mon Mar  7 20:53:03 EST 2011
+    - Fixed a bug in send_sms() that prevented it from working at all.
+      The bug was introduced with the "assume_registered" option.
+
 1.56  Mon Nov 15 21:00:00 CET 2010
     - When sending messages in text mode, now we wait a bit
       between the +CMSG command and the actual text.
