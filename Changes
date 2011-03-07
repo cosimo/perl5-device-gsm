@@ -5,6 +5,7 @@ Revision history for Perl extension Device::Gsm.
       The bug was introduced with the "assume_registered" option.
     - Fixed RT #57585. Thanks to Eric Kössldorfer for his patch and
       test case.
+    - Added PDU<->latin1 conversion functions in Device::Gsm::Pdu
     - Note to self: first release from Australia!
 
 1.56  Mon Nov 15 21:00:00 CET 2010
