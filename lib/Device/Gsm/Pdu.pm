@@ -135,12 +135,12 @@ sub decode_text_UCS2 {
 	return undef unless $encoded;
 	
 	my $len = hex substr( $encoded, 0, 2 );
-	$encoded  = substr $encoded, 2;
+	$encoded = substr $encoded, 2;
 	
-	my $decoded="";
-	while( $encoded ) {
-		$decoded.=pack("U",hex(substr($encoded,0,4)));
-		$encoded = substr($encoded,4);		
+	my $decoded = "";
+	while ($encoded) {
+		$decoded .= pack("C0U",hex(substr($encoded,0,4)));
+		$encoded = substr($encoded, 4);		
 	}
 	return $decoded;
 }
