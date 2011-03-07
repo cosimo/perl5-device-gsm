@@ -515,6 +515,11 @@ sub register {
     # Get answer
     my $cReply = $me->answer($Device::Modem::STD_RESPONSE, 10000);
 
+    if (! defined $cReply || $cReply eq "") {
+        $me->log->write('warn', 'Could not get a reply for the AT+CPIN command');
+        return;
+    }
+
     if ($cReply =~ /(READY|SIM PIN2)/) {
 
         # Iridium satellite phones rest saying "SIM PIN2" when they are registered...
