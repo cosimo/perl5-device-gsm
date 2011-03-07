@@ -18,6 +18,9 @@
 
 package Device::Gsm::Pdu;
 
+use strict;
+use Device::Gsm::Charset;
+
 # decode a pdu encoded phone number into human readable format 
 sub decode_address {
     my $address = shift or return;
