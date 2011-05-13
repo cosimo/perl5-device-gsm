@@ -11,13 +11,14 @@
 
 package Device::Gsm;
 
-$Device::Gsm::VERSION = '1.58';
+$Device::Gsm::VERSION = '1.58.1';
 
 use strict;
 use Device::Modem 1.47;
 use Device::Gsm::Sms;
 use Device::Gsm::Pdu;
 use Device::Gsm::Charset;
+use Time::HiRes qw(sleep);
 
 @Device::Gsm::ISA = ('Device::Modem');
 
@@ -55,7 +56,11 @@ sub connect {
 
     $me->SUPER::connect(%aOpt);
 }
-
+sub disconnect { 
+	my $me = shift;
+	$me->SUPER::disconnect();
+	sleep 0.05;
+}
 #
 # Get/set phone date and time
 #
@@ -309,7 +314,6 @@ sub imei {
         $self->log->write('info', 'IMEI code is [' . $imei . ']');
 
     }
-
     return $imei || $code;
 }
 
@@ -670,7 +674,7 @@ sub _read_messages_pdu {
         }
         else {
             $self->log->write('info',
-                "could not instance message $header $pdu!");
+   "could not instance message $header $pdu!");
         }
 
     }
@@ -742,9 +746,16 @@ sub _send_sms_pdu {
     my $class = $opt{'class'} || 'normal';
     $class = $class eq 'normal' ? '00' : 'F0';
 
-    # TODO Validity period (now fixed to 4 days)
-    my $vp = 'AA';
-
+    #Validity period value
+    #0 to 143	(TP-VP + 1) * 5 minutes (i.e. 5 minutes intervals up to 12 hours)
+    #144 to 167	12 hours + ((TP-VP - 143) * 30 minutes)
+    #168 to 196	(TP-VP - 166) * 1 day
+    #197 to 255	(TP-VP - 192) * 1 week
+    #default 24h
+    my $vp = 'A7';
+    if(defined $opt{'validity_period'}){
+	$vp=sprintf("%02X",$opt{'validity_period'});
+    }
     # Status report requested?
     my $status_report = 0;
     if (exists $opt{'status_report'} && $opt{'status_report'}) {
@@ -813,8 +824,9 @@ sub _send_sms_pdu {
     $me->log->write('debug', "SMS reply: $cReply\r\n");
 
     if ($cReply =~ /OK$/i) {
+	$cReply =~ /\+CMGS:\s*(\d+)/i;
         $me->log->write('info', "Sent SMS (pdu mode) to $num!");
-        $lOk = 1;
+        $lOk = $1?$1:1;
     }
     else {
         $cReply =~ /(\+CMGS:.*)/;
@@ -824,6 +836,118 @@ sub _send_sms_pdu {
     return $lOk;
 }
 
+sub send_sms_pdu_long {
+    my ($me, %opt) = @_;
+
+    # Get options
+    my $num  = $opt{'recipient'};
+    my $text = $opt{'content'};
+    my $pdu_msg= $opt{'pdu_msg'};
+
+    return 0 unless $num and $text and $pdu_msg;
+
+    $me->atsend(q[ATE1] . Device::Modem::CR);
+    $me->answer($Device::Modem::STD_RESPONSE);
+
+    # Select class of sms (normal or *flash sms*)
+    my $class = $opt{'class'} || 'normal';
+    $class = $class eq 'normal' ? '00' : 'F0';
+
+    #Validity period value
+    #0 to 143	(TP-VP + 1) * 5 minutes (i.e. 5 minutes intervals up to 12 hours)
+    #144 to 167	12 hours + ((TP-VP - 143) * 30 minutes)
+    #168 to 196	(TP-VP - 166) * 1 day
+    #197 to 255	(TP-VP - 192) * 1 week
+    #default 24h
+    my $vp = 'A7';
+    if(defined $opt{'validity_period'}){
+	$vp=sprintf("%02X",$opt{'validity_period'});
+    }
+
+    # Status report requested?
+    my $status_report = 0;
+    if (exists $opt{'status_report'} && $opt{'status_report'}) {
+        $status_report = 1;
+    }
+
+    my $lOk = 0;
+    my $cReply;
+
+    # Send sms in PDU mode
+
+    #
+    # Example of sms send in PDU mode
+    #
+    #AT+CMGS=22
+    #> 0011000A8123988277190000AA0AE8329BFD4697D9EC37
+    #+CMGS: 111
+    #
+    #OK
+
+    # Encode DA
+    my $enc_da = Device::Gsm::Pdu::encode_address($num);
+    $me->log->write('info', 'encoded dest. address is [' . $enc_da . ']');
+
+    # Encode text
+    #$text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
+    #my $enc_msg = Device::Gsm::Pdu::encode_text7($text);
+    $me->log->write('info',
+        'encoded 7bit text (w/length) is [' . $pdu_msg . ']');
+
+    # Build PDU data
+    my $pdu = uc join(
+        '',
+	#we use default SMSC address(don supply one) 
+        '00',
+	#as you can see when UDH is present we set 6 bit of of first octet, you can recognize CSM that way, I prefer regex :) (se UD.pm) 
+        ($status_report ? '71' : '51'),
+	#message reference, my G24 returns own MR after successful sending, setting this value did nothing in that case, but other modems may behave differently
+        '00',
+        $enc_da,
+	#protocol identifier (0x00 use default)
+        '00',
+	#data coding scheme (flash sms or normal, coding etc. more about:http://www.dreamfabric.com/sms/dcs.html) 
+        $class,
+        $vp,
+        $pdu_msg
+    );
+
+    $me->log->write('info', 'due to send PDU [' . $pdu . ']');
+
+    # Sending main SMS command ( with length )
+    my $len = ((length $pdu) >> 1) - 1;
+
+    #$me->log->write('info', 'AT+CMGS='.$len.' string sent');
+
+    # Select PDU format for messages
+    $me->atsend(q[AT+CMGF=0] . Device::Modem::CR);
+    $me->answer($Device::Modem::STD_RESPONSE);
+    $me->log->write('info', 'Selected PDU format for msg sending');
+
+    # Send SMS length
+    $me->atsend(qq[AT+CMGS=$len] . Device::Modem::CR);
+    $me->answer($Device::Modem::STD_RESPONSE);
+
+    # Sending SMS content encoded as PDU
+    $me->log->write('info', 'PDU sent [' . $pdu . ' + CTRLZ]');
+    $me->atsend($pdu . Device::Modem::CTRL_Z);
+
+    # Get reply and check for errors
+    $cReply = $me->answer($Device::Modem::STD_RESPONSE, 30000);
+    $me->log->write('debug', "SMS reply: $cReply\r\n");
+
+    if ($cReply =~ /OK$/i) {
+	$cReply =~ /\+CMGS:\s*(\d+)/i;
+        $me->log->write('info', "Sent SMS (pdu mode) to $num!");
+        $lOk = $1?$1:1;
+    }
+    else {
+        $cReply =~ /(\+CMGS:.*)/;
+        $me->log->write('warning', "ERROR in sending SMS: $1");
+    }
+
+    return $lOk;
+}
 #
 # Set or request service center number
 #
@@ -915,13 +1039,77 @@ sub network {
     if (!defined $netname || $netname eq 'unknown') {
         $netname = undef;
     }
-
     return wantarray
       ? ($netname, $network)
       : $netname;
 
 }
-
+#
+#returns simcard MSISDN
+#
+sub selfnum {
+	my $self = shift;
+	my @selfnum;
+	my $selfnum;
+	if ($self->test_command('CNUM')) {
+		$self->atsend('AT+CNUM' . Device::Modem::CR);
+		my $ans = $self->answer($Device::Modem::STD_RESPONSE);
+		my @answer=split /[\r\n]+/m,$ans;
+		foreach(@answer) { 
+			if($_=~/^\+CNUM: /){ 
+			my @temp=split /,/,$';
+			$temp[1] =~ s/"//g; 
+			if ($temp[1] =~ /\d{9,}/) {  
+				!$selfnum and $selfnum=$temp[1];
+				push(@selfnum,$temp[1]); 
+			} 
+			}
+			}
+		if($selfnum){	
+		$self->log->write('info','Received number [' . "@selfnum" .']');
+		return wantarray 
+		? @selfnum
+		: $selfnum;
+	}else{
+		$self->log->write('info','Received no numbers');
+		return "";
+	}
+		
+}
+#
+#On my motorola G24 for messages with alphanumeric sender sender() returns malformed characters
+#on globetrotter option 505 everything is all right. I wrote this at beggining of playng with you module,
+#and almost forgot about it. I'll investigate this bug in future. 
+#
+}
+sub get_literal_header { 
+	my ($self,$index) = @_;
+	my $header='';
+	#set text mode
+	$self->atsend('AT+CMGF=1' . Device::Modem::CR);
+	sleep 0.1;
+	if ($self->answer($Device::Modem::STD_RESPONSE) =~ /OK/) { 
+		$self->log->write('warning', 'Text mode set') 
+	}else{
+		$self->log->write('warning', 'Text mode not set');
+		$self->log->write('warning', 'Trying restore PDU mode');
+		$self->atsend('AT+CMGF=0' . Device::Modem::CR);
+		sleep 0.1;
+		$self->answer($Device::Modem::STD_RESPONSE) =~ /OK/ and $self->log->write('warning', 'PDU mode restored');
+		return;
+		}
+	$self->atsend('AT+MMGR='.$index.Device::Modem::CR);
+	my $ans = $self->answer();
+	if ($ans =~ /\+MMGR:/) { 
+		my @temp=split(/,/,$');
+		$header=$temp[1];
+		$header=~s/\"|\'//g;
+	}
+	$self->atsend('AT+CMGF=0' . Device::Modem::CR);
+	sleep 0.1;
+	$self->answer($Device::Modem::STD_RESPONSE) =~ /OK/ and $self->log->write('warning', 'PDU mode Set') or return;
+	return $header;
+}
 1;
 
 __END__

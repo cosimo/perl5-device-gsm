@@ -35,8 +35,9 @@ sub structure {
 		@struct = qw/SCA PDUTYPE OA PID DCS SCTS UD/;
 	} elsif( $self->type() == SMS_SUBMIT ) {
 		@struct = qw/SCA PDUTYPE MR DA PID DCS VP UD/;
+	}elsif( $self->type() == SMS_STATUS) {
+		@struct = qw/SCA PDUTYPE MR DA SCTS DT ST/;
 	}
-
 	return @struct;
 }
 

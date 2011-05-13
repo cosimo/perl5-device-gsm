@@ -14,9 +14,21 @@
 package Sms::Token::UD;
 use integer;
 use strict;
+
+use constant UDH1 => '050003'; 
+use constant UDH2 => '060804';
+use constant UDH1_LENGTH => 7;
+use constant UDH2_LENGTH => 8;
+
 use Device::Gsm::Charset;
 use Device::Gsm::Pdu;
 use Device::Gsm::Sms::Token;
+#user data headers in CSMS more here : http://mobiletidings.com/2009/02/18/combining-sms-messages/
+my $udh1=UDH1;
+my $udh2=UDH2;
+#lenght in septets
+my $udh1_length=UDH1_LENGTH;
+my $udh2_length=UDH2_LENGTH;
 
 @Sms::Token::UD::ISA = ('Sms::Token');
 
@@ -34,18 +46,28 @@ sub decode {
 	my $dcs= $self->get('_messageTokens')->{'DCS'}->get('_data')->[0];
 	my $text;
 	if ($dcs == 8) {
+		if($$rMessage =~ m/($udh1)([A-F0-9]{6})|($udh2)([A-F0-9]{8})/){
+		#if matched udh1 : $1 == $udh1; $2 = 1 octet referennumber . 1 octet message count . 1 octet message number 
+		#else $3 == $udh1 ; $4= 2 octets referennumber . 1 octet message count . 1 octet message number
+		#in ucs2 UDL is count in octect so we decrease udh*_len by 1
+		#in ucs2 we forgot about align to septet boundary
+		($1 eq $udh1) and $text =Device::Gsm::Pdu::decode_text_UCS2(sprintf("%02X",$ud_len-$udh1_length-1).$') or $text= Device::Gsm::Pdu::decode_text_UCS2(sprintf("%02X",$ud_len-$udh2_length-1).$');
+		}else { 
 		$text = Device::Gsm::Pdu::decode_text_UCS2($$rMessage);
+		}
 	} else {
-		# XXX Here assume that DCS == 0x00 (7 bit coding)
-		$text   = Device::Gsm::Pdu::decode_text7($$rMessage);
-
-  		# Convert text from GSM 03.38 to Latin 1
-		$text      = Device::Gsm::Charset::gsm0338_to_iso8859($text);
+		if($$rMessage =~ m/($udh1)([A-F0-9]{6})|($udh2)([A-F0-9]{8})/){	
+		#if udh1 is present we must use decode_text7_udh1 to remove bit of padding, 
+		#TODO: investigate why when part of sms is 160 length add 1 to udl for good decoding probably bug in decode_text7_udh1
+		($1 eq $udh1) and $text = Device::Gsm::Pdu::decode_text7_udh1(sprintf("%02X",$ud_len-$udh1_length+int($ud_len/160)).$') or $text = Device::Gsm::Pdu::decode_text7(sprintf("%02X",$ud_len-$udh2_length).$');
+		}else{
+		$text=Device::Gsm::Pdu::decode_text7($$rMessage);	
+		}
+	$text = Device::Gsm::Charset::gsm0338_to_iso8859($text);
 	} 
 
 	$self->set( 'length' => $ud_len );
 	$self->set( 'text'   => $text   );
-
 	$self->data( $text );
 	$self->state( Sms::Token::DECODED );
 

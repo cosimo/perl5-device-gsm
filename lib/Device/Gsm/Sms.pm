@@ -105,6 +105,26 @@ sub time {
 	}
 	return '';
 }
+#
+# time_dt (): returns status message discharge time in ascii format
+#
+sub time_dt {
+	my $self = shift;
+	if( my $t = $self->token('DT')) {
+		return $t->toString();
+	}
+	return '';
+}
+#
+# message_ref(): returns message reference of status message
+#
+sub message_ref {
+	my $self = shift;
+	if( my $t = $self->token('MR')) {
+		return $t->toString();
+	}
+	return '';
+}
 
 #
 # type(): returns message type in ascii readable format
@@ -325,12 +345,23 @@ sub storage {
 }
 
 #
-# Only valid for SMS_SUBMIT messages (?)
+# Only valid for SMS_SUBMIT and SMS_STATUS messages 
 #
 sub recipient {
 	my $self = shift;
-	if( $self->type() == SMS_SUBMIT ) {
+	if( $self->type() == SMS_SUBMIT or $self->type() == SMS_STATUS) {
 		my $t = $self->token('DA');
+		return $t->toString() if $t;
+	}
+}
+#
+#Only valid for SMS_STATUS messages returns status code(in hex) extracted from status message
+#Codes are explained in ST.pm
+#
+sub delivery_status {
+	my $self = shift;
+	if($self->type() == SMS_STATUS) {
+		my $t = $self->token('ST');
 		return $t->toString() if $t;
 	}
 }
