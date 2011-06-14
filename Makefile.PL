@@ -2,7 +2,7 @@ use 5.008;
 use ExtUtils::MakeMaker;
 WriteMakefile(
     'ABSTRACT_FROM' => 'Gsm.pm',
-    'AUTHOR'        => 'Cosimo Streppone <cosimo@cpan.org>',
+    'AUTHOR'        => 'Cosimo Streppone <cosimo@cpan.org>,Grzegorz Woźniak <wozniakg@gmail.com>',
     'NAME'          => 'Device::Gsm',
     'VERSION_FROM'  => 'Gsm.pm', # finds $VERSION
     'PREREQ_PM'     => {
