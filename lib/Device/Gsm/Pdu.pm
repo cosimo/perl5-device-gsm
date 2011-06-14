@@ -1,5 +1,6 @@
 # Device::Gsm::Pdu - PDU encoding/decoding functions for Device::Gsm class 
 # Copyright (C) 2002-2011 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -20,6 +21,7 @@ package Device::Gsm::Pdu;
 
 use strict;
 use Device::Gsm::Charset;
+use Device::Gsm::Sms::Token::UDH;
 
 # decode a pdu encoded phone number into human readable format 
 sub decode_address {
@@ -72,6 +74,31 @@ sub decode_text7 {
     pack 'C a*',
     unpack 'C b*',
     pack 'H*', $_[0]
+}
+#remains for comatibility reasons with my production scripts :)
+sub decode_text7_udh1 {
+    my $unpacked=join '',
+    unpack 'C/(a7)',
+    pack 'C a*',
+    unpack 'C b*',
+    pack 'H*', $_[0];
+    #remove bit of padding from message
+    $unpacked=substr($unpacked,1,length($unpacked));
+    pack '(b*)*',($unpacked =~ m/([01]{1,7})/gs);
+}
+#decode text with padding
+sub decode_text7_udh {
+    my ($encoded,$padding) =@_;
+    $padding =0 unless($padding);
+    my $unpacked=join '',
+    unpack 'C/(a7)',
+    pack 'C a*',
+    unpack 'C b*',
+    pack 'H*', $encoded;
+    #remove bits of padding from message
+    $unpacked=substr($unpacked,$padding,length($unpacked));
+    pack '(b*)*',($unpacked =~ m/([01]{7})/gs);
+    
 }
 
 # decode 8-bit encoded text
@@ -155,6 +182,39 @@ sub encode_text7 {
     length $_[0],
     join '',
     unpack '(b7)*', $_[0];
+}
+#return complete ud with udh
+#remains for comatibility reasons with my production scripts :)
+sub encode_text7_udh1 {
+    my $decoded= shift;
+    my $udh1=shift;
+    my $decoded_length=length($decoded);
+    $decoded=Device::Gsm::Charset::iso8859_to_gsm0338($decoded);
+    my $pdu_msg=uc  
+    unpack 'H*',
+    pack 'b*',
+    #add one bit of padding to align septet boundary 
+    '0' .join '',
+    unpack '(b7)*', $decoded;
+    #below add 7 septets length for udh1
+    return sprintf("%02X",$decoded_length + Sms::Token::UDH::UDH1_LENGTH) . $udh1 . $pdu_msg;
+}
+#encode text with padding
+sub encode_text7_udh {
+    my $decoded= shift;
+    my $padding=shift;
+    $padding =0 unless($padding);
+    my $decoded_length=length($decoded);
+    $decoded=Device::Gsm::Charset::iso8859_to_gsm0338($decoded);
+    my $pdu_msg=uc  
+    unpack 'H*',
+    pack 'b*',
+    #add bits of padding to align septet boundary 
+    '0' x $padding .join '',
+    unpack '(b7)*', $decoded;
+    #below add septets length of text
+    my $len_hex=sprintf("%02X",$decoded_length);
+    return wantarray?($len_hex,$pdu_msg,$len_hex.$pdu_msg):$len_hex.$pdu_msg;
 }
 
 sub pdu_to_latin1 {

@@ -1,5 +1,6 @@
 # Device::Gsm::Sms - SMS message simple class that represents a text SMS message
 # Copyright (C) 2002-2009 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -79,7 +80,9 @@ sub new {
 		bless $self, $class;
 
 		if( $self->decode( Device::Gsm::Sms::SMS_DELIVER ) ) {
-#			_log('OK, message decoded correctly!');
+			#			_log('OK, message decoded correctly!');
+		} elsif($self->decode( Device::Gsm::Sms::SMS_STATUS) ){
+
 		} else {
 #			_log('CASINO!');
 			undef $self;
@@ -237,7 +240,8 @@ sub decode {
 
 	my @token_names = $self->structure();
 	my $decoded     = 1;
-
+	#is udh in pdu?
+	my $udh_parsed = 0;
 	while( @token_names ) {
 
 		# Create new token object
@@ -260,6 +264,7 @@ sub decode {
 			if( $token->name() eq 'PDUTYPE' ) {
             
                 my $mti = $token->MTI();
+		my $udhi= $token->UDHI();
 
 =cut
                 # If MTI has bit 1 on, this could be a SMS-STATUS message (0x02), or (0x03???)
@@ -287,9 +292,15 @@ sub decode {
 #_log('RESTARTING DECODING AFTER MTI DETECTION'); #<STDIN>;
     				redo;
 	    		}
-
+			
+		 if($udh_parsed==0 and $udhi ==1) {
+			 $cPdu=$cPduCopy;
+			 @token_names = $self->structure();
+			 $udh_parsed=1;
+			 redo;
+		 }	 
 #_log('       ', $token->name(), ' DATA = ', $token->toString() );
-
+			
             }
 
 		}
@@ -386,6 +397,60 @@ sub text {
 	my $self = shift;
 	my $t = $self->token('UD');
 	return $t->toString() if $t;
+}
+#
+#only valid for SMS_DELIVER messages, retuns presence of UDH
+#
+sub is_udh { 
+	my $self=shift;
+	if($self->type() == SMS_DELIVER){ 
+		return $self->{'tokens'}->{'PDUTYPE'}->{'_UDHI'};
+	}
+}
+#
+#only valid for SMS_DELIVER messages with UDH, returns if sms is csms
+#
+sub is_csms { 
+	my $self=shift;
+	if($self->is_udh()){ 
+		return $self->{'tokens'}->{'UDH'}->{'_IS_CSMS'};
+	}	
+}
+#
+#only valid for SMS_DELIVER messages with UDH, retuns CSM reference number
+#
+sub csms_ref_num { 
+	my $self=shift;
+	if($self->is_csms()){
+		return $self->{'tokens'}->{'UDH'}->{'_REF_NUM'};
+	}	
+}
+#
+#only valid for SMS_DELIVER messages with UDH, retuns CSM reference number
+#
+sub csms_ref_hex { 
+	my $self=shift;
+	if($self->is_csms()){
+		return $self->{'tokens'}->{'UDH'}->{'_REF_HEX'};
+	}	
+}
+#
+#only valid for SMS_DELIVER messages with UDH, retuns CSM parts count 
+#
+sub csms_parts { 
+	my $self=shift;
+	if($self->is_csms()){ 
+		return $self->{'tokens'}->{'UDH'}->{'_PARTS'};
+	}	
+}
+#
+#only valid for SMS_DELIVER messages with UDH, retuns CSM current part number 
+#
+sub csms_part_num { 
+	my $self=shift;
+	if($self->is_csms()){
+		return $self->{'tokens'}->{'UDH'}->{'_PART_NUM'};
+	}	
 }
 
 sub token ($) {

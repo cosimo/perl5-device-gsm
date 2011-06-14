@@ -1,5 +1,6 @@
 # Device::Gsm::Sms::Structure - SMS messages structure class
 # Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -21,7 +22,7 @@ use Device::Gsm::Sms::Token;
 
 use Device::Gsm::Sms::Token::SCA;
 use Device::Gsm::Sms::Token::PDUTYPE;
-
+use Data::Dumper;
 #
 # Inspect structure of SMS
 # This varies with sms type (deliver or submit)
@@ -29,10 +30,13 @@ use Device::Gsm::Sms::Token::PDUTYPE;
 sub structure {
 	my $self = shift;
 	my @struct;
-
 	if( $self->type() == SMS_DELIVER ) {
-		# UD takes UDL + UD automatically
-		@struct = qw/SCA PDUTYPE OA PID DCS SCTS UD/;
+		if($self->{'tokens'}->{'PDUTYPE'}->{'_UDHI'}) { 
+				@struct = qw/SCA PDUTYPE OA PID DCS SCTS UDH UD/;
+		}else{ 
+			# UD takes UDL + UD automatically
+			@struct = qw/SCA PDUTYPE OA PID DCS SCTS UD/;
+		}
 	} elsif( $self->type() == SMS_SUBMIT ) {
 		@struct = qw/SCA PDUTYPE MR DA PID DCS VP UD/;
 	}elsif( $self->type() == SMS_STATUS) {

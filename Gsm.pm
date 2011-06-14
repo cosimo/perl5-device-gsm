@@ -1,5 +1,6 @@
 # Device::Gsm - a Perl class to interface GSM devices as AT modems
 # Copyright (C) 2002-2011 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -18,6 +19,7 @@ use Device::Modem 1.47;
 use Device::Gsm::Sms;
 use Device::Gsm::Pdu;
 use Device::Gsm::Charset;
+use Device::Gsm::Sms::Token;
 use Time::HiRes qw(sleep);
 
 @Device::Gsm::ISA = ('Device::Modem');
@@ -564,7 +566,7 @@ sub register {
 #
 #   recipient => '+39338101010'
 #   class     => 'flash' | 'normal'
-#   validity  => [ default = 4 days ]
+#   validity  => [ default = 24 hours ]
 #   content   => 'text-only for now'
 #   mode      => 'text' | 'pdu'        (default = 'pdu')
 #
@@ -573,7 +575,7 @@ sub send_sms {
     my ($me, %opt) = @_;
 
     my $lOk = 0;
-
+    my $mr;	
     return unless $opt{'recipient'} and $opt{'content'};
 
     # Check if registered to network
@@ -597,16 +599,98 @@ sub send_sms {
     $opt{'mode'} ||= 'PDU';
     if (uc $opt{'mode'} ne 'TEXT') {
 
-        $lOk = $me->_send_sms_pdu(%opt);
+        ($lOk,$mr) = $me->_send_sms_pdu(%opt);
 
     }
     else {
 
-        $lOk = $me->_send_sms_text(%opt);
+        ($lOk,$mr) = $me->_send_sms_text(%opt);
     }
 
     # Return result of sending
-    return $lOk;
+    return wantarray?($lOk,$mr):$lOk;
+}
+# send_csms( %options )
+#
+#   recipient => '+39338101010'
+#   class     => 'flash' | 'normal'
+#   validity  => [ default = 24 hours ]
+#   content   => 'text-only above 160 chars'
+#
+sub send_csms {
+
+    my ($me, %opt) = @_;
+
+    my $lOk=0;
+    my @mrs;
+    return unless $opt{'recipient'} and $opt{'content'};
+
+    # Check if registered to network
+    if (!$me->{'REGISTERED'}) {
+        $me->log->write('info', 'Not yet registered, doing now...');
+        $me->register();
+
+        # Wait some time to allow SIM registering to network
+        $me->wait($Device::Gsm::REGISTER_DELAY << 10);
+    }
+
+    # Again check if now registered
+    if (!$me->{'REGISTERED'}) {
+
+        $me->log->write('warning', 'ERROR in registering to network');
+        return 0;
+
+    }
+    
+   
+    # Ok, registered. Select mode to send SMS
+    $opt{'mode'} ||= 'PDU';
+
+    if (uc $opt{'mode'} eq 'TEXT') {
+	$me->log->write('warning','CSMS only in PDU mode, switching');
+	until(uc($me->{'_mode'}) ne 'PDU'){
+		$me->mode('pdu') or sleep 0.05;
+	}
+    }
+    my @text_parts;
+    #ensure we have to send CSMS	
+    if(length($opt{'content'}) <=160){
+	 my @send_return=$me->_send_sms_pdu(%opt);
+	 if($send_return[0]) { 
+		 $lOk++;
+		 push(@mrs,$send_return[1]);
+	 }else{
+		 $lOk=0;
+		 $#mrs=-1;
+	 }
+    }else{	
+	    my $udh=new Sms::Token("UDH");
+	    my $ref_num=sprintf("%02X",(int(rand(255))));
+	    my $parts=(@text_parts=($opt{'content'}=~m/(.{1,153})/gs));
+	    $parts=sprintf("%02X",$parts);
+	    my $padding=Sms::Token::UDH::calculate_padding(Sms::Token::UDH::IEI_T_8_L);
+	    my $part_count=1;
+	    foreach my $text_part (@text_parts) { 
+		    my $part=sprintf("%02X",$part_count);
+		    my ($len_hex,$encoded_text)=Device::Gsm::Pdu::encode_text7_udh($text_part,$padding);
+		    $part_count++;
+		    $opt{'content'} = $text_part;
+		    $opt{'pdu_msg'} = sprintf("%02X",hex($len_hex) + Sms::Token::UDH::IEI_T_8_L + 2 ).$udh->encode(Sms::Token::UDH::IEI_T_8 => $ref_num.$parts.$part) . $encoded_text;
+		    my @send_return=$me->send_sms_pdu_long(%opt);
+		    if($send_return[0]) { 
+			    $lOk++;
+			    push(@mrs,$send_return[1]);
+
+		    }else{
+			    $lOk=0;
+			    $#mrs=-1;
+			    last;
+		    }
+		    sleep 0.05;
+	    }	    
+    }	    
+    # Return result of sending
+    return wantarray?($lOk,@mrs):$lOk;
 }
 
 #
@@ -698,6 +782,7 @@ sub _send_sms_text {
     return 0 unless $num and $text;
 
     my $lOk = 0;
+    my $mr;
     my $cReply;
 
     # Select text format for messages
@@ -717,14 +802,16 @@ sub _send_sms_text {
     # Get reply and check for errors
     $cReply = $me->answer('+CMGS', 2000);
     if ($cReply =~ /OK$/i) {
+	$cReply =~ /\+CMGS:\s*(\d+)/i;
         $me->log->write('info', "Sent SMS (text mode) to $num!");
         $lOk = 1;
+	$mr = $1;
     }
     else {
         $me->log->write('warning', "ERROR in sending SMS");
     }
 
-    return $lOk;
+    return wantarray?($lOk,$mr):$lOk;
 }
 
 #
@@ -763,6 +850,7 @@ sub _send_sms_pdu {
     }
 
     my $lOk = 0;
+    my $mr=undef;
     my $cReply;
 
     # Send sms in PDU mode
@@ -826,14 +914,17 @@ sub _send_sms_pdu {
     if ($cReply =~ /OK$/i) {
 	$cReply =~ /\+CMGS:\s*(\d+)/i;
         $me->log->write('info', "Sent SMS (pdu mode) to $num!");
-        $lOk = $1?$1:1;
+	$lOk = 1;
+	$mr = $1;
+
+
     }
     else {
         $cReply =~ /(\+CMGS:.*)/;
         $me->log->write('warning', "ERROR in sending SMS: $1");
     }
 
-    return $lOk;
+    return wantarray?($lOk,$mr):$lOk;
 }
 
 sub send_sms_pdu_long {
@@ -843,6 +934,7 @@ sub send_sms_pdu_long {
     my $num  = $opt{'recipient'};
     my $text = $opt{'content'};
     my $pdu_msg= $opt{'pdu_msg'};
+    print $opt{'content'} ."\n" . $opt{'pdu_msg'} ."\n";  
 
     return 0 unless $num and $text and $pdu_msg;
 
@@ -871,6 +963,7 @@ sub send_sms_pdu_long {
     }
 
     my $lOk = 0;
+    my $mr=undef;
     my $cReply;
 
     # Send sms in PDU mode
@@ -939,14 +1032,15 @@ sub send_sms_pdu_long {
     if ($cReply =~ /OK$/i) {
 	$cReply =~ /\+CMGS:\s*(\d+)/i;
         $me->log->write('info', "Sent SMS (pdu mode) to $num!");
-        $lOk = $1?$1:1;
+        $lOk = 1;
+	$mr = $1;
     }
     else {
         $cReply =~ /(\+CMGS:.*)/;
         $me->log->write('warning', "ERROR in sending SMS: $1");
     }
 
-    return $lOk;
+    return wantarray?($lOk,$mr):$lOk;
 }
 #
 # Set or request service center number
@@ -1087,14 +1181,14 @@ sub get_literal_header {
 	my $header='';
 	#set text mode
 	$self->atsend('AT+CMGF=1' . Device::Modem::CR);
-	sleep 0.1;
+	sleep 0.05;
 	if ($self->answer($Device::Modem::STD_RESPONSE) =~ /OK/) { 
 		$self->log->write('warning', 'Text mode set') 
 	}else{
 		$self->log->write('warning', 'Text mode not set');
 		$self->log->write('warning', 'Trying restore PDU mode');
 		$self->atsend('AT+CMGF=0' . Device::Modem::CR);
-		sleep 0.1;
+		sleep 0.05;
 		$self->answer($Device::Modem::STD_RESPONSE) =~ /OK/ and $self->log->write('warning', 'PDU mode restored');
 		return;
 		}
@@ -1106,7 +1200,7 @@ sub get_literal_header {
 		$header=~s/\"|\'//g;
 	}
 	$self->atsend('AT+CMGF=0' . Device::Modem::CR);
-	sleep 0.1;
+	sleep 0.05;
 	$self->answer($Device::Modem::STD_RESPONSE) =~ /OK/ and $self->log->write('warning', 'PDU mode Set') or return;
 	return $header;
 }
