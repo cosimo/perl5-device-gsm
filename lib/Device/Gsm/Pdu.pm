@@ -183,8 +183,10 @@ sub encode_text7 {
     join '',
     unpack '(b7)*', $_[0];
 }
+#
 #return complete ud with udh
 #remains for comatibility reasons with my production scripts :)
+#
 sub encode_text7_udh1 {
     my $decoded= shift;
     my $udh1=shift;
@@ -199,7 +201,9 @@ sub encode_text7_udh1 {
     #below add 7 septets length for udh1
     return sprintf("%02X",$decoded_length + Sms::Token::UDH::UDH1_LENGTH) . $udh1 . $pdu_msg;
 }
+#
 #encode text with padding
+#
 sub encode_text7_udh {
     my $decoded= shift;
     my $padding=shift;
@@ -213,7 +217,7 @@ sub encode_text7_udh {
     '0' x $padding .join '',
     unpack '(b7)*', $decoded;
     #below add septets length of text
-    my $len_hex=sprintf("%02X",$decoded_length);
+    my $len_hex=sprintf("%02X",$decoded_length);    
     return wantarray?($len_hex,$pdu_msg,$len_hex.$pdu_msg):$len_hex.$pdu_msg;
 }
 
