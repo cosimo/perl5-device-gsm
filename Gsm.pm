@@ -21,9 +21,82 @@ use Device::Gsm::Pdu;
 use Device::Gsm::Charset;
 use Device::Gsm::Sms::Token;
 use Time::HiRes qw(sleep);
+use constant USSD_DCS=>15;
 
 @Device::Gsm::ISA = ('Device::Modem');
 
+%Device::Gsm::USSD_RESPONSE_CODES=(
+	0=>'No further user action required (network initiated USSD-Notify, or no further information needed after mobile Initiated operation)',
+	1=>'Further user action required (network initiated USSD-Request, or  further information needed after mobile initiated operation)',
+	2=>'USSD terminated by network. the reason for the termination is indicated  by the index stored in %Device::Gsm::USSD_TERMINATION_CODES',
+	3=>'Other local client has responded',
+	4=>'Operation not supported',
+	5=>'Network time out');
+%Device::Gsm::USSD_TERMINATION_CODES=(
+	0=>'NO_CAUSE',
+	1=>'CC_BUSY',
+	2=>'PARAMETER_ERROR',
+	3=>'INVALID_NUMBER',
+	4=>'OUTGOING_CALL_BARRED',
+	5=>'TOO_MANY_CALLS_ON_HOLD',
+	6=>'NORMAL',
+	10=>'DROPPED',
+	12=>'NETWORK',
+	13=>'INVALID_CALL_ID',
+	14=>'NORMAL_CLEARING',
+	16=>'TOO_MANY_ACTIVE_CALLS',
+	17=>'UNASSIGNED_NUMBER',
+	18=>'NO_ROUTE_TO_DEST',
+	19=>'RESOURCE_UNAVAILABLE',
+	20=>'CALL_BARRED',
+	21=>'USER_BUSY',
+	22=>'NO_ANSWER',
+	23=>'CALL_REJECTED',
+	24=>'NUMBER_CHANGED',
+	25=>'DEST_OUT_OF_ORDER',
+	26=>'SIGNALING_ERROR',
+	27=>'NETWORK_ERROR',
+	28=>'NETWORK_BUSY',
+	29=>'NOT_SUBSCRIBED',
+	31=>'SERVICE_UNAVAILABLE',
+	32=>'SERVICE_NOT_SUPPORTED',
+	33=>'PREPAY_LIMIT_REACHED',
+	35=>'INCOMPATIBLE_DEST',
+	43=>'ACCESS_DENIED',
+	45=>'FEATURE_NOT_AVAILABLE',
+	46=>'WRONG_CALL_STATE',
+	47=>'SIGNALING_TIMEOUT',
+	48=>'MAX_MPTY_PARTICIPANTS_EXCEEDED',
+	49=>'SYSTEM_FAILURE',
+	50=>'DATA_MISSING',
+	51=>'BASIC_SERVICE_NOT_PROVISIONED',
+	52=>'ILLEGAL_SS_OPERATION',
+	53=>'SS_INCOMPATIBILITY',
+	54=>'SS_NOT_AVAILABLE',
+	55=>'SS_SUBSCRIPTION_VIOLATION',
+	56=>'INCORRECT_PASSWORD',
+	57=>'TOO_MANY_PASSWORD_ATTEMPTS',
+	58=>'PASSWORD_REGISTRATION_FAILURE',
+	59=>'ILLEGAL_EQUIPMENT',
+	60=>'UNKNOWN_SUBSCRIBER',
+	61=>'ILLEGAL_SUBSCRIBER',
+	62=>'ABSENT_SUBSCRIBER',
+	63=>'USSD_BUSY',
+	65=>'CANNOT_TRANSFER_MPTY_CALL',
+	66=>'BUSY_WITH_UNANSWERED_CALL',
+	68=>'UNANSWERED_CALL_PENDING',
+	69=>'USSD_CANCELED',
+	70=>'PRE_EMPTION',
+	71=>'OPERATION_NOT_ALLOWED',
+	72=>'NO_FREE_BEARER_AVAILABLE',
+	73=>'NBR_SN_EXCEEDED',
+	74=>'NBR_USER_EXCEEDED',
+	75=>'NOT_ALLOWED_BY_CC',
+	76=>'MODIFIED_TO_SS_BY_CC',
+	77=>'MODIFIED_TO_CALL_BY_CC',
+	78=>'CALL_MODIFIED_BY_CC',
+	90=>'FDN_FAILURE'
+);
 # Connection defaults to 19200 baud. This seems to be the optimal
 # rate for serial links to new gsm phones.
 $Device::Gsm::BAUDRATE = 19200;
@@ -654,7 +727,7 @@ sub send_csms {
     }
     my @text_parts;
     #ensure we have to send CSMS	
-    if(length($opt{'content'}) <=160){
+    if(Device::Gsm::Charset::gsm0338_length($opt{'content'}) <=160){
 	 my @send_return=$me->_send_sms_pdu(%opt);
 	 if($send_return[0]) { 
 		 $lOk++;
@@ -666,7 +739,8 @@ sub send_csms {
     }else{	
 	    my $udh=new Sms::Token("UDH");
 	    my $ref_num=sprintf("%02X",(int(rand(255))));
-	    my $parts=(@text_parts=($opt{'content'}=~m/(.{1,153})/gs));
+	    my @text_parts=Device::Gsm::Charset::gsm0338_split($opt{'content'});
+	    my $parts=scalar(@text_parts);
 	    $parts=sprintf("%02X",$parts);
 	    my $padding=Sms::Token::UDH::calculate_padding(Sms::Token::UDH::IEI_T_8_L);
 	    my $part_count=1;
@@ -818,7 +892,7 @@ sub _send_sms_text {
 # _send_sms_pdu( %options )  : sends message in PDU mode
 #
 sub _send_sms_pdu {
-    my ($me, %opt) = @_;
+    my ($me, %opt,$is_gsm0338) = @_;
 
     # Get options
     my $num  = $opt{'recipient'};
@@ -869,7 +943,7 @@ sub _send_sms_pdu {
     $me->log->write('info', 'encoded dest. address is [' . $enc_da . ']');
 
     # Encode text
-    $text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
+    $is_gsm0338 or $text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
     my $enc_msg = Device::Gsm::Pdu::encode_text7($text);
     $me->log->write('info',
         'encoded 7bit text (w/length) is [' . $enc_msg . ']');
@@ -934,7 +1008,6 @@ sub send_sms_pdu_long {
     my $num  = $opt{'recipient'};
     my $text = $opt{'content'};
     my $pdu_msg= $opt{'pdu_msg'};
-    print $opt{'content'} ."\n" . $opt{'pdu_msg'} ."\n";  
 
     return 0 unless $num and $text and $pdu_msg;
 
@@ -1203,6 +1276,54 @@ sub get_literal_header {
 	sleep 0.05;
 	$self->answer($Device::Modem::STD_RESPONSE) =~ /OK/ and $self->log->write('warning', 'PDU mode Set') or return;
 	return $header;
+}
+sub send_ussd {
+      	my ($self,$message)=@_;
+	my $answer='';
+	my $encoded=Device::Gsm::Pdu::encode_text7_ussd($message);
+	if($self->test_command("CUSD")){
+			my $at_command='AT+CUSD=1,"'.$encoded.'",'.USSD_DCS.Device::Modem::CR;
+			$self->atsend($at_command);
+			my $expect=qr/ERROR|OK|\+CUSD:/;
+			my $cReadChars=$Device::Modem::READCHARS;
+			$Device::Modem::READCHARS=300;
+			my $response='';
+		       	$response=$self->answer($expect,1000);
+   			 # Catch the case that the msgs are returned with gaps between them
+			$response=~m/OK/ and $response.= "\n" . $self->answer($expect,15000);
+			$Device::Modem::READCHARS=$cReadChars;
+			if($response =~ m/OK/){
+				$self->log->write('warning','send_ussd command: "' . $message . '" OK, AT: '.$at_command." ". 'response: '.$response);
+				if($response =~m/\+CUSD:\s*(\d+)\s*,/){ 
+					my $response_code=$1;
+					$self->log->write('warning',"Have a ussd_response code: $response_code=>".$Device::Gsm::USSD_RESPONSE_CODES{$1});
+					$response=$';
+					if($response_code<2) { 
+						if($response=~m/\s*\"?([0-9A-F]+)\"?\s*,\s*(\d*)\s*/){
+							my $ussd_response=$1;
+							my $ussd_dcs=length($2)?$2:USSD_DCS;
+							$self->log->write('warning',"Have a ussd_response message: $ussd_response, dcs: $ussd_dcs");
+							($ussd_dcs==15 or $ussd_dcs == 0 )  and $answer=Device::Gsm::Pdu::decode_text7_ussd($ussd_response) and $ussd_dcs=-1;
+							$ussd_dcs==72 and $answer=Device::Gsm::Pdu::decode_text_UCS2($ussd_response) and $ussd_dcs=-1;
+							$ussd_dcs==68 and $answer=Device::Gsm::Pdu::decode_text8($ussd_response) and $ussd_dcs=-1;
+							$ussd_dcs !=-1 and $self->log->write('warning',"Cant decode ussd_response message with dcs: $ussd_dcs");
+
+						}
+
+					}elsif($response_code==2){
+						$response=~m/\s*(\d+)\s*/ and $self->log->write('warning',"Have a ussd_termintion code: $1=>".$Device::Gsm::USSD_TERMINATION_CODES{$1});
+					}
+				}	
+			}else{
+				$self->log->write('warning','Error send_ussd command: '.$at_command.", returned: ".$response);
+				return '';
+
+			}	
+	}else{
+		$self->log->write('warning','Error send_ussd AT+CUSD command not supported');
+		return '';
+	}
+	return $answer;
 }
 1;
 

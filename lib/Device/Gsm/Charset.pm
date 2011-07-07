@@ -520,13 +520,7 @@ sub gsm0338_to_iso8859 {
 
 		} else {
 			# Standard GSM 3.38 encoding
-			my $latin1 = $Device::Gsm::Charset::GSM0338_TO_ISO8859[$c];
-			if (defined $latin1) {
-				$ascii .= chr($latin1);
-			}
-			else {
-				$ascii .= chr($c);
-			}
+			$ascii .= chr( $Device::Gsm::Charset::GSM0338_TO_ISO8859[$c] );
 		}
 
         #warn('gsm char ['.$c.'] converted to ascii ['.ord(substr($ascii,-1)).']');
@@ -534,7 +528,49 @@ sub gsm0338_to_iso8859 {
 
 	return $ascii;
 }
-
+sub gsm0338_length {
+	my $ascii =shift;
+	my $gsm0338_length=0;	
+	my $n = 0;
+	for( ; $n < length($ascii) ; $n++ ) {
+	        my $ch_ascii = ord(substr($ascii, $n, 1));
+	        my $ch_gsm   = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_ascii];
+	        # Is this a "replaced" char?
+	        if( $ch_gsm <= 0xFF ) {
+			$gsm0338_length++;
+		}else{
+			$gsm0338_length+=2;
+		}
+	}
+	return $gsm0338_length;
+}
+sub gsm0338_split { 
+	my $ascii=shift;
+	return '' if ! defined $ascii || $ascii eq '';
+	my @parts;
+	my $part;
+	my $chars_count=0;
+	my $ascii_length=length($ascii);
+	while($ascii_length) {
+	    	my $ch_ascii = substr($ascii,0, 1);
+		my $ch_gsm=$Device::Gsm::Charset::ISO8859_TO_GSM0338[ord($ch_ascii)];
+	        if($chars_count<153 and $ch_gsm<= 0xFF) { 
+			$part.=$ch_ascii;
+			$chars_count++;
+			$ascii=substr($ascii,1,$ascii_length--);
+		}elsif($chars_count<152 and $ch_gsm>0xFF){
+			$part.=$ch_ascii;
+			$chars_count+=2;
+			$ascii=substr($ascii,1,$ascii_length--);
+		}else{
+			push(@parts,$part);
+			$part='';
+			$chars_count=0;
+		}
+	}
+	push(@parts,$part);
+	return (@parts);
+}
 1;
 
 __END__
