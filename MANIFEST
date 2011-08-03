@@ -31,6 +31,7 @@ MANIFEST
 MANIFEST.SKIP
 META.yml			Module meta-data (added by MakeMaker)
 README
+perltidyrc
 t/01basic.t
 t/02info.t
 t/06msgcodec.t
@@ -41,3 +42,4 @@ t/30gsmascii.t
 t/30networks.t
 t/31_rt_57585.t
 t/31_rt_58869.t
+
