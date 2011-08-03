@@ -30,21 +30,58 @@ sub decode {
 	# Get length of message
 	my $ud_len = hex substr($$rMessage, 0, 2);
 
+	# Get alphabet used for encoding from the DCS
+	my $dcs = $self->get('_messageTokens')->{'DCS'}->get('_data')->[0];
+	my $MASK_ALPHABET = 0x0C;
+	my @ALPHABET = ('DEFAULT', '8BITDATA', 'UCS2');
+	my $alphabet_key = ($dcs & $MASK_ALPHABET ) >> 2;
+	my $alphabet = $ALPHABET[$alphabet_key];
+
+	# Get UDH if it exists
+	my $udh;
+	my $udh_len;
+	my $udhi = $self->get('_messageTokens')->{'PDUTYPE'}->{'_UDHI'};
+	if ($udhi) {
+		$udh_len = hex substr($$rMessage, 2, 2);
+		$udh = substr($$rMessage, 2, ($udh_len+1)*2);
+	}
+
 	# Finally get text of message
-	my $dcs= $self->get('_messageTokens')->{'DCS'}->get('_data')->[0];
-	my $text;
-	if ($dcs == 8) {
-		$text = Device::Gsm::Pdu::decode_text_UCS2($$rMessage);
+	my $bin;   # hex encoded UD binary or UCS2 text
+	my $text;  # UD converted to text
+
+	if ($alphabet eq 'UCS2' ) {
+		if ($udhi) {
+			# Get rest of UD
+			$bin = substr($$rMessage, 2 + ($udh_len+1)*2);
+			$text = Device::Gsm::Pdu::decode_text_UCS2($bin);
+		} else {
+			$bin = substr($$rMessage, 2);
+			$text = Device::Gsm::Pdu::decode_text_UCS2($$rMessage);
+		}
+	} elsif ($alphabet eq '8BITDATA') {
+		if ($udhi) {
+			$bin = substr($$rMessage, 2 + ($udh_len+1)*2);
+		} else {  
+			$bin = substr($$rMessage, 2);
+		}
 	} else {
 		# XXX Here assume that DCS == 0x00 (7 bit coding)
 		$text   = Device::Gsm::Pdu::decode_text7($$rMessage);
-
+		if ($udhi) {
+			my $udh_len_octet  = (hex substr($$rMessage, 2, 2)) + 1;
+			my $udh_len_septet = int($udh_len_octet * 8 / 7) + (($udh_len_octet * 8)%7?1:0);
+			# strip off UDH
+			$text =~ s/^(.{1,$udh_len_septet})//;
+		}
   		# Convert text from GSM 03.38 to Latin 1
-		$text      = Device::Gsm::Charset::gsm0338_to_iso8859($text);
-	} 
+		$text = Device::Gsm::Charset::gsm0338_to_iso8859($text);
+	}
 
 	$self->set( 'length' => $ud_len );
 	$self->set( 'text'   => $text   );
+	$self->set( 'udh'    => $udh    );
+	$self->set( 'bin'    => $bin    );
 
 	$self->data( $text );
 	$self->state( Sms::Token::DECODED );
