@@ -59,53 +59,54 @@ use integer;
 use strict;
 use Device::Gsm::Sms::Token;
 
-@Sms::Token::ST::ISA = ('Sms::Token');
+@Sms::Token::ST::ISA          = ('Sms::Token');
 %Sms::Token::ST::STATUS_CODES = (
-0x00=>'TP_STATUS_RECEIVED_OK',
-0x01=>'TP_STATUS_UNABLE_TO_CONFIRM_DELIVERY',
-0x02=>'TP_STATUS_REPLACED',
+    0x00 => 'TP_STATUS_RECEIVED_OK',
+    0x01 => 'TP_STATUS_UNABLE_TO_CONFIRM_DELIVERY',
+    0x02 => 'TP_STATUS_REPLACED',
 ############
-0x20=>'TP_STATUS_TRY_CONGESTION',
-0x21=>'TP_STATUS_TRY_SME_BUSY',
-0x22=>'TP_STATUS_TRY_NO_RESPONSE_FROM_SME',
-0x23=>'TP_STATUS_TRY_SERVICE_REJECTED',
-0x24=>'TP_STATUS_TRY_QOS_NOT_AVAILABLE',
-0x25=>'TP_STATUS_TRY_SME_ERROR',
+    0x20 => 'TP_STATUS_TRY_CONGESTION',
+    0x21 => 'TP_STATUS_TRY_SME_BUSY',
+    0x22 => 'TP_STATUS_TRY_NO_RESPONSE_FROM_SME',
+    0x23 => 'TP_STATUS_TRY_SERVICE_REJECTED',
+    0x24 => 'TP_STATUS_TRY_QOS_NOT_AVAILABLE',
+    0x25 => 'TP_STATUS_TRY_SME_ERROR',
 ############
-0x40=>'TP_STATUS_PERM_REMOTE_PROCEDURE_ERROR',
-0x41=>'TP_STATUS_PERM_INCOMPATIBLE_DEST',
-0x42=>'TP_STATUS_PERM_REJECTED_BY_SME',
-0x43=>'TP_STATUS_PERM_NOT_OBTAINABLE',
-0x44=>'TP_STATUS_PERM_QOS_NOT_AVAILABLE',
-0x45=>'TP_STATUS_PERM_NO_INTERWORKING',
-0x46=>'TP_STATUS_PERM_VALID_PER_EXPIRED',
-0x47=>'TP_STATUS_PERM_DELETED_BY_ORIG_SME',
-0x48=>'TP_STATUS_PERM_DELETED_BY_SC_ADMIN',
-0x49=>'TP_STATUS_PERM_SM_NO_EXIST',
+    0x40 => 'TP_STATUS_PERM_REMOTE_PROCEDURE_ERROR',
+    0x41 => 'TP_STATUS_PERM_INCOMPATIBLE_DEST',
+    0x42 => 'TP_STATUS_PERM_REJECTED_BY_SME',
+    0x43 => 'TP_STATUS_PERM_NOT_OBTAINABLE',
+    0x44 => 'TP_STATUS_PERM_QOS_NOT_AVAILABLE',
+    0x45 => 'TP_STATUS_PERM_NO_INTERWORKING',
+    0x46 => 'TP_STATUS_PERM_VALID_PER_EXPIRED',
+    0x47 => 'TP_STATUS_PERM_DELETED_BY_ORIG_SME',
+    0x48 => 'TP_STATUS_PERM_DELETED_BY_SC_ADMIN',
+    0x49 => 'TP_STATUS_PERM_SM_NO_EXIST',
 ############
-0x60=>'TP_STATUS_TMP_CONGESTION',
-0x61=>'TP_STATUS_TMP_SME_BUSY',
-0x62=>'TP_STATUS_TMP_NO_RESPONSE_FROM_SME',
-0x63=>'TP_STATUS_TMP_SERVICE_REJECTED',
-0x64=>'TP_STATUS_TMP_QOS_NOT_AVAILABLE',
-0x65=>'TP_STATUS_TMP_SME_ERROR',
+    0x60 => 'TP_STATUS_TMP_CONGESTION',
+    0x61 => 'TP_STATUS_TMP_SME_BUSY',
+    0x62 => 'TP_STATUS_TMP_NO_RESPONSE_FROM_SME',
+    0x63 => 'TP_STATUS_TMP_SERVICE_REJECTED',
+    0x64 => 'TP_STATUS_TMP_QOS_NOT_AVAILABLE',
+    0x65 => 'TP_STATUS_TMP_SME_ERROR',
 ############
-0xFF=>'TP_STATUS_NONE');
+    0xFF => 'TP_STATUS_NONE'
+);
 
 # takes (scalar message (string) reference)
 # returns success/failure of decoding
 # if all ok, removes token from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
 
-	$self->data(substr($$rMessage, 0, 2) );
-	$self->state( Sms::Token::DECODED );
+    $self->data(substr($$rMessage, 0, 2));
+    $self->state(Sms::Token::DECODED);
 
-	# Remove ST from message
-	$$rMessage = substr( $$rMessage, 2 );
+    # Remove ST from message
+    $$rMessage = substr($$rMessage, 2);
 
-	return 1;
+    return 1;
 }
 
 #
@@ -115,16 +116,16 @@ sub decode {
 # or undef value in case of errors
 #
 sub encode {
-	my $self = shift;
+    my $self = shift;
 
-	# Take supplied data (optional) or object internal data
-	my $data = shift;
-	if( ! defined $data || $data eq '' ) {
-		$data = $self->data();
-		$data ||= '00';
-	}
+    # Take supplied data (optional) or object internal data
+    my $data = shift;
+    if (!defined $data || $data eq '') {
+        $data = $self->data();
+        $data ||= '00';
+    }
 
-	return $data;
+    return $data;
 }
 
 1;

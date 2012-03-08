@@ -22,16 +22,16 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes token from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
 
-	$self->data( hex substr($$rMessage, 0, 2) );
-	$self->state( Sms::Token::DECODED );
+    $self->data(hex substr($$rMessage, 0, 2));
+    $self->state(Sms::Token::DECODED);
 
-	# Remove MR from message
-	$$rMessage = substr( $$rMessage, 2 );
+    # Remove MR from message
+    $$rMessage = substr($$rMessage, 2);
 
-	return 1;
+    return 1;
 }
 
 #
@@ -41,16 +41,16 @@ sub decode {
 # or undef value in case of errors
 #
 sub encode {
-	my $self = shift;
+    my $self = shift;
 
-	# Take supplied data (optional) or object internal data
-	my $data = shift;
-	if( ! defined $data || $data eq '' ) {
-		$data = $self->data();
-		$data ||= '00';
-	}
+    # Take supplied data (optional) or object internal data
+    my $data = shift;
+    if (!defined $data || $data eq '') {
+        $data = $self->data();
+        $data ||= '00';
+    }
 
-	return $data;
+    return $data;
 }
 
 1;

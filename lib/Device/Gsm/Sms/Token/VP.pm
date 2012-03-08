@@ -22,37 +22,40 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes token from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
 
-	my $vpf = $self->messageTokens('PDUTYPE')->VPF();
+    my $vpf = $self->messageTokens('PDUTYPE')->VPF();
 
-	# Check if VP flag is present
-	if( $vpf & 0x02 ) {
+    # Check if VP flag is present
+    if ($vpf & 0x02) {
 
-		my $vp = hex substr($$rMessage, 0, 2);
+        my $vp = hex substr($$rMessage, 0, 2);
 
-		# Decode value of VP field
-		if( $vp <= 0x8F ) {
-			$vp = (($vp + 1) * 5).' minutes';
-		} elsif( $vp <= 0xA7 ) {
-			$vp = (( 24 + ($vp - 143) ) * 30 ) . ' minutes';
-		} elsif( $vp <= 0xC4 ) {
-			$vp = ($vp - 166) . ' days';
-		} else {
-			$vp = ($vp - 192) . ' weeks';
-		}
+        # Decode value of VP field
+        if ($vp <= 0x8F) {
+            $vp = (($vp + 1) * 5) . ' minutes';
+        }
+        elsif ($vp <= 0xA7) {
+            $vp = ((24 + ($vp - 143)) * 30) . ' minutes';
+        }
+        elsif ($vp <= 0xC4) {
+            $vp = ($vp - 166) . ' days';
+        }
+        else {
+            $vp = ($vp - 192) . ' weeks';
+        }
 
-		$self->set( 'validity_period' => $vp );
-		$self->data( $vp );
+        $self->set('validity_period' => $vp);
+        $self->data($vp);
 
-		# Remove VP from message
-		$$rMessage = substr( $$rMessage, 2 );
-	}
+        # Remove VP from message
+        $$rMessage = substr($$rMessage, 2);
+    }
 
-	$self->state( Sms::Token::DECODED );
+    $self->state(Sms::Token::DECODED);
 
-	return 1;
+    return 1;
 }
 
 #
@@ -62,16 +65,16 @@ sub decode {
 # or undef value in case of errors
 #
 sub encode {
-	my $self = shift;
+    my $self = shift;
 
-	# Take supplied data (optional) or object internal data
-	my $data = shift;
-	if( ! defined $data || $data eq '' ) {
-		$data = $self->data();
-		$data ||= '00';
-	}
+    # Take supplied data (optional) or object internal data
+    my $data = shift;
+    if (!defined $data || $data eq '') {
+        $data = $self->data();
+        $data ||= '00';
+    }
 
-	return $data;
+    return $data;
 }
 
 1;

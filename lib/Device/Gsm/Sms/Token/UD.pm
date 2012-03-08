@@ -19,6 +19,7 @@ use strict;
 use Device::Gsm::Charset;
 use Device::Gsm::Pdu;
 use Device::Gsm::Sms::Token;
+
 #my $udh1_length=UDH1_LENGTH;
 #my $udh2_length=UDH2_LENGTH;
 
@@ -28,40 +29,43 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes user data from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
-	my $padding=0;
+    my ($self, $rMessage) = @_;
+    my $ok      = 0;
+    my $padding = 0;
 
-	# Get length of message
-	my $ud_len = hex substr($$rMessage, 0, 2);
+    # Get length of message
+    my $ud_len = hex substr($$rMessage, 0, 2);
 
-	# Finally get text of message
-	my $dcs= $self->get('_messageTokens')->{'DCS'}->get('_data')->[0];
-	my $is_csms=$self->get('_messageTokens')->{'UDH'}->{'_IS_CSMS'};
-	$is_csms and my $udhl=$self->get('_messageTokens')->{'UDH'}->{'_length'};
-	my $text;
+    # Finally get text of message
+    my $dcs     = $self->get('_messageTokens')->{'DCS'}->get('_data')->[0];
+    my $is_csms = $self->get('_messageTokens')->{'UDH'}->{'_IS_CSMS'};
+    $is_csms
+        and my $udhl = $self->get('_messageTokens')->{'UDH'}->{'_length'};
+    my $text;
 
-	if ($dcs == 8) {
-		$text = Device::Gsm::Pdu::decode_text_UCS2($$rMessage);
-	} else {
-		if($is_csms){
-			$padding=Sms::Token::UDH::calculate_padding($udhl);
-			$text=Device::Gsm::Pdu::decode_text7_udh($$rMessage,$padding);
-		}else{
-		$text=Device::Gsm::Pdu::decode_text7($$rMessage);	
-		}
-	$text = Device::Gsm::Charset::gsm0338_to_iso8859($text);
-	} 
-	$self->set( 'padding' => $padding );
-	$self->set( 'length' => $ud_len );
-	$self->set( 'text'   => $text   );
-	$self->data( $text );
-	$self->state( Sms::Token::DECODED );
+    if ($dcs == 8) {
+        $text = Device::Gsm::Pdu::decode_text_UCS2($$rMessage);
+    }
+    else {
+        if ($is_csms) {
+            $padding = Sms::Token::UDH::calculate_padding($udhl);
+            $text = Device::Gsm::Pdu::decode_text7_udh($$rMessage, $padding);
+        }
+        else {
+            $text = Device::Gsm::Pdu::decode_text7($$rMessage);
+        }
+        $text = Device::Gsm::Charset::gsm0338_to_iso8859($text);
+    }
+    $self->set('padding' => $padding);
+    $self->set('length'  => $ud_len);
+    $self->set('text'    => $text);
+    $self->data($text);
+    $self->state(Sms::Token::DECODED);
 
-	# Empty message
-	$$rMessage = '';
+    # Empty message
+    $$rMessage = '';
 
-	return 1;
+    return 1;
 }
 
 #
@@ -70,13 +74,13 @@ sub decode {
 # takes internal token data and encodes it, returning the result or undef value in case of errors
 #
 sub encode {
-	my $self = shift;
-	my $padding = shift;
+    my $self    = shift;
+    my $padding = shift;
 
-	#my $ud_len = $self->get('length');
-	my $text   = $self->get('text');
+    #my $ud_len = $self->get('length');
+    my $text = $self->get('text');
 
-	return Device::Gsm::Pdu::encode_text7($text);
+    return Device::Gsm::Pdu::encode_text7($text);
 
 }
 

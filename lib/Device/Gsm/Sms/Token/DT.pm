@@ -25,33 +25,39 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes DT from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
 
-	my @ts = split //, substr( $$rMessage, 0, 14 );
+    my @ts = split //, substr($$rMessage, 0, 14);
 
-	$self->set( year     => $ts [1] . $ts [0] );
-	$self->set( month    => $ts [3] . $ts [2] );
-	$self->set( day      => $ts [5] . $ts [4] );
-	$self->set( hour     => $ts [7] . $ts [6] );
-	$self->set( minute   => $ts [9] . $ts [8] );
-	$self->set( second   => $ts[11] . $ts[10] );
-	$self->set( timezone => $ts[13] . $ts[12] );
+    $self->set(year     => $ts[1] . $ts[0]);
+    $self->set(month    => $ts[3] . $ts[2]);
+    $self->set(day      => $ts[5] . $ts[4]);
+    $self->set(hour     => $ts[7] . $ts[6]);
+    $self->set(minute   => $ts[9] . $ts[8]);
+    $self->set(second   => $ts[11] . $ts[10]);
+    $self->set(timezone => $ts[13] . $ts[12]);
 
-	# Store also timestamp as convenient format
-	$self->set( 'date' => $self->get('day').'/'.$self->get('month').'/'.$self->get('year') );
-	$self->set( 'time' => $self->get('hour').':'.$self->get('minute').':'.$self->get('second') );
+    # Store also timestamp as convenient format
+    $self->set('date' => $self->get('day') . '/'
+            . $self->get('month') . '/'
+            . $self->get('year'));
+    $self->set('time' => $self->get('hour') . ':'
+            . $self->get('minute') . ':'
+            . $self->get('second'));
 
-	# TODO: add timezone decoding ...
-	$self->data( $self->get('date').' '.$self->get('time').' '.$self->get('timezone') );
+    # TODO: add timezone decoding ...
+    $self->data($self->get('date') . ' '
+            . $self->get('time') . ' '
+            . $self->get('timezone'));
 
-	# Signal token as correctly decoded (?)
-	$self->state( Sms::Token::DECODED );
+    # Signal token as correctly decoded (?)
+    $self->state(Sms::Token::DECODED);
 
-	# Remove DT info from message
-	$$rMessage = substr( $$rMessage, 14 );
+    # Remove DT info from message
+    $$rMessage = substr($$rMessage, 14);
 
-	return 1;
+    return 1;
 }
 
 #
@@ -61,7 +67,7 @@ sub decode {
 # or undef value in case of errors
 #
 sub encode {
-	return '99211332959500';
+    return '99211332959500';
 }
 
 1;

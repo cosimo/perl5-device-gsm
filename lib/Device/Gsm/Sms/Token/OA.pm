@@ -22,33 +22,32 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes OA from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
 
-	# Detect originating address length
-	my $oa_len    = hex( substr $$rMessage, 0, 2 );
+    # Detect originating address length
+    my $oa_len = hex(substr $$rMessage, 0, 2);
 
-	# Get number type (0x91=international, 0x81=local)
-	my $oa_type   = substr( $$rMessage, 2, 2 );
+    # Get number type (0x91=international, 0x81=local)
+    my $oa_type = substr($$rMessage, 2, 2);
 
     # Number of octets to remove from message
-	my $oa_octets = (($oa_len + 1) >> 1) << 1;
+    my $oa_octets = (($oa_len + 1) >> 1) << 1;
 
-	# Get address
+    # Get address
     my $addr = Device::Gsm::Pdu::decode_address(
-        substr($$rMessage, 0, 4 + $oa_octets)
-    );
+        substr($$rMessage, 0, 4 + $oa_octets));
 
-	$self->set('length'  => $oa_len);
-	$self->set('type'    => $oa_type);
-	$self->set('address' => $addr);
-	$self->data( $oa_len, $oa_type, $addr );
-	$self->state( Sms::Token::DECODED );
+    $self->set('length'  => $oa_len);
+    $self->set('type'    => $oa_type);
+    $self->set('address' => $addr);
+    $self->data($oa_len, $oa_type, $addr);
+    $self->state(Sms::Token::DECODED);
 
-	# Remove OA from message
-	$$rMessage = substr( $$rMessage, 4 + $oa_octets );
+    # Remove OA from message
+    $$rMessage = substr($$rMessage, 4 + $oa_octets);
 
-	return 1;
+    return 1;
 }
 
 #
@@ -57,23 +56,23 @@ sub decode {
 # encodes originating address (OA)
 #
 sub encode {
-	my $self = shift;
-	my $oa_len = $self->get('length');
+    my $self   = shift;
+    my $oa_len = $self->get('length');
 
-	# XXX TO BE COMPLETED...
-	return $oa_len;
+    # XXX TO BE COMPLETED...
+    return $oa_len;
 
 }
 
 sub toString {
-	my $self = shift;
-	my $str  = $self->get('address');
+    my $self = shift;
+    my $str  = $self->get('address');
+
     # Prepend + to number if international
-    if( $str !~ /^\s*\+/ && $self->get('type') eq '91' )
-    {   
+    if ($str !~ /^\s*\+/ && $self->get('type') eq '91') {
         $str = '+' . $str;
     }
-	return $str;
+    return $str;
 }
 
 1;

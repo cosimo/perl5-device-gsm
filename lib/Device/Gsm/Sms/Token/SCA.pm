@@ -22,73 +22,74 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes SCA from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
-	my($length, $type, $address);
-	my $msg = $$rMessage;
-	my $msg_copy = $msg;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
+    my ($length, $type, $address);
+    my $msg      = $$rMessage;
+    my $msg_copy = $msg;
 
-	# .------------.----------.---------------------------------.
-	# | LENGTH (1) | TYPE (1) | ADDRESS BCD DIGITS (0-8 octets) |
-	# `------------'----------'---------------------------------'
-	$length = substr $msg, 0, 2;
+    # .------------.----------.---------------------------------.
+    # | LENGTH (1) | TYPE (1) | ADDRESS BCD DIGITS (0-8 octets) |
+    # `------------'----------'---------------------------------'
+    $length = substr $msg, 0, 2;
 
-	# If length is `00', SCA = default end decoding ends
-	if( $length eq '00' ) {
-		$self->data( '' );
-		$self->state( Sms::Token::DECODED );
-		# Remove length-octet read from message
-		$$rMessage = substr( $$rMessage, 2 );
-		return 1;
-	}
+    # If length is `00', SCA = default end decoding ends
+    if ($length eq '00') {
+        $self->data('');
+        $self->state(Sms::Token::DECODED);
 
-	# Begin decoding (length is number of octets for the SCA + 1 (length) )
-	$length = hex $length;
+        # Remove length-octet read from message
+        $$rMessage = substr($$rMessage, 2);
+        return 1;
+    }
 
-	# Length > 9 is impossible; max is 8 + 1 (length)
-	if( $length > 9 ) {
-		$self->data( undef );
-		$self->state( Sms::Token::ERROR );
-		return 0;
-	}
+    # Begin decoding (length is number of octets for the SCA + 1 (length) )
+    $length = hex $length;
 
-	$self->set( 'length' => $length );
+    # Length > 9 is impossible; max is 8 + 1 (length)
+    if ($length > 9) {
+        $self->data(undef);
+        $self->state(Sms::Token::ERROR);
+        return 0;
+    }
 
-	# Get type of message (81 = national, 91 = international)
-	$type = substr $msg, 2, 2;
-	if( $type ne '81' and $type ne '91' ) {
-		$self->data( undef );
-		$self->state( Sms::Token::ERROR );
-		return 0;
-	}
+    $self->set('length' => $length);
 
-	$self->set( type => $type );
+    # Get type of message (81 = national, 91 = international)
+    $type = substr $msg, 2, 2;
+    if ($type ne '81' and $type ne '91') {
+        $self->data(undef);
+        $self->state(Sms::Token::ERROR);
+        return 0;
+    }
 
-	# Get rest of address
-	$address = substr $msg, 4, ( ($length - 1) << 1 );
+    $self->set(type => $type);
 
-	# Reverse each pair of bcd digits
-	my $sca;
-	while( $address ) {
-		$sca .= reverse substr( $address, 0, 2 );
-		$address = substr $address, 2;
-	}
+    # Get rest of address
+    $address = substr $msg, 4, (($length - 1) << 1);
 
-	# Truncate last `F' if found (XXX)
-	chop $sca if substr($sca, -1) eq 'F';
+    # Reverse each pair of bcd digits
+    my $sca;
+    while ($address) {
+        $sca .= reverse substr($address, 0, 2);
+        $address = substr $address, 2;
+    }
 
-	# If sca is international, put a '+' sign before
-	$sca = '+'.$sca if $type eq '91';
+    # Truncate last `F' if found (XXX)
+    chop $sca if substr($sca, -1) eq 'F';
 
-	$self->data( $sca );
-	$self->set( type => $type );
-	$self->set( 'length' => $length );
-	$self->state( Sms::Token::DECODED );
+    # If sca is international, put a '+' sign before
+    $sca = '+' . $sca if $type eq '91';
 
-	# Remove SCA info from message
-	$$rMessage = substr( $msg, ($length + 1) << 1 );
+    $self->data($sca);
+    $self->set(type     => $type);
+    $self->set('length' => $length);
+    $self->state(Sms::Token::DECODED);
 
-	return 1;
+    # Remove SCA info from message
+    $$rMessage = substr($msg, ($length + 1) << 1);
+
+    return 1;
 }
 
 #
@@ -98,40 +99,40 @@ sub decode {
 # or undef value in case of errors
 #
 sub encode {
-	my $self = shift;
+    my $self = shift;
 
-	# Take supplied data (optional) or object internal data
-	my $data = shift;
-	if( ! defined $data || $data eq '' ) {
-		$data = $self->data();
-	}
+    # Take supplied data (optional) or object internal data
+    my $data = shift;
+    if (!defined $data || $data eq '') {
+        $data = $self->data();
+    }
 
-	# Begin encoding as SCA
-	$data =~ s/\s+//g;
+    # Begin encoding as SCA
+    $data =~ s/\s+//g;
 
-	my $type = index($data,'+') == 0 ? 91 : 81;
+    my $type = index($data, '+') == 0 ? 91 : 81;
 
-	# Remove all non-numbers
-	$data =~ s/\D//g;
+    # Remove all non-numbers
+    $data =~ s/\D//g;
 
-	my $len  = unpack 'H2' => chr( length $data );
+    my $len = unpack 'H2' => chr(length $data);
 
-	$data .= 'F';
-	my @digit = split // => $data;
-	my $encoded;
+    $data .= 'F';
+    my @digit = split // => $data;
+    my $encoded;
 
-	while( @digit > 1 ) {
-		$encoded .= join '', reverse splice @digit, 0, 2;
-	}
+    while (@digit > 1) {
+        $encoded .= join '', reverse splice @digit, 0, 2;
+    }
 
-	$data = uc $len . $type . $encoded;
+    $data = uc $len . $type . $encoded;
 
-	$self->data( $data );
-	$self->set( 'length' => $len );
-	$self->set( 'type'   => $type );
-	$self->state( Sms::Token::ENCODED );
+    $self->data($data);
+    $self->set('length' => $len);
+    $self->set('type'   => $type);
+    $self->state(Sms::Token::ENCODED);
 
-	return $data;
+    return $data;
 
 }
 

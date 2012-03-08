@@ -22,26 +22,26 @@ use Device::Gsm::Sms::Token;
 # returns success/failure of decoding
 # if all ok, removes PDUTYPE from message
 sub decode {
-	my($self, $rMessage) = @_;
-	my $ok = 0;
+    my ($self, $rMessage) = @_;
+    my $ok = 0;
 
-	$self->data( substr($$rMessage, 0, 2) );
+    $self->data(substr($$rMessage, 0, 2));
 
-	# Update PDU type flags into token object
-	$self->set( 'pdutype', hex(substr($$rMessage,0,2)) );
-	$self->set( 'MTI', $self->MTI() );
-	$self->set( 'MMS', $self->MMS() );
-	$self->set( 'RD',  $self->RD()  );
-	$self->set( 'VPF', $self->VPF() );
-	$self->set( 'SRR', $self->SRR() );
-	$self->set( 'SRI', $self->SRI() );
-	$self->set( 'UDHI',$self->UDHI());
-	$self->set( 'RP',  $self->RP()  );
+    # Update PDU type flags into token object
+    $self->set('pdutype', hex(substr($$rMessage, 0, 2)));
+    $self->set('MTI',     $self->MTI());
+    $self->set('MMS',     $self->MMS());
+    $self->set('RD',      $self->RD());
+    $self->set('VPF',     $self->VPF());
+    $self->set('SRR',     $self->SRR());
+    $self->set('SRI',     $self->SRI());
+    $self->set('UDHI',    $self->UDHI());
+    $self->set('RP',      $self->RP());
 
-	# Remove PDU TYPE from message
-	$$rMessage = substr($$rMessage, 2);
+    # Remove PDU TYPE from message
+    $$rMessage = substr($$rMessage, 2);
 
-	return 1;
+    return 1;
 }
 
 #
@@ -51,58 +51,60 @@ sub decode {
 # or undef value in case of errors
 #
 sub encode {
-	my $self = shift;
+    my $self = shift;
 
-	# Take supplied data (optional) or object internal data
-	my $data = shift;
-	if( ! defined $data || $data eq '' ) {
-		$data = $self->data();
-	}
+    # Take supplied data (optional) or object internal data
+    my $data = shift;
+    if (!defined $data || $data eq '') {
+        $data = $self->data();
+    }
 
-	return $data;
+    return $data;
 }
 
 #--------------------------------------------
 # Bit component flags
 
-sub RP { # REPLY PATH PARAMETER SET
-	my $self = shift;
-	( $self->get('pdutype') & 0x80 ) >> 7;
+sub RP {    # REPLY PATH PARAMETER SET
+    my $self = shift;
+    ($self->get('pdutype') & 0x80) >> 7;
 }
 
-sub UDHI { # USER DATA HEADER PRESENT
-	my $self = shift;
-	( $self->get('pdutype') & 0x40 ) >> 6;
+sub UDHI {    # USER DATA HEADER PRESENT
+    my $self = shift;
+    ($self->get('pdutype') & 0x40) >> 6;
 }
 
-sub SRR { # STATUS REPORT REQUESTED
-	my $self = shift;
-	( $self->get('pdutype') & 0x20 ) >> 5;
+sub SRR {     # STATUS REPORT REQUESTED
+    my $self = shift;
+    ($self->get('pdutype') & 0x20) >> 5;
 }
 
-sub SRI { # STATUS REPORT WILL BE RETURNED
-	my $self = shift;
-	( $self->get('pdutype') & 0x20 ) >> 5;
+sub SRI {     # STATUS REPORT WILL BE RETURNED
+    my $self = shift;
+    ($self->get('pdutype') & 0x20) >> 5;
 }
 
-sub VPF { # VALIDITY PERIOD FLAG 0=not present, 1=reserved, 2=integer, 3=semioctet
-	my $self = shift;
-	( $self->get('pdutype') & 0x18 ) >> 3;
+sub VPF
+{    # VALIDITY PERIOD FLAG 0=not present, 1=reserved, 2=integer, 3=semioctet
+    my $self = shift;
+    ($self->get('pdutype') & 0x18) >> 3;
 }
 
-sub MMS { # MORE MESSAGES WAITING AT SMS-C
-	my $self = shift;
-	( $self->get('pdutype') & 0x04 ) >> 2;
+sub MMS {    # MORE MESSAGES WAITING AT SMS-C
+    my $self = shift;
+    ($self->get('pdutype') & 0x04) >> 2;
 }
 
-sub RD { # ... allow repeated sending (REJECT DUPLICATES)
-	my $self = shift;
-	( $self->get('pdutype') & 0x04 ) >> 2;
+sub RD {     # ... allow repeated sending (REJECT DUPLICATES)
+    my $self = shift;
+    ($self->get('pdutype') & 0x04) >> 2;
 }
 
-sub MTI { # TYPE OF SMS (0x00=SMS-DELIVER, 0x01=SMS-SUBMIT, 0x10=SMS-STATUS/COMMAND, 0x11=RESERVED
-	my $self = shift;
-	$self->get('pdutype') & 0x03;
+sub MTI
+{ # TYPE OF SMS (0x00=SMS-DELIVER, 0x01=SMS-SUBMIT, 0x10=SMS-STATUS/COMMAND, 0x11=RESERVED
+    my $self = shift;
+    $self->get('pdutype') & 0x03;
 }
 
 1;
