@@ -262,17 +262,15 @@ sub decode {
 			# Catch message type indicator (MTI) and re-load structure
             # We must also skip message types 0x02 and 0x03 because we don't handle them currently
 			if( $token->name() eq 'PDUTYPE' ) {
-            
+
                 my $mti = $token->MTI();
 		my $udhi= $token->UDHI();
 
-=cut
-                # If MTI has bit 1 on, this could be a SMS-STATUS message (0x02), or (0x03???)
-                if( $mti >= SMS_STATUS ) {
-                    _log('skipping unhandled message type ['.$mti.']');
-                    return undef;
-                }
-=cut
+#               # If MTI has bit 1 on, this could be a SMS-STATUS message (0x02), or (0x03???)
+#               if( $mti >= SMS_STATUS ) {
+#                   _log('skipping unhandled message type ['.$mti.']');
+#                   return undef;
+#               }
 
                 if( $mti != $type ) {
 #_log('token PDUTYPE, data='.$token->data().' MTI='.$token->get('MTI').' ->MTI()='.$token->MTI());

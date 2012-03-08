@@ -1709,7 +1709,7 @@ Send out an SMS message quickly:
 
 The allowed parameters to send_sms() are:
 
-=over -
+=over
 
 =item C<class>
 
