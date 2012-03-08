@@ -28,7 +28,7 @@ use Device::Gsm::Pdu;
 use Device::Gsm::Sms::Structure;
 use Device::Gsm::Sms::Token;
 
-sub _log    { print @_, "\n"; }
+sub _log { print @_, "\n"; }
 sub _parent { $_[0]->{_parent} }
 
 #
@@ -40,106 +40,116 @@ sub _parent { $_[0]->{_parent} }
 # creates message object
 #
 sub new {
-	my($proto, %opt) = @_;
-	my $class = ref $proto || $proto;
+    my ($proto, %opt) = @_;
+    my $class = ref $proto || $proto;
 
-	# Create new message object
-	my $self = {};
+    # Create new message object
+    my $self = {};
 
     # Store gsm parent object reference
-    if( exists $opt{'parent'} ) {
+    if (exists $opt{'parent'}) {
         $self->{'_parent'} = $opt{'parent'};
+
         # Assume default storage for sms message
         $opt{'storage'} ||= $self->{'_parent'}->storage();
     }
 
     # Store options into main object
-	$self->{'options'} = \%opt;
+    $self->{'options'} = \%opt;
 
-	# Hash to contain token objects after decoding (must be accessible by name)
-	$self->{'tokens'}  = {};
+    # Hash to contain token objects after decoding (must be accessible by name)
+    $self->{'tokens'} = {};
 
-	return undef unless( exists $opt{'header'} && exists $opt{'pdu'} );
+    return undef unless (exists $opt{'header'} && exists $opt{'pdu'});
 
-#_log("NEW SMS OBJECT");
-#_log("Header [$opt{header}]");
-#_log("PDU    [$opt{pdu}]");
+    #_log("NEW SMS OBJECT");
+    #_log("Header [$opt{header}]");
+    #_log("PDU    [$opt{pdu}]");
 
-	# Check for valid msg header (thanks to Pierre Hilson for his patch
-	# to make this regex work also for Alcatel gsm software)
-	if( $opt{'header'} =~ /\+CMGL:\s*(\d+),\s*(\d+),\s*(\w*),\s*(\d+)/o )
-	{
+    # Check for valid msg header (thanks to Pierre Hilson for his patch
+    # to make this regex work also for Alcatel gsm software)
+    if ($opt{'header'} =~ /\+CMGL:\s*(\d+),\s*(\d+),\s*(\w*),\s*(\d+)/o) {
 
-		$self->{'index'}  = $1;                        # Position of message in SIM card
-		$self->{'status'} = $2;                        # Status of message (REC READ/UNREAD, STO, ...);
-		$self->{'alpha'}  = $3;                        # Alphanumeric representation of sender
-		$self->{'length'} = $4;                        # Final length of message
-		$self->{'pdu'}    = $opt{'pdu'};               # PDU content
-		$self->{'storage'}= $opt{'storage'};           # Storage (SM or ME)
+        $self->{'index'} = $1;    # Position of message in SIM card
+        $self->{'status'}
+            = $2;    # Status of message (REC READ/UNREAD, STO, ...);
+        $self->{'alpha'}  = $3;    # Alphanumeric representation of sender
+        $self->{'length'} = $4;    # Final length of message
+        $self->{'pdu'}     = $opt{'pdu'};        # PDU content
+        $self->{'storage'} = $opt{'storage'};    # Storage (SM or ME)
 
-		bless $self, $class;
+        bless $self, $class;
 
-		if( $self->decode( Device::Gsm::Sms::SMS_DELIVER ) ) {
-			#			_log('OK, message decoded correctly!');
-		} elsif($self->decode( Device::Gsm::Sms::SMS_STATUS) ){
+        if ($self->decode(Device::Gsm::Sms::SMS_DELIVER)) {
 
-		} else {
-#			_log('CASINO!');
-			undef $self;
-		}
+            #			_log('OK, message decoded correctly!');
+        }
+        elsif ($self->decode(Device::Gsm::Sms::SMS_STATUS)) {
 
-	} else {
+        }
+        else {
 
-		# Warning: could not parse message header
-		undef $self;
+            #			_log('CASINO!');
+            undef $self;
+        }
 
-	}
+    }
+    else {
 
-	return $self;
+        # Warning: could not parse message header
+        undef $self;
+
+    }
+
+    return $self;
 }
 
 #
 # time(): returns message time in ascii format
 #
 sub time {
-	my $self = shift;
-	if( my $t = $self->token('SCTS') ) {
-		return $t->toString();
-	}
-	return '';
+    my $self = shift;
+    if (my $t = $self->token('SCTS')) {
+        return $t->toString();
+    }
+    return '';
 }
+
 #
 # time_dt (): returns status message discharge time in ascii format
 #
 sub time_dt {
-	my $self = shift;
-	if( my $t = $self->token('DT')) {
-		return $t->toString();
-	}
-	return '';
+    my $self = shift;
+    if (my $t = $self->token('DT')) {
+        return $t->toString();
+    }
+    return '';
 }
+
 #
 # message_ref(): returns message reference of status message
 #
 sub message_ref {
-	my $self = shift;
-	if( my $t = $self->token('MR')) {
-		return $t->toString();
-	}
-	return '';
+    my $self = shift;
+    if (my $t = $self->token('MR')) {
+        return $t->toString();
+    }
+    return '';
 }
 
 #
 # type(): returns message type in ascii readable format
 #
 {
-	# List of allowed status strings
-	my @status = ( 'UNKNOWN', 'REC UNREAD', 'REC READ', 'SENT UNREAD', 'SENT READ' );
 
-	sub status () {
-		my $self = shift;
-		return $status[ defined $self->{'status'} ? $self->{'status'} : 0 ];
-	}
+    # List of allowed status strings
+    my @status
+        = ('UNKNOWN', 'REC UNREAD', 'REC READ', 'SENT UNREAD', 'SENT READ');
+
+    sub status () {
+        my $self = shift;
+        return $status[ defined $self->{'status'} ? $self->{'status'} : 0 ];
+    }
 
 }
 
@@ -153,127 +163,136 @@ sub message_ref {
 #
 #
 sub _old_decode {
-	my($header, $pdu) = @_;
-	my %msg = ();
-	my $errors = 0;
+    my ($header, $pdu) = @_;
+    my %msg    = ();
+    my $errors = 0;
 
-	# Copy original header/pdu strings
-	$msg{'_HEADER'} = $header;
-	$msg{'_PDU'} = $pdu;
+    # Copy original header/pdu strings
+    $msg{'_HEADER'} = $header;
+    $msg{'_PDU'}    = $pdu;
 
-	#
-	# Decode header string
-	#
-	if( $header =~ /\+CMGL:\s*(\d+),(\d+),(\d*),(\d+)/ ) {
-		$msg{'index'}  = $1;
-		$msg{'type'}   = $2;
-		$msg{'xxx'}    = $3;   # XXX
-		$msg{'length'} = $4;
-	}
+    #
+    # Decode header string
+    #
+    if ($header =~ /\+CMGL:\s*(\d+),(\d+),(\d*),(\d+)/) {
+        $msg{'index'}  = $1;
+        $msg{'type'}   = $2;
+        $msg{'xxx'}    = $3;    # XXX
+        $msg{'length'} = $4;
+    }
 
-	#
-	# Decode all parts of PDU message
-	#
+    #
+    # Decode all parts of PDU message
+    #
 
-	# ----------------------------------- SCA (service center address)
-	my $sca_length = hex( substr $pdu, 0, 2 );
-	if( $sca_length == 0 ) {
-		# No SCA provided, take default
-		$msg{'SCA'} = undef;
-	} else {
-		# Parse SCA address
-		#print STDERR "SCA length = ", $sca_length, "; ";
-		#print STDERR "Parsing address ", substr( $pdu, 0, ($sca_length+1) << 1 );
-		$msg{'SCA'} = Device::Gsm::Pdu::decode_address( substr($pdu, 0, ($sca_length+1) << 1 ) );
-		#print STDERR ' = `', $msg{'SCA'}, "'\n";
-	}
+    # ----------------------------------- SCA (service center address)
+    my $sca_length = hex(substr $pdu, 0, 2);
+    if ($sca_length == 0) {
 
-	# ----------------------------------- PDU type
-	$pdu = substr $pdu => (($sca_length+1) << 1);
-	$msg{'PDU_TYPE'} = substr $pdu, 0, 2;
-	undef $sca_length;
+        # No SCA provided, take default
+        $msg{'SCA'} = undef;
+    }
+    else {
 
-	# ----------------------------------- OA (originating address)
-	$pdu = substr $pdu => 2;
-	my $oa_length = hex( substr $pdu, 0, 2 );
+        # Parse SCA address
+        #print STDERR "SCA length = ", $sca_length, "; ";
+        #print STDERR "Parsing address ", substr( $pdu, 0, ($sca_length+1) << 1 );
+        $msg{'SCA'} = Device::Gsm::Pdu::decode_address(
+            substr($pdu, 0, ($sca_length + 1) << 1));
 
-	$msg{'OA'} = Device::Gsm::Pdu::decode_address( substr($pdu, 0, ($oa_length+1) << 1 ) );
-	undef $oa_length;
+        #print STDERR ' = `', $msg{'SCA'}, "'\n";
+    }
 
-	# PID      (protocol identifier)
-	# DCS      (data coding scheme)
-	# SCTS     (service center time stamp)
-	# UDL + UD (user data)
-	@msg{ qw/PID DCS SCTS UDL UD/ } = unpack 'A2 A2 A14 A2 A*', $pdu;
+    # ----------------------------------- PDU type
+    $pdu = substr $pdu => (($sca_length + 1) << 1);
+    $msg{'PDU_TYPE'} = substr $pdu, 0, 2;
+    undef $sca_length;
 
-	#map { $msg{$_} = hex $msg{$_} } qw/PID DCS UDL/;
-	#
-	# Decode USER DATA in 7/8 bit encoding
-	#
-	if( $msg{'DCS'} eq '00' ) { # DCS_7BIT
-		Device::Gsm::Pdu::decode_text7( $msg{'UD'} );
-	} elsif( $msg{'DCS'} eq 'F6' ) { # DCS_8BIT
-		Device::Gsm::Pdu::decode_text8( $msg{'UD'} );
-	}
+    # ----------------------------------- OA (originating address)
+    $pdu = substr $pdu => 2;
+    my $oa_length = hex(substr $pdu, 0, 2);
 
-	# XXX DEBUG
-	#foreach( sort keys %msg ) {
-	#	print STDERR 'MSG[', $_, '] = `'.$msg{$_}.'\'', "\n";
-	#}
+    $msg{'OA'} = Device::Gsm::Pdu::decode_address(
+        substr($pdu, 0, ($oa_length + 1) << 1));
+    undef $oa_length;
 
-	bless \%msg, 'Device::Gsm::Sms';
+    # PID      (protocol identifier)
+    # DCS      (data coding scheme)
+    # SCTS     (service center time stamp)
+    # UDL + UD (user data)
+    @msg{qw/PID DCS SCTS UDL UD/} = unpack 'A2 A2 A14 A2 A*', $pdu;
+
+    #map { $msg{$_} = hex $msg{$_} } qw/PID DCS UDL/;
+    #
+    # Decode USER DATA in 7/8 bit encoding
+    #
+    if ($msg{'DCS'} eq '00') {    # DCS_7BIT
+        Device::Gsm::Pdu::decode_text7($msg{'UD'});
+    }
+    elsif ($msg{'DCS'} eq 'F6') {    # DCS_8BIT
+        Device::Gsm::Pdu::decode_text8($msg{'UD'});
+    }
+
+    # XXX DEBUG
+    #foreach( sort keys %msg ) {
+    #	print STDERR 'MSG[', $_, '] = `'.$msg{$_}.'\'', "\n";
+    #}
+
+    bless \%msg, 'Device::Gsm::Sms';
 }
 
-
 sub decode {
-	my( $self, $type ) = @_;
-	$self->{'type'} = $type;
+    my ($self, $type) = @_;
+    $self->{'type'} = $type;
 
-	# Get list of tokens for this message (from ::Sms::Structure)
-	my $cPdu        = $self->{'pdu'};
+    # Get list of tokens for this message (from ::Sms::Structure)
+    my $cPdu = $self->{'pdu'};
 
-	# Check that PDU is not empty
-	return 0 unless $cPdu;
+    # Check that PDU is not empty
+    return 0 unless $cPdu;
 
-	# Backup copy for "backtracking"
-	my $cPduCopy    = $cPdu;
+    # Backup copy for "backtracking"
+    my $cPduCopy = $cPdu;
 
-	my @token_names = $self->structure();
-	my $decoded     = 1;
-	#is udh in pdu?
-	my $udh_parsed = 0;
-	while( @token_names ) {
+    my @token_names = $self->structure();
+    my $decoded     = 1;
 
-		# Create new token object
-		my $token = new Sms::Token( shift @token_names, {messageTokens => $self->{'tokens'}} );
-		if( ! defined $token ) {
-			$decoded = 0;
-			last;
-		}
+    #is udh in pdu?
+    my $udh_parsed = 0;
+    while (@token_names) {
 
-		# If decoding is completed successfully, add token object to message
-#_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
+        # Create new token object
+        my $token = new Sms::Token(shift @token_names,
+            { messageTokens => $self->{'tokens'} });
+        if (!defined $token) {
+            $decoded = 0;
+            last;
+        }
 
-		if( $token->decode(\$cPdu) ) {
+        # If decoding is completed successfully, add token object to message
+        #_log('PDU BEFORE ['.$cPdu.']', length($cPdu) );
 
-			# Store token object into SMS message
-			$self->{'tokens'}->{ $token->name() } = $token;
+        if ($token->decode(\$cPdu)) {
 
-			# Catch message type indicator (MTI) and re-load structure
+            # Store token object into SMS message
+            $self->{'tokens'}->{ $token->name() } = $token;
+
+            # Catch message type indicator (MTI) and re-load structure
             # We must also skip message types 0x02 and 0x03 because we don't handle them currently
-			if( $token->name() eq 'PDUTYPE' ) {
+            if ($token->name() eq 'PDUTYPE') {
 
-                my $mti = $token->MTI();
-		my $udhi= $token->UDHI();
+                my $mti  = $token->MTI();
+                my $udhi = $token->UDHI();
 
-#               # If MTI has bit 1 on, this could be a SMS-STATUS message (0x02), or (0x03???)
-#               if( $mti >= SMS_STATUS ) {
-#                   _log('skipping unhandled message type ['.$mti.']');
-#                   return undef;
-#               }
+                #               # If MTI has bit 1 on, this could be a SMS-STATUS message (0x02), or (0x03???)
+                #               if( $mti >= SMS_STATUS ) {
+                #                   _log('skipping unhandled message type ['.$mti.']');
+                #                   return undef;
+                #               }
 
-                if( $mti != $type ) {
-#_log('token PDUTYPE, data='.$token->data().' MTI='.$token->get('MTI').' ->MTI()='.$token->MTI());
+                if ($mti != $type) {
+
+                    #_log('token PDUTYPE, data='.$token->data().' MTI='.$token->get('MTI').' ->MTI()='.$token->MTI());
                     #
                     # This is a SMS-SUBMIT message, so:
                     #
@@ -282,34 +301,35 @@ sub decode {
                     # 3) reload token structure
                     # 4) restart decoding
                     #
-                    $self->type( $type = $mti );
+                    $self->type($type = $mti);
 
-                    $cPdu = $cPduCopy;
+                    $cPdu        = $cPduCopy;
                     @token_names = $self->structure();
 
-#_log('RESTARTING DECODING AFTER MTI DETECTION'); #<STDIN>;
-    				redo;
-	    		}
-			
-		 if($udh_parsed==0 and $udhi ==1) {
-			 $cPdu=$cPduCopy;
-			 @token_names = $self->structure();
-			 $udh_parsed=1;
-			 redo;
-		 }	 
-#_log('       ', $token->name(), ' DATA = ', $token->toString() );
-			
+                    #_log('RESTARTING DECODING AFTER MTI DETECTION'); #<STDIN>;
+                    redo;
+                }
+
+                if ($udh_parsed == 0 and $udhi == 1) {
+                    $cPdu        = $cPduCopy;
+                    @token_names = $self->structure();
+                    $udh_parsed  = 1;
+                    redo;
+                }
+
+                #_log('       ', $token->name(), ' DATA = ', $token->toString() );
+
             }
 
-		}
+        }
 
-#_log('PDU AFTER  ['.$cPdu.']', length($cPdu) );
+        #_log('PDU AFTER  ['.$cPdu.']', length($cPdu) );
 
-	}
+    }
 
-#_log("\n", 'PRESS ENTER TO CONTINUE'); <STDIN>;
+    #_log("\n", 'PRESS ENTER TO CONTINUE'); <STDIN>;
 
-	return $decoded;
+    return $decoded;
 
 }
 
@@ -323,14 +343,25 @@ sub delete {
 
     # Try to delete message
     my $msg_index = $self->index();
-    my $storage = $self->storage();
+    my $storage   = $self->storage();
 
     # Issue delete command
-    if( ref $gsm && $storage && $msg_index >= 0 ) {
+    if (ref $gsm && $storage && $msg_index >= 0) {
         $ok = $gsm->delete_sms($msg_index, $storage);
-        $gsm->log->write('info', 'Delete sms n.'.$msg_index.' in storage '.$storage.' => '.($ok?'OK':'*ERROR'));
-    } else {
-        $gsm->log->write('warn', 'Could not delete sms n.'.$msg_index.' in storage '.$storage.'. Internal error.');
+        $gsm->log->write('info',
+                  'Delete sms n.'
+                . $msg_index
+                . ' in storage '
+                . $storage . ' => '
+                . ($ok ? 'OK' : '*ERROR'));
+    }
+    else {
+        $gsm->log->write('warn',
+                  'Could not delete sms n.'
+                . $msg_index
+                . ' in storage '
+                . $storage
+                . '. Internal error.');
         $ok = undef;
     }
 
@@ -338,7 +369,7 @@ sub delete {
 }
 
 #
-# Returns message own index number (position) 
+# Returns message own index number (position)
 #
 sub index {
     my $self = $_[0];
@@ -354,127 +385,133 @@ sub storage {
 }
 
 #
-# Only valid for SMS_SUBMIT and SMS_STATUS messages 
+# Only valid for SMS_SUBMIT and SMS_STATUS messages
 #
 sub recipient {
-	my $self = shift;
-	if( $self->type() == SMS_SUBMIT or $self->type() == SMS_STATUS) {
-		my $t = $self->token('DA');
-		return $t->toString() if $t;
-	}
+    my $self = shift;
+    if ($self->type() == SMS_SUBMIT or $self->type() == SMS_STATUS) {
+        my $t = $self->token('DA');
+        return $t->toString() if $t;
+    }
 }
+
 #
 #Only valid for SMS_STATUS messages returns status code(in hex) extracted from status message
 #Codes are explained in ST.pm
 #
 sub delivery_status {
-	my $self = shift;
-	if($self->type() == SMS_STATUS) {
-		my $t = $self->token('ST');
-		return $t->toString() if $t;
-	}
+    my $self = shift;
+    if ($self->type() == SMS_STATUS) {
+        my $t = $self->token('ST');
+        return $t->toString() if $t;
+    }
 }
 
 #
 # Only valid for SMS_DELIVER messages (?)
 #
 sub sender {
-	my $self = shift;
-	if( $self->type() == SMS_DELIVER ) {
-		my $t = $self->token('OA');
-		return $t->toString() if $t;
-	}
+    my $self = shift;
+    if ($self->type() == SMS_DELIVER) {
+        my $t = $self->token('OA');
+        return $t->toString() if $t;
+    }
 }
 
 # Alias for text()
 sub content {
-	return $_[0]->text();
+    return $_[0]->text();
 }
 
 sub text {
-	my $self = shift;
-	my $t = $self->token('UD');
-	return $t->toString() if $t;
+    my $self = shift;
+    my $t    = $self->token('UD');
+    return $t->toString() if $t;
 }
+
 #
 #only valid for SMS_DELIVER messages, retuns presence of UDH
 #
-sub is_udh { 
-	my $self=shift;
-	if($self->type() == SMS_DELIVER){ 
-		return $self->{'tokens'}->{'PDUTYPE'}->{'_UDHI'};
-	}
+sub is_udh {
+    my $self = shift;
+    if ($self->type() == SMS_DELIVER) {
+        return $self->{'tokens'}->{'PDUTYPE'}->{'_UDHI'};
+    }
 }
+
 #
 #only valid for SMS_DELIVER messages with UDH, returns if sms is csms
 #
-sub is_csms { 
-	my $self=shift;
-	if($self->is_udh()){ 
-		return $self->{'tokens'}->{'UDH'}->{'_IS_CSMS'};
-	}	
+sub is_csms {
+    my $self = shift;
+    if ($self->is_udh()) {
+        return $self->{'tokens'}->{'UDH'}->{'_IS_CSMS'};
+    }
 }
+
 #
 #only valid for SMS_DELIVER messages with UDH, retuns CSM reference number
 #
-sub csms_ref_num { 
-	my $self=shift;
-	if($self->is_csms()){
-		return $self->{'tokens'}->{'UDH'}->{'_REF_NUM'};
-	}	
+sub csms_ref_num {
+    my $self = shift;
+    if ($self->is_csms()) {
+        return $self->{'tokens'}->{'UDH'}->{'_REF_NUM'};
+    }
 }
+
 #
 #only valid for SMS_DELIVER messages with UDH, retuns CSM reference number
 #
-sub csms_ref_hex { 
-	my $self=shift;
-	if($self->is_csms()){
-		return $self->{'tokens'}->{'UDH'}->{'_REF_HEX'};
-	}	
+sub csms_ref_hex {
+    my $self = shift;
+    if ($self->is_csms()) {
+        return $self->{'tokens'}->{'UDH'}->{'_REF_HEX'};
+    }
 }
+
 #
-#only valid for SMS_DELIVER messages with UDH, retuns CSM parts count 
+#only valid for SMS_DELIVER messages with UDH, retuns CSM parts count
 #
-sub csms_parts { 
-	my $self=shift;
-	if($self->is_csms()){ 
-		return $self->{'tokens'}->{'UDH'}->{'_PARTS'};
-	}	
+sub csms_parts {
+    my $self = shift;
+    if ($self->is_csms()) {
+        return $self->{'tokens'}->{'UDH'}->{'_PARTS'};
+    }
 }
+
 #
-#only valid for SMS_DELIVER messages with UDH, retuns CSM current part number 
+#only valid for SMS_DELIVER messages with UDH, retuns CSM current part number
 #
-sub csms_part_num { 
-	my $self=shift;
-	if($self->is_csms()){
-		return $self->{'tokens'}->{'UDH'}->{'_PART_NUM'};
-	}	
+sub csms_part_num {
+    my $self = shift;
+    if ($self->is_csms()) {
+        return $self->{'tokens'}->{'UDH'}->{'_PART_NUM'};
+    }
 }
 
 sub token ($) {
-	my($self, $token_name) = @_;
-	return undef unless $token_name;
+    my ($self, $token_name) = @_;
+    return undef unless $token_name;
 
-	if( exists $self->{'tokens'}->{$token_name} ) {
-		return $self->{'tokens'}->{$token_name};
-	} else {
-		warn('undefined token '.$token_name.' for this sms');
-		return undef;
-	}
+    if (exists $self->{'tokens'}->{$token_name}) {
+        return $self->{'tokens'}->{$token_name};
+    }
+    else {
+        warn('undefined token ' . $token_name . ' for this sms');
+        return undef;
+    }
 }
 
 #
 # Returns type of sms (SMS_DELIVER || SMS_SUBMIT)
 #
 sub type {
-	my $self = shift;
-	if( @_ ) {
-		$self->{'type'} = shift;
-	}
-	$self->{'type'};
+    my $self = shift;
+    if (@_) {
+        $self->{'type'} = shift;
+    }
+    $self->{'type'};
 }
-
-
 
 =pod
 
