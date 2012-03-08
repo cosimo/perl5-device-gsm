@@ -1,5 +1,9 @@
 Revision history for Perl extension Device::Gsm.
 
+1.59  Thu Mar  8 10:13:30 CET 2012
+    - Fixed RT #75619, POD fixes to make the POD clean for Debian packaging.
+    - Applied .perltidyrc to all source files. Watch out if you had patches :)
+
 1.58  Mon Mar  7 22:31:22 EST 2011
     - Fixed RT #48229, an uninitialized value when registering to the network
       but getting no answer from the phone.
