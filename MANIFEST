@@ -38,7 +38,6 @@ perltidyrc
 README
 t/01basic.t
 t/02info.t
-t/04syslog.t
 t/05messages.t
 t/06msgcodec.t
 t/07tokens.t
