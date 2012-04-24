@@ -94,6 +94,24 @@ sub new {
         }
 
     }
+    elsif ($opt{'header'} =~ /\+CDS:\s*(\d+)/o) {
+
+        $self->{'mr'} = $1;    # Message number
+        $self->{'pdu'}     = $opt{'pdu'};        # PDU content
+
+        bless $self, $class;
+
+        if ($self->decode(Device::Gsm::Sms::SMS_STATUS)) {
+            #			_log('OK, message decoded correctly!');
+
+        }
+        else {
+
+            #			_log('CASINO!');
+            undef $self;
+        }
+
+    }
     else {
 
         # Warning: could not parse message header
@@ -394,6 +412,18 @@ sub recipient {
         return $t->toString() if $t;
     }
 }
+
+#
+# Only valid for SMS_STATUS messages?
+#
+sub message_reference {
+    my $self = shift;
+    if ( $self->type() == SMS_STATUS) {
+        my $t = $self->token('MR');
+        return $t->toString() if $t;
+    }
+}
+
 
 #
 #Only valid for SMS_STATUS messages returns status code(in hex) extracted from status message
