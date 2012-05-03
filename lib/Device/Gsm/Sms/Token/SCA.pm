@@ -55,9 +55,9 @@ sub decode {
 
     $self->set('length' => $length);
 
-    # Get type of message (81 = national, 91 = international)
+    # Get type of message (81 = national, 91 = international, 80 = empty for status messages)
     $type = substr $msg, 2, 2;
-    if ($type ne '81' and $type ne '91') {
+    if ($type ne '81' and $type ne '91' and $type ne '80') {
         $self->data(undef);
         $self->state(Sms::Token::ERROR);
         return 0;
