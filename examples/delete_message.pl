@@ -2,8 +2,6 @@
 #
 # Short example of use for Device::Gsm class
 # Script that deletes permanently one message from sim
-#
-# $Id: delete_message.pl,v 1.3 2006-04-20 20:06:15 cosimo Exp $
 
 use strict;
 use lib '../lib';

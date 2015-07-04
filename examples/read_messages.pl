@@ -2,8 +2,6 @@
 #
 # Short example of use for Device::Gsm class
 # Script that reads all SMS stored on SIM
-#
-# $Id: read_messages.pl,v 1.5 2006-04-20 20:05:45 cosimo Exp $
 
 use strict;
 use lib '../lib';

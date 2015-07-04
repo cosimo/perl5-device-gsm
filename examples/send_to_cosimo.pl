@@ -5,8 +5,6 @@
 #
 # This is a funny experiment to know how many people are
 # using this module out there... :-) 
-#
-# $Id: send_to_cosimo.pl,v 1.5 2006-05-01 11:56:54 cosimo Exp $
 
 use strict;
 use Config;

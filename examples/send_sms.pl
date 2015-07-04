@@ -1,8 +1,6 @@
 #!/usr/bin/perl
 #
 # Short example of use for Device::Gsm class
-#
-# $Id: send_sms.pl,v 1.2 2002-04-29 17:03:46 cosimo Exp $
 
 use strict;
 use Device::Gsm;

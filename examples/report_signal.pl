@@ -2,8 +2,6 @@
 #
 # Short example of use for Device::Gsm class
 # Report signal quality of mobile phone line
-#
-# $Id: report_signal.pl,v 1.2 2004-03-15 21:43:22 cosimo Exp $
 
 use strict;
 use Device::Gsm;

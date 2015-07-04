@@ -2,8 +2,6 @@
 #
 # Short example of use for Device::Gsm class
 # Get date and time from phone 
-#
-# $Id: get_time.pl,v 1.1 2003-12-15 22:49:44 cosimo Exp $
 
 use strict;
 use lib 'blib/arch';
