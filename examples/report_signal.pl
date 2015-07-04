@@ -6,7 +6,7 @@
 use strict;
 use Device::Gsm;
 
-print "\nthis is ", '$Id: report_signal.pl,v 1.2 2004-03-15 21:43:22 cosimo Exp $', "\n";
+print "\nthis is report_signal.pl\n";
 print "\nGetting signal quality of your mobile phone line...\n\n";
 
 my $port = $ENV{DEV_GSM_PORT} || ($^O =~ /Win/ ? 'COM2' : '/dev/ttyS1');
