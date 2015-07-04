@@ -16,11 +16,11 @@ WriteMakefile(
             : ( 'Device::SerialPort'=> 0 )
         )
     },
+    'LICENSE' => 'perl',
     'META_MERGE' => {
         resources => {
             repository => 'git://github.com/cosimo/perl5-device-gsm.git',
             bugtracker => 'mailto:bug-device-gsm@rt.cpan.org',
-            license    => 'http://dev.perl.org/licenses/',
         },
     },
 );
