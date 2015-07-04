@@ -1,5 +1,3 @@
-# $Id: 08storage.t,v 1.1 2006-07-23 15:47:58 cosimo Exp $
-#
 # test new token engine for decoding/encoding sms messages 
 #
 use Test::More;
