@@ -2,6 +2,10 @@
 #
 # test sim card message reading functions
 #
+
+use strict;
+use warnings;
+
 use Test::More;
 BEGIN { plan tests => 3 };
 use Device::Gsm; 

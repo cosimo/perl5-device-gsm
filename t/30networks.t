@@ -1,6 +1,9 @@
 # $Id: 30networks.t,v 1.2 2007-02-28 20:54:32 cosimo Exp $
 # test pdu encoding/decoding functions for sms
 
+use strict;
+use warnings;
+
 use Test::More;
 plan tests => 4;
 use_ok('Device::Gsm::Networks');

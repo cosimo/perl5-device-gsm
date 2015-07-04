@@ -2,6 +2,10 @@
 #
 # test sim card message encoding/decoding functions 
 #
+
+use strict;
+use warnings;
+
 use Test::More;
 use lib '../lib';
 

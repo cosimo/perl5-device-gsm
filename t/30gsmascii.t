@@ -1,6 +1,9 @@
 # $Id: 30gsmascii.t,v 1.3 2004-09-15 21:02:40 cosimo Exp $
 # test gsm <=> ascii charset conversions
 
+use strict;
+use warnings;
+
 use Test::More;
 use lib '../blib/lib';
 use Device::Gsm::Charset;
