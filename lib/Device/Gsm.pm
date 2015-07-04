@@ -1491,7 +1491,7 @@ bluetooth dongle, connecting to a Nokia 6600 phone.
 Please be kind to the universe and contact me if you have troubles or you are
 interested in this.
 
-Please be monstruosly kind to the universe and (if you don't mind spending an SMS)
+Please be monstrously kind to the universe and (if you don't mind spending an SMS)
 use the C<examples/send_to_cosimo.pl> script to make me know that Device::Gsm works
 with your device (thanks!).
 
@@ -1733,7 +1733,7 @@ network. See C<register()> method.
 
 Returns the measure of signal quality expressed in dBm units, where near to zero is better.
 An example value is -91 dBm, and reported value is C<-91>. Values should range from
--113 to -51 dBm, where -113 is the minimum signal quality and -51 is the theorical maximum quality.
+-113 to -51 dBm, where -113 is the minimum signal quality and -51 is the theoretical maximum quality.
 
     my $level = $gsm->signal_quality();
 
@@ -1742,7 +1742,7 @@ an B<undefined> value will be returned.
 
 =head2 software_version()
 
-Returns the device firmare version, as stored by the manufacturer. Example:
+Returns the device firmware version, as stored by the manufacturer. Example:
 
     my $rev = $gsm->software_revision();
 
@@ -1846,7 +1846,7 @@ Can assume two values (case insensitive): C<pdu> and C<text>.
 C<PDU> means B<Protocol Data Unit> and it is a sort of B<binary> encoding of commands,
 to save time/space, while C<text> is the normal GSM commands text mode.
 
-Recent mobile phones and GSM equipments surely have support for C<PDU> mode.
+Recent mobile phones and GSM equipment surely have support for C<PDU> mode.
 Older OEM modules (like Falcom Swing, for example) don't have PDU mode, but only text mode.
 It is just a matter of trying.
 
