@@ -1,7 +1,5 @@
 #!/usr/bin/perl -w
 
-# $Id: Modem__Hayes.pl,v 1.1 2003-03-23 08:14:32 cosimo Exp $
-
 use Device::SerialPort qw(:STAT 0.07);
 use strict;
 

@@ -7,8 +7,6 @@
 # cosimo@cpan.org with subject "Device::Gsm profile"
 #
 # Usage: autoscan --device=/dev/ttyS0 --baud=19200 --file=my_device.log
-#
-# $Id: autoscan,v 1.4 2004-01-10 21:33:46 cosimo Exp $
 
 use Device::Gsm;
 use Getopt::Long;
