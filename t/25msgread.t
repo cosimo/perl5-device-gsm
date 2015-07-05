@@ -59,7 +59,7 @@ while( @test_data ) {
 	if( $ok_text ) {
 
 		#$ascii_text = Device::Gsm::_gsm2ascii( undef, $msg->text );
-		$ascii_text = Device::Gsm::Charset::gsm0338_to_iso8859( $msg->text );
+		$ascii_text = $msg->text;
 
         print_msg_debug_info($ok_text, $ascii_text, $msg->text) if $debug;
 
