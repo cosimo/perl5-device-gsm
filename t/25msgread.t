@@ -57,7 +57,7 @@ while( @test_data ) {
 	if( $ok_text ) {
 		$ascii_text = $msg->text;
 
-        print_msg_debug_info($ok_text, $ascii_text, $msg->text) if $debug;
+        print_msg_debug_info($ok_text, $ascii_text) if $debug;
 
 		is( $ascii_text, $ok_text, 'check sms text' );
 	}
@@ -67,19 +67,17 @@ while( @test_data ) {
 sub print_msg_debug_info {
     my $ok_text = shift;
     my $ascii_text = shift;
-    my $gsm_text = shift;
 
     print "Length of ok_text = ", length($ok_text), "\n";
     print "Length of sms_text= ", length($ascii_text), "\n";
-    print "Length of original= ", length($gsm_text), "\n";
     print "\n";
 
     my $diff = 0;
-    for(my $i = 0 ; $i < length($gsm_text) ; $i++ ) {
+    for(my $i = 0 ; $i < length($ascii_text) ; $i++ ) {
         next if substr($ascii_text,$i,1) eq substr($ok_text,$i,1);
 
         print "Pos: $i ", (substr($ascii_text,$i,1) eq substr($ok_text,$i,1) ? 'OK  ' : 'FAIL')." [", substr($ascii_text,$i,1), ': ', ord(substr($ascii_text,$i,1)), "]";
-        print " != [", substr($ok_text,$i,1),     ': ', ord(substr($ok_text,$i,1)),     "]  ORIGINAL=[", substr($gsm_text,$i,1), ": ", ord(substr($gsm_text,$i,1)), "]\n";
+        print " != [", substr($ok_text,$i,1),     ': ', ord(substr($ok_text,$i,1)),     "]\n";
 
         # Gsm table generation (use with `grep 'CODE' text | cut -b5-`)
         print "CODE \t", '$gsm['.ord(substr($ascii_text,$i,1)).'] = \''.substr($ok_text,$i,1)."';\n";
