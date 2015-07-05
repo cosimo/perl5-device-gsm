@@ -36,7 +36,9 @@ use constant ESCAPE => 0x1B;
 #
 # These conversion tables are taken from pduconv 0.1 library
 # by Mats Engstrom <mats at nerdlabs dot org>. See also:
-# http://freshmeat.net/projects/pduconv
+# http://www.mikrocontroller.net/attachment/104082/pduconv.c
+# and
+# https://github.com/rdmeneze/SMSBox-PIC/tree/master/source/pdu_conv
 #
 # Un grazie a Stefano!
 #
