@@ -1,22 +1,20 @@
 # $Id: 25msgread.t,v 1.5 2004-09-15 21:12:50 cosimo Exp $
 # test pdu messages decoding
 
-use Test;
+use Test::More tests => 18;
 use encoding 'WINDOWS-1252';
 
 use Device::Gsm;
 use Device::Gsm::Sms;
 use Device::Gsm::Charset;
 
-BEGIN { plan tests => 18 };
-
 my $debug = 0;
 
 my $msg = new Device::Gsm::Sms( header => 'xxx', pdu=> 'xxx');
-ok( (! defined $msg && ! ref $msg), 1, 'erroneous message (sms object undef)' );
+ok( (! defined $msg && ! ref $msg), 'erroneous message (sms object undef)' );
 
 $msg = new Device::Gsm::Sms(header => '', pdu => '');
-ok( (! defined $msg && ! ref $msg), 1, 'empty header/pdu message (sms object undef)' );
+ok( (! defined $msg && ! ref $msg), 'empty header/pdu message (sms object undef)' );
 
 my @test_data = (
 	'+CMGL: 1,1,,99',
@@ -54,14 +52,14 @@ while( @test_data ) {
 
 	$ok_text = shift @test_data;
 
-	ok( defined $msg && ref $msg eq 'Device::Gsm::Sms', 1, 'sms test-set object' );
+	ok( defined $msg && ref $msg eq 'Device::Gsm::Sms', 'sms test-set object' );
 
 	if( $ok_text ) {
 		$ascii_text = $msg->text;
 
         print_msg_debug_info($ok_text, $ascii_text, $msg->text) if $debug;
 
-		ok( $ascii_text, $ok_text, 'check sms text' );
+		is( $ascii_text, $ok_text, 'check sms text' );
 	}
 
 }
