@@ -1,8 +1,8 @@
 # Sms::Token::DT - SMS TP-DT token (Discharge-Time of <TP-ST>,
 # given in semioctet representation, and represents
 # the local time as described in GSM03.40)
-# Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
-# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
+# Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.

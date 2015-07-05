@@ -1,6 +1,6 @@
 # Sms::Token::UDH - SMS UDH token (User Data Header  stores non text data inluding CSMS ref,parts,part number)
-# Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
-# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
+# Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.

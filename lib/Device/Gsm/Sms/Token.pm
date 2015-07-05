@@ -1,5 +1,5 @@
 # Device::Gsm::Sms::Token - SMS PDU message parser token
-# Copyright (C) 2002-2006 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.

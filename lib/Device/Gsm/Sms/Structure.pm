@@ -1,6 +1,6 @@
 # Device::Gsm::Sms::Structure - SMS messages structure class
-# Copyright (C) 2002 Cosimo Streppone, cosimo@cpan.org
-# Copyright (C) 2006-2011 Grzegorz Wozniak, wozniakg@gmail.com
+# Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
