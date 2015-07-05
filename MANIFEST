@@ -44,6 +44,7 @@ t/07tokens.t
 t/08storage.t
 t/20pdu.t
 t/21pdu_latin1.t
+t/25msgread.t
 t/30gsmascii.t
 t/30networks.t
 t/31_rt_57585.t
