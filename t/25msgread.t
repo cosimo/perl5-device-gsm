@@ -10,6 +10,8 @@ use Device::Gsm::Charset;
 
 BEGIN { plan tests => 18 };
 
+my $debug = 0;
+
 my $msg = new Device::Gsm::Sms( header => 'xxx', pdu=> 'xxx');
 ok( (! defined $msg && ! ref $msg), 1, 'erroneous message (sms object undef)' );
 
@@ -59,32 +61,37 @@ while( @test_data ) {
 		#$ascii_text = Device::Gsm::_gsm2ascii( undef, $msg->text );
 		$ascii_text = Device::Gsm::Charset::gsm0338_to_iso8859( $msg->text );
 
-#		my $i = 0;
-		my $gsm_text   = $msg->text();
-#		my $diff = 0;
-
-#		print "Length of ok_text = ", length($ok_text), "\n";
-#		print "Length of sms_text= ", length($ascii_text), "\n";
-#		print "Length of original= ", length($gsm_text), "\n";
-#		print "\n";
-
-#		for( ; $i < length($gsm_text) ; $i++ ) {
-#			next if substr($ascii_text,$i,1) eq substr($ok_text,$i,1);
-			
-#			print "Pos: $i ", (substr($ascii_text,$i,1) eq substr($ok_text,$i,1) ? 'OK  ' : 'FAIL')." [", substr($ascii_text,$i,1), ': ', ord(substr($ascii_text,$i,1)), "]";
-#			print " != [", substr($ok_text,$i,1),     ': ', ord(substr($ok_text,$i,1)),     "]  ORIGINAL=[", substr($gsm_text,$i,1), ": ", ord(substr($gsm_text,$i,1)), "]\n";
-
-			# Gsm table generation (use with `grep 'CODE' text | cut -b5-`)
-#			print "CODE \t", '$gsm['.ord(substr($ascii_text,$i,1)).'] = \''.substr($ok_text,$i,1)."';\n";
-
-#			$diff++;
-#		}
-
-#		print "$diff differences found on ", length($ascii_text), " chars\n";
+        print_msg_debug_info($ok_text, $ascii_text, $msg->text) if $debug;
 
 		ok( $ascii_text, $ok_text, 'check sms text' );
 	}
 
+}
+
+sub print_msg_debug_info {
+    my $ok_text = shift;
+    my $ascii_text = shift;
+    my $gsm_text = shift;
+
+    print "Length of ok_text = ", length($ok_text), "\n";
+    print "Length of sms_text= ", length($ascii_text), "\n";
+    print "Length of original= ", length($gsm_text), "\n";
+    print "\n";
+
+    my $diff = 0;
+    for(my $i = 0 ; $i < length($gsm_text) ; $i++ ) {
+        next if substr($ascii_text,$i,1) eq substr($ok_text,$i,1);
+
+        print "Pos: $i ", (substr($ascii_text,$i,1) eq substr($ok_text,$i,1) ? 'OK  ' : 'FAIL')." [", substr($ascii_text,$i,1), ': ', ord(substr($ascii_text,$i,1)), "]";
+        print " != [", substr($ok_text,$i,1),     ': ', ord(substr($ok_text,$i,1)),     "]  ORIGINAL=[", substr($gsm_text,$i,1), ": ", ord(substr($gsm_text,$i,1)), "]\n";
+
+        # Gsm table generation (use with `grep 'CODE' text | cut -b5-`)
+        print "CODE \t", '$gsm['.ord(substr($ascii_text,$i,1)).'] = \''.substr($ok_text,$i,1)."';\n";
+
+        $diff++;
+    }
+
+    print "$diff differences found on ", length($ascii_text), " chars\n";
 }
 
 # end of messages test
