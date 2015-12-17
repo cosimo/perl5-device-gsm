@@ -1,5 +1,8 @@
 package Device::Gsm::Networks;
 
+use strict;
+use warnings;
+
 #
 # Gsm networks data stolen from Gnokii
 #
