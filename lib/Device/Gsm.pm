@@ -1133,7 +1133,8 @@ sub send_sms_pdu_long {
         #protocol identifier (0x00 use default)
         '00',
 
-        #data coding scheme (flash sms or normal, coding etc. more about:http://www.dreamfabric.com/sms/dcs.html)
+        # data coding scheme (flash sms or normal, coding etc. more about
+	# http://en.wikipedia.org/wiki/Data_Coding_Scheme)
         $class,
         $vp,
         $pdu_msg
