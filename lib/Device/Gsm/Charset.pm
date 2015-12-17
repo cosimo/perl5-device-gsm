@@ -10,7 +10,7 @@
 # Perl licensing terms for details.
 
 package Device::Gsm::Charset;
-$VERSION = substr q$Revision$, 0, 10;
+$VERSION = $Device::Gsm::VERSION;
 
 use strict;
 use constant NPC7   => 0x3F;
