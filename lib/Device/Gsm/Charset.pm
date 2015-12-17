@@ -1,5 +1,5 @@
 # Device::Gsm::Charset - GSM0338 <=> ASCII charset conversion module
-# Copyright (C) 2004-2009 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2004-2015 Cosimo Streppone, cosimo@cpan.org
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
