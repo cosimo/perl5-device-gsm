@@ -11,8 +11,6 @@
 #
 # Commercial support is available. Write me if you are
 # interested in new features or software support.
-#
-# $Id$
 
 package Sms::Token;
 

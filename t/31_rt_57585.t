@@ -1,4 +1,3 @@
-# $Id: 20pdu.t,v 1.8 2007-02-28 21:18:14 cosimo Exp $
 # test pdu encoding/decoding functions for sms
 
 use Test::More;

@@ -2,15 +2,13 @@
 #
 # Short example of use for Device::Gsm class
 # Get date and time from phone 
-#
-# $Id: sync_time.pl,v 1.2 2003-12-15 22:50:12 cosimo Exp $
 
 use strict;
 use lib 'blib/arch';
 use lib 'blib';
 use Device::Gsm;
 
-print "\nthis is ", '$Id: sync_time.pl,v 1.2 2003-12-15 22:50:12 cosimo Exp $', "\n";
+print "\nthis is sync_time.pl\n";
 print "This script tries to set phone date/time to that of your PC clock\n";
 
 my $gsm = conn();

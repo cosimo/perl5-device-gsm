@@ -1,5 +1,3 @@
-# $Id: 05messages.t,v 1.2 2004-05-25 21:01:32 cosimix Exp $
-#
 # test sim card message reading functions
 #
 use Test::More;

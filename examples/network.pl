@@ -1,8 +1,6 @@
 #!/usr/bin/perl
 #
 # Get GSM network name 
-#
-# $Id: network.pl,v 1.1 2006-12-19 21:04:52 cosimo Exp $
 
 use strict;
 use Device::Gsm;

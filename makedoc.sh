@@ -1,7 +1,4 @@
 #!/bin/sh
-#
-# $Id: makedoc.sh,v 1.4 2004-01-22 23:21:42 cosimo Exp $
-#
 
 #mv README README.old
 #pod2text Gsm.pm >README

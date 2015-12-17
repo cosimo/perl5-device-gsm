@@ -1,4 +1,3 @@
-# $Id: 25msgread.t,v 1.5 2004-09-15 21:12:50 cosimo Exp $
 # test pdu messages decoding
 
 use Test;
