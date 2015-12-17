@@ -1,5 +1,8 @@
 # test pdu encoding/decoding functions, specifically for CUSD responses from german eplus network
 
+use strict;
+use warnings;
+
 use encoding 'latin1';
 
 use Test::More;

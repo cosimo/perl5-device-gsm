@@ -1,5 +1,8 @@
 # test pdu encoding/decoding functions for sms
 
+use strict;
+use warnings;
+
 use Test::More;
 plan tests => 4;
 use_ok('Device::Gsm::Networks');

@@ -1,5 +1,8 @@
 # test pdu messages decoding
 
+use strict;
+use warnings;
+
 use Test;
 use encoding 'WINDOWS-1252';
 
@@ -49,14 +52,14 @@ while( @test_data ) {
 		pdu    => shift @test_data
 	);
 
-	$ok_text = shift @test_data;
+	my $ok_text = shift @test_data;
 
 	ok( defined $msg && ref $msg eq 'Device::Gsm::Sms', 1, 'sms test-set object' );
 
 	if( $ok_text ) {
 
 		#$ascii_text = Device::Gsm::_gsm2ascii( undef, $msg->text );
-		$ascii_text = Device::Gsm::Charset::gsm0338_to_iso8859( $msg->text );
+		my $ascii_text = Device::Gsm::Charset::gsm0338_to_iso8859( $msg->text );
 
 #		my $i = 0;
 		my $gsm_text   = $msg->text();

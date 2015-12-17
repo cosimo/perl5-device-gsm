@@ -1,5 +1,8 @@
 # test pdu encoding/decoding functions for sms
 
+use strict;
+use warnings;
+
 use Test::More;
 use Device::Gsm::Pdu;
 

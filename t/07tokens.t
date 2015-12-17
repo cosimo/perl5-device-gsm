@@ -1,5 +1,9 @@
 # test new token engine for decoding/encoding sms messages 
 #
+
+use strict;
+use warnings;
+
 use Test::More;
 BEGIN { plan tests => 7 };
 use lib '../lib';

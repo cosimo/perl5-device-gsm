@@ -1,5 +1,8 @@
 # test gsm <=> ascii charset conversions
 
+use strict;
+use warnings;
+
 use Test::More;
 use lib '../blib/lib';
 use Device::Gsm::Charset;
