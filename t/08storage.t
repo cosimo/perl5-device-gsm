@@ -1,7 +1,7 @@
 # test new token engine for decoding/encoding sms messages 
 #
 use Test::More;
-BEGIN { plan tests => 8 };
+BEGIN { plan tests => 7 };
 use lib '../lib';
 use_ok('Device::Gsm');
 use_ok('Device::Gsm::Sms');
@@ -40,7 +40,7 @@ if( $port eq '' ) {
 
 NOTICE
 
-	skip( 'Serial port not set up!', 6 );
+	skip( 'Serial port not set up!', 5 );
 
 }
 
@@ -68,7 +68,7 @@ is(undef, $storage, 'storage when starting is undefined');
 
 my $has_cpms = $gsm->test_command('+CPMS');
 
-$gsm->storage('SM');
+$storage = $gsm->storage('SM');
 
 if($has_cpms)
 {
@@ -79,7 +79,7 @@ else
     is($storage, undef, 'storage not changed because phone does not support it');
 }
 
-$gsm->storage('ME');
+$storage = $gsm->storage('ME');
 
 if($has_cpms)
 {
