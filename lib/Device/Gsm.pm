@@ -134,11 +134,16 @@ sub connect {
     #
     $aOpt{'baudrate'} ||= $Device::Gsm::BAUDRATE;
 
+    $me->{_test_cache} = {}; # We clear the list of commands supported,
+                             # in case the user disconnects one phone
+                             # and connects a different kind of phone
+
     $me->SUPER::connect(%aOpt);
 }
 
 sub disconnect {
     my $me = shift;
+    $me->{_test_cache} = {}; # Not strictly needed, but this is safety code
     $me->SUPER::disconnect();
     sleep 0.05;
 }
@@ -520,6 +525,11 @@ sub software_version {
 sub test_command {
     my ($self, $command) = @_;
 
+    if (!exists($self->{_test_cache})) { $self->{_test_cache} = {} }
+    if (exists($self->{_test_cache}{$command})) {
+        return $self->{_test_cache}{$command};
+    }
+
     # Support old code adding a `+' if not specified
     # TODO to be removed in 1.30 ?
     if ($command =~ /^[a-zA-Z]/) {
@@ -540,7 +550,8 @@ sub test_command {
         'command [' . $command . '] is ' . ($ok ? '' : 'not ') . 'supported'
     );
 
-    $ok;
+    $self->{_test_cache}{$command} = $ok;
+    return $ok;
 }
 
 #
@@ -1787,6 +1798,9 @@ All we have to do is:
 Note that if you omit the starting C<+> character, it is automatically added.
 You can also test commands like C<^SNBR> or the like, without C<+> char being added.
 
+This method caches the results of the test to use in future tests (at least
+until the next C<connect()> or C<disconnect()> is executed).
+
 =for html
 <I>Must be explained better, uh?</I>
 
@@ -1952,12 +1966,6 @@ queue (that could be a simple filesystem folder).
 
 Support C<validity> period option on SMS sending. Tells how much time the SMS
 Service Center must hold the SMS for delivery when not received.
-
-=item Profiles
-
-Build a profile of the GSM device used, so that we don't have to C<always>
-test each command to know whether it is supported or not, because this takes
-too time to be done every time.
 
 =back
 
