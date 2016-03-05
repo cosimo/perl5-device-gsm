@@ -35,10 +35,9 @@ serial, irda or bluetooth ports.
 |     PRE-REQUISITES      |
 `-------------------------'
 
-- a working perl installation (version 5.005+ recommended, although this
-  module has been reported to work also for 5.004)
+- a working perl installation (version 5.8.8+ required)
 
-- Device::Modem perl extension (possibly version >= 1.30)
+- Device::Modem perl extension (version >= 1.47)
   Download this extension from [http://cpan.perl.org/modules/by-module/Device/]
 
 - Device::Modem, in turn, requires Device::SerialPort (for unix-like systems)
@@ -74,8 +73,8 @@ serial, irda or bluetooth ports.
 
 I normally test it with both Linux and Win32 and
 it works equally well. It is known to work also on Solaris,
-FreeBSD, NetBSD (packaged with NetBSD perl installation
-as Feb 2003), OpenBSD and Commodore 64 eventually :-)
+FreeBSD, NetBSD, Mac OSX, OpenBSD and Commodore 64
+eventually :-)
 
 
 ,-------------------------.
