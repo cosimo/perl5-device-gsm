@@ -2,8 +2,15 @@
 | Device::Gsm            perl extension |
 `======================================='
 
-Copyright 2002-2015 (C) Cosimo Streppone, <cosimo@cpan.org>
+This software includes parts:
+    Copyright (c) 2002-2015 by Cosimo Streppone and Grzegorz Wozniak.
+    Copyright (c) 2016 by Joel Maslak (just small parts!)
 
+The installation package also includes programmer documentation
+derived from Unicode sources licensed for free use for development
+and documentation.  This is:
+    Copyright (c) 2000 Unicode, Inc.  All Rights reserved.
+For additional information, see docs/gsm0388.txt
 
 This is a perl module extension. If you don't know
 what this means, please take the time to go to
