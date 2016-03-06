@@ -184,14 +184,13 @@ sub decode_text_UCS2 {
 
     my $orig = $encoded;
 
-    eval {
-        my $decoded = "";
-        while ($encoded) {
-            $decoded .= pack("C", hex(substr($encoded, 0, 2)));
-            $encoded = substr($encoded, 2);
-        }
-        return decode("UTF-16BE", $decoded);
-    };
+    my $decoded = "";
+    while ($encoded) {
+        $decoded .= pack("C", hex(substr($encoded, 0, 2)));
+        $encoded = substr($encoded, 2);
+    }
+    eval { $decoded = decode("UTF-16BE", $decoded) };
+    if (length($decoded)) { return $decoded }
 
     # If we get here, the decode almost certainly failed, so it's
     # probably actually UCS2
