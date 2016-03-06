@@ -20,6 +20,7 @@ package Device::Gsm::Pdu;
 use strict;
 use Device::Gsm::Charset;
 use Device::Gsm::Sms::Token::UDH;
+use Encode;
 
 # decode a pdu encoded phone number into human readable format
 sub decode_address {
@@ -161,11 +162,41 @@ sub encode_address {
 }
 
 sub decode_text_UCS2 {
+    # UCS2 is "supposed" to be one of the original Unicode
+    # encodings, where each character is 16 bits whide.  However,
+    # Unicode was later extended to longer code points - something
+    # that was not supported by UCS2.  However, since backwards
+    # compatibility needed to be maintained, most phones interpret
+    # UCS2 as UTF-16 with big endian ordering.  This allows things
+    # like emoticons to work which have codepoints > 65535.
+    #
+    # We treat this as if it is UTF-16BE, unless the encoding fails.
+    # If it fails, we treat it like UCS-2
+
     my $encoded = shift;
     return undef unless $encoded;
 
+    if (length($encoded) < 2) { die("no length field") }
+    if (length($encoded) % 2) { die("partial bytes found") }
+
     my $len = hex substr($encoded, 0, 2);
     $encoded = substr $encoded, 2;
+
+    my $orig = $encoded;
+
+    eval {
+        my $decoded = "";
+        while ($encoded) {
+            $decoded .= pack("C", hex(substr($encoded, 0, 2)));
+            $encoded = substr($encoded, 2);
+        }
+        return decode("UTF-16BE", $decoded);
+    };
+
+    # If we get here, the decode almost certainly failed, so it's
+    # probably actually UCS2
+    $encoded = $orig;
+    if (length($encoded) % 4) { die("odd number of bytes found") }
 
     my $decoded = "";
     while ($encoded) {
