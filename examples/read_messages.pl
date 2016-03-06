@@ -6,7 +6,7 @@
 use strict;
 use lib '../lib';
 use lib '../';
-use Gsm;
+use Device::Gsm;
 
 print "\nthis is read_messages.pl\n";
 print "\nTrying to read all messages you have on your SIM card...\n";
