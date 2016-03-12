@@ -422,7 +422,7 @@ use constant ESCAPE => 0x1B;
     -101,        #   234    ê lowercase e circumflex                  */
     -101,        #   235    ë lowercase e dieresis or umlaut          */
     7,           #   236    ì lowercase i grave                       */
-    7,           #   237    í lowercase i acute                       */
+    -7,          #   237    í lowercase i acute                       */
     -105,        #   238    î lowercase i circumflex                  */
     -105,        #   239    ï lowercase i dieresis or umlaut          */
     NPC7,        #   240    ð lowercase eth                           */
