@@ -1,6 +1,7 @@
 # Device::Gsm::Pdu - PDU encoding/decoding functions for Device::Gsm class
 # Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
 # Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
+# Copyright (C) 2016 Joel Maslak, jmaslak@antelope.net
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -259,6 +260,27 @@ sub encode_text7_udh {
         wantarray
         ? ($len_hex, $pdu_msg, $len_hex . $pdu_msg)
         : $len_hex . $pdu_msg;
+}
+
+#
+#encode ucs-2 text
+#
+sub encode_text_UCS2 {
+    # This actually encodes into UTF-16 little endian, not UCS2. This is
+    # what most phones actually use.
+    # The input should be a unicode string (so make sure to "decode" any
+    # UTF-8 into a unicode string.
+    my $txt = shift;
+
+    my $utf16 = encode('UTF-16BE', $txt);
+    if (length($utf16) > 255) { die("input string encodes > 256 characters") }
+
+    my $output = sprintf("%02x", length($utf16));
+    foreach my $c (split //, $utf16) {
+        $output .= sprintf("%02x", ord($c));
+    }
+
+    return $output;
 }
 
 sub pdu_to_latin1 {

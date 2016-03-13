@@ -2,8 +2,9 @@
 
 use Test::More;
 use Device::Gsm::Pdu;
+use utf8;
 
-BEGIN { plan tests => 17 };
+BEGIN { plan tests => 21 };
 
 # Test encoding mobile numbers
 is( Device::Gsm::Pdu::encode_address('3289287791'),    '0A812398827719'   ); #1
@@ -31,6 +32,15 @@ is( Device::Gsm::Pdu::decode_text7( Device::Gsm::Pdu::encode_text7($_) ), $_ )
         'hellohello',
         'The quick brown fox jumps over the lazy dog',
         'La marianna la va in campagna, quando il sole tramontera\'... chissa\' quando, chissa\' quando ritornera\''
+    );
+
+# UCS-2 (actually UTF-16BE) encoding
+is( Device::Gsm::Pdu::decode_text_UCS2( Device::Gsm::Pdu::encode_text_UCS2($_) ), $_ )
+    for(
+        'hellohello',
+        'The quick brown fox jumps over the lazy dog',
+        'La marianna la va in campagna, quando il sole tramontera\'... chissa\' quando, chissa\' quando ritornera\'',
+        'Text with Unicode 😀'
     );
 
 # Alphabetical address decoding
