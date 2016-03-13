@@ -11,7 +11,7 @@ WriteMakefile(
     'PREREQ_PM'     => {
         'Test::More'    => 0,
         'Device::Modem' => 1.47,
-        ( $^O =~ /Win/i
+        ( ( ($^O =~ /Win/i) && (! ($^O =~ /darwin/i)) )
             ? ( 'Win32::SerialPort' => 0 )
             : ( 'Device::SerialPort'=> 0 )
         )
