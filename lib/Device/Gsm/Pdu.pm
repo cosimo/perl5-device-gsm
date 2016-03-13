@@ -412,6 +412,21 @@ Converts a PDU (without the initial length octet) into a latin1 string.
 
 Converts a text string in latin1 encoding (ISO-8859-1) into a PDU string.
 
+=head2 decode_text_UCS2($text, $options)
+
+Decodes text from UCS2 (actually UTF16-BE).  C<$options> is a hashref
+that contains only one key/value pair for the key C<encoding>.  If
+this is provided, the returned text is encoded in the appropriate
+encoding (valid encodings are any encoding supported by L<Encoding>
+and the special encoding C<'none'> which indicates that a raw Unicode
+string should be returned.  If C<$options> is not passed, or if there
+is no value sent for C<encoding>, it defaults to UTF-8.
+
+=head2 encode_text_UCS2($text)
+
+Encodes text into UCS2 (actually UTF16-BE).  The text is assumed to
+be a Unicode string (no encoding).
+
 =head3 Example
 
     my $text = "Just another Perl hacker";
