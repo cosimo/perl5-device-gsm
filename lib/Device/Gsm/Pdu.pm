@@ -212,7 +212,7 @@ sub decode_text_UCS2 {
 
     my $decoded = "";
     while ($encoded) {
-        $decoded .= pack("C0U", hex(substr($encoded, 0, 4)));
+        $decoded .= pack("U", hex(substr($encoded, 0, 4)));
         $encoded = substr($encoded, 4);
     }
     return ($encoding eq 'none') ? $decoded : encode($encoding, $decoded);
