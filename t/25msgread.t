@@ -1,6 +1,6 @@
 # test pdu messages decoding
 
-use Test::More tests => 18;
+use Test::More tests => 26;
 use utf8;
 
 use Device::Gsm;
@@ -54,10 +54,12 @@ while( @test_data ) {
 	ok( defined $msg && ref $msg eq 'Device::Gsm::Sms', 'sms test-set object' );
 
 	if( $ok_text ) {
-		$ascii_text = $msg->text;
+		$ascii_text   = $msg->text;
+		$unicode_text = $msg->unicode_text;
 
         print_msg_debug_info($ok_text, $ascii_text) if $debug;
 
+		is( $ascii_text, $ok_text, 'check sms text' );
 		is( $ascii_text, $ok_text, 'check sms text' );
 	}
 

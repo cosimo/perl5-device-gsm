@@ -25,6 +25,7 @@ use constant SMS_STATUS  => 0x02;
 use Device::Gsm::Pdu;
 use Device::Gsm::Sms::Structure;
 use Device::Gsm::Sms::Token;
+use Encode qw//; # Don't want to conflict with decode()
 
 sub _log { print @_, "\n"; }
 sub _parent { $_[0]->{_parent} }
@@ -457,6 +458,12 @@ sub text {
     return $t->toString() if $t;
 }
 
+sub unicode_text {
+    my $self = shift;
+    my $t    = $self->token('UD');
+    return Encode::decode('UTF-8', $t->toString()) if $t;
+}
+
 #
 #only valid for SMS_DELIVER messages, retuns presence of UDH
 #
@@ -696,7 +703,8 @@ Returns the storage where SMS has been read from.
 
 =head2 text()
 
-Returns the textual content of sms message.
+Returns the textual content of sms message.  If the text was
+UCS-2 formatted, it is returned UTF-8 encoded.
 
 =head2 token()
 
@@ -715,6 +723,11 @@ Example:
 	elsif( $sms->type() == Device::Gsm::Sms::SMS_SUBMIT ) {
 		# ...
 	}
+
+=head2 unicode_text()
+
+Returns the textual content of the sms message as a Unicode (non-encoded)
+string.
 
 =head1 REQUIRES
 
