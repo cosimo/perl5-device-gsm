@@ -173,9 +173,19 @@ sub decode_text_UCS2 {
     #
     # We treat this as if it is UTF-16BE, unless the encoding fails.
     # If it fails, we treat it like UCS-2
+    #
+    # For compatibility, we take an optional second parameter, with
+    # options provided in a hashref format.  The only option
+    # currently available is encoding which defaults to "utf-8".
+    # You can pass your preferred decoding, or pass 'none' to
+    # indicate you don't want any decoding (so the string is
+    # returned in native Unicode format)
 
     my $encoded = shift;
     return undef unless $encoded;
+
+    my $options = shift || {};
+    my $encoding = $options->{encoding} || 'UTF-8';
 
     if (length($encoded) < 2) { die("no length field") }
     if (length($encoded) % 2) { die("partial bytes found") }
@@ -191,7 +201,9 @@ sub decode_text_UCS2 {
         $encoded = substr($encoded, 2);
     }
     eval { $decoded = decode("UTF-16BE", $decoded) };
-    if (length($decoded)) { return $decoded }
+    if (length($decoded)) {
+        return ($encoding eq 'none') ? $decoded : encode($encoding, $decoded);
+    }
 
     # If we get here, the decode almost certainly failed, so it's
     # probably actually UCS2
@@ -203,7 +215,7 @@ sub decode_text_UCS2 {
         $decoded .= pack("C0U", hex(substr($encoded, 0, 4)));
         $encoded = substr($encoded, 4);
     }
-    return $decoded;
+    return ($encoding eq 'none') ? $decoded : encode($encoding, $decoded);
 }
 
 sub encode_text7 {

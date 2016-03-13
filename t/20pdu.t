@@ -2,6 +2,7 @@
 
 use Test::More;
 use Device::Gsm::Pdu;
+use Encode;
 use utf8;
 
 BEGIN { plan tests => 21 };
@@ -35,7 +36,7 @@ is( Device::Gsm::Pdu::decode_text7( Device::Gsm::Pdu::encode_text7($_) ), $_ )
     );
 
 # UCS-2 (actually UTF-16BE) encoding
-is( Device::Gsm::Pdu::decode_text_UCS2( Device::Gsm::Pdu::encode_text_UCS2($_) ), $_ )
+is( Device::Gsm::Pdu::decode_text_UCS2( Device::Gsm::Pdu::encode_text_UCS2($_) ), encode('UTF-8', $_) )
     for(
         'hellohello',
         'The quick brown fox jumps over the lazy dog',
