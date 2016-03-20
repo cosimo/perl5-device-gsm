@@ -1900,6 +1900,13 @@ Note that not all carriers support CSMS, nor does this necessarily work as
 expected between carriers.  For instance, a message might be received
 as multiple smaller messages, possibly out-of-order.
 
+This method also forces B<PDU> mode, as there is no way to send CSMS from
+the B<TEXT> mode.
+
+Calling C<send_csms()> once may result in many text messages being sent,
+which may be charged individually by your carrier, even though they may
+be reassembled as appear as one message on the receiving station/phone.
+
 See C<send_sms()> for all arguments and return values.
 
 =back
@@ -1935,7 +1942,14 @@ on phone memory, while C<normal> is the default.
 =item C<content>
 
 This is the text you want to send, consisting of max 160 chars if you use B<PDU> mode
-and 140 (?) if in B<text> mode (more on this later).
+and 140 (?) if in B<text> mode (more on this later), assuming that the text is either
+standard ASCII or GSM0338-encodable.
+
+If this value contains characters that cannot cleanly map to/from GSM0338, and you are
+using B<PDU> mode, it will send the text as UTF-16. This means you will be unalbe to
+send more than 70 characters, sometimes significantly less (such as with emoticons).
+
+If the length is an issue, you may want to consider C<send_csms()>.
 
 =item C<mode>
 
