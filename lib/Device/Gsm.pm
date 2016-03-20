@@ -1547,6 +1547,12 @@ Device::Gsm - Perl extension to interface GSM phones / modems
       content   => 'Hello world! from Device::Gsm'
   );
 
+  # Send a longer text message (concatenated SMS)
+  $gsm->send_csms(
+      recipient => '+123456789',
+      content   => $long_text_or_unicode
+  );
+
   # Get list of Device::Gsm::Sms message objects
   # see `examples/read_messages.pl' for all the details
   my @messages = $gsm->messages();
@@ -1883,6 +1889,20 @@ when/if needed.
 
 If return value is true, registration was successful, otherwise there is something wrong;
 probably you supplied the wrong PIN code or network unreachable.
+
+=head2 send_csms()
+
+This is simialr to C<send_sms()>, but allows longer messages by concatenated
+SMS to be sent.  If the message fits in a single SMS message, this works
+exactly the same as C<send_sms()>.
+
+Note that not all carriers support CSMS, nor does this necessarily work as
+expected between carriers.  For instance, a message might be received
+as multiple smaller messages, possibly out-of-order.
+
+See C<send_sms()> for all arguments and return values.
+
+=back
 
 =head2 send_sms()
 
