@@ -278,7 +278,7 @@ sub encode_text7_udh {
 #encode ucs-2 text
 #
 sub encode_text_UCS2 {
-    # This actually encodes into UTF-16 little endian, not UCS2. This is
+    # This actually encodes into UTF-16 big endian, not UCS2. This is
     # what most phones actually use.
     # The input should be a unicode string (so make sure to "decode" any
     # UTF-8 into a unicode string.
