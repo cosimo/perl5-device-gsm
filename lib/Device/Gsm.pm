@@ -771,10 +771,22 @@ sub send_csms {
             $me->mode('pdu') or sleep 0.05;
         }
     }
-    my @text_parts;
+    
+    my ($encoding, $msg_len, $enc);
+    if (Device::Gsm::Charset::gsm0338_ok($opt{'content'})) { 
+        $encoding = 'gsm0338';
+        my $e = Device::Gsm::Pdu::encode_text7($opt{'content'});
+        $msg_len = length($e) / 2 - 1; # don't need length byte
+    } else {
+        # Must be UCS-2 / UTF-16
+        $encoding = 'ucs2';
+
+        my $e = Device::Gsm::Pdu::encode_text_UCS2($opt{'content'});
+        $msg_len = length($e) / 2 - 1; # Don't need length byte
+    }
 
     #ensure we have to send CSMS
-    if (Device::Gsm::Charset::gsm0338_length($opt{'content'}) <= 160) {
+    if ($msg_len <= 140) {
         my @send_return = $me->_send_sms_pdu(%opt);
         if ($send_return[0]) {
             $lOk++;
@@ -788,24 +800,43 @@ sub send_csms {
     else {
         my $udh        = new Sms::Token("UDH");
         my $ref_num    = sprintf("%02X", (int(rand(255))));
-        my @text_parts = Device::Gsm::Charset::gsm0338_split($opt{'content'});
+        my @text_parts;
+        if ($encoding eq 'gsm0338') {
+            @text_parts = Device::Gsm::Charset::gsm0338_split($opt{'content'});
+        } else {
+            @text_parts = Device::Gsm::Charset::ucs2_split($opt{'content'});
+        }
+
         my $parts      = scalar(@text_parts);
         $parts = sprintf("%02X", $parts);
-        my $padding
-            = Sms::Token::UDH::calculate_padding(Sms::Token::UDH::IEI_T_8_L);
         my $part_count = 1;
         foreach my $text_part (@text_parts) {
             my $part = sprintf("%02X", $part_count);
-            my ($len_hex, $encoded_text)
-                = Device::Gsm::Pdu::encode_text7_udh($text_part, $padding);
+
+            my ($len_hex, $encoded_text, $udh_len);
+            if ($encoding eq 'gsm0338') {
+                my $padding = Sms::Token::UDH::calculate_padding(
+                                Sms::Token::UDH::IEI_T_8_L
+                              );
+                ($len_hex, $encoded_text) 
+                    = Device::Gsm::Pdu::encode_text7_udh($text_part, $padding);
+                $udh_len = 7; # This is in SEPTETS!
+            } else {
+                # UCS2 / UTF-16
+                ($len_hex, $encoded_text) 
+                    = Device::Gsm::Pdu::encode_text_UCS2_udh($text_part);
+                $udh_len = 6; # This is in OCTETS!
+            }
+
             $part_count++;
             $opt{'content'} = $text_part;
+            $opt{'encoding'} = $encoding;
             $opt{'pdu_msg'}
-                = sprintf("%02X",
-                hex($len_hex) + Sms::Token::UDH::IEI_T_8_L + 2)
-                . $udh->encode(
-                Sms::Token::UDH::IEI_T_8 => $ref_num . $parts . $part)
-                . $encoded_text;
+                = sprintf("%02X", hex($len_hex) + $udh_len) # PDU Length
+                  . $udh->encode(
+                        Sms::Token::UDH::IEI_T_8 => $ref_num . $parts . $part
+                    )
+                  . $encoded_text;
             my @send_return = $me->send_sms_pdu_long(%opt);
             if ($send_return[0]) {
                 $lOk++;
@@ -967,10 +998,6 @@ sub _send_sms_pdu {
     $me->atsend(q[ATE1] . Device::Modem::CR);
     $me->answer($Device::Modem::STD_RESPONSE);
 
-    # Select class of sms (normal or *flash sms*)
-    my $class = $opt{'class'} || 'normal';
-    $class = $class eq 'normal' ? '00' : 'F0';
-
     #Validity period value
     #0 to 143	(TP-VP + 1) * 5 minutes (i.e. 5 minutes intervals up to 12 hours)
     #144 to 167	12 hours + ((TP-VP - 143) * 30 minutes)
@@ -1008,12 +1035,41 @@ sub _send_sms_pdu {
     $me->log->write('info', 'encoded dest. address is [' . $enc_da . ']');
 
     # Encode text
-    $is_gsm0338 or $text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
-    my $enc_msg = Device::Gsm::Pdu::encode_text7($text);
+    my $enc_msg;
+    my $encoding;
+    if ($is_gsm0338) {
+        $enc_msg = Device::Gsm::Pdu::encode_text7($text);
+        $encoding = 'gsm0338';
+    } else {
+        if ( Device::Gsm::Charset::gsm0338_ok($text) ) {
+            $text = Device::Gsm::Charset::iso8859_to_gsm0338($text);
+            $enc_msg = Device::Gsm::Pdu::encode_text7($text);
+            $encoding = 'gsm0338';
+        } else {
+            $enc_msg = Device::Gsm::Pdu::encode_text_UCS2($text);
+            $encoding = 'ucs2'; # A lie, but it's what GSM uses even if no
+                                # phones do - it's actually UT-16BE
+        }
+    }
+
+    # It's 141, not 140, because we don't count the length octet
+    if ( ( length($enc_msg) / 2 ) > 141 ) {
+        die("Encoded message too long for $encoding encoding at "
+            . length($enc_msg) . "chars");
+    }
+
     $me->log->write(
         'info',
-        'encoded 7bit text (w/length) is [' . $enc_msg . ']'
+        'encoded text (w/length) is [' . $enc_msg . ']'
     );
+
+    # Select class of sms (normal or *flash sms*)
+    my $class = $opt{'class'} || 'normal';
+    $class = $class eq 'normal' ? 0x00 : 0x10;
+
+    # Is this UCS2? (if it's GSM0338, DCS = CLAS)
+    my $dcs += $encoding eq 'ucs2' ? 0x08 : 0x00;
+    $dcs = sprintf("%02x", $dcs);
 
     # Build PDU data
     my $pdu = uc join(
@@ -1023,7 +1079,7 @@ sub _send_sms_pdu {
         '00',
         $enc_da,
         '00',
-        $class,
+        $dcs,
         $vp,
         $enc_msg
     );
@@ -1071,9 +1127,10 @@ sub send_sms_pdu_long {
     my ($me, %opt) = @_;
 
     # Get options
-    my $num     = $opt{'recipient'};
-    my $text    = $opt{'content'};
-    my $pdu_msg = $opt{'pdu_msg'};
+    my $num      = $opt{'recipient'};
+    my $text     = $opt{'content'};
+    my $pdu_msg  = $opt{'pdu_msg'};
+    my $encoding = $opt{'encoding'};
 
     return 0 unless $num and $text and $pdu_msg;
 
@@ -1082,7 +1139,11 @@ sub send_sms_pdu_long {
 
     # Select class of sms (normal or *flash sms*)
     my $class = $opt{'class'} || 'normal';
-    $class = $class eq 'normal' ? '00' : 'F0';
+    $class = $class eq 'normal' ? 0x00 : 0x10;
+    
+    my $dcs = $class;
+    $dcs += ($encoding eq 'ucs2') ? 0x08 : 0x00;
+    $dcs = sprintf("%02x", $dcs);
 
     #Validity period value
     #0 to 143	(TP-VP + 1) * 5 minutes (i.e. 5 minutes intervals up to 12 hours)
@@ -1147,7 +1208,7 @@ sub send_sms_pdu_long {
 
         # data coding scheme (flash sms or normal, coding etc. more about
 	# http://en.wikipedia.org/wiki/Data_Coding_Scheme)
-        $class,
+        $dcs,
         $vp,
         $pdu_msg
     );
@@ -1484,6 +1545,12 @@ Device::Gsm - Perl extension to interface GSM phones / modems
   $gsm->send_sms(
       recipient => '+3934910203040',
       content   => 'Hello world! from Device::Gsm'
+  );
+
+  # Send a longer text message (concatenated SMS)
+  $gsm->send_csms(
+      recipient => '+123456789',
+      content   => $long_text_or_unicode
   );
 
   # Get list of Device::Gsm::Sms message objects
@@ -1823,6 +1890,27 @@ when/if needed.
 If return value is true, registration was successful, otherwise there is something wrong;
 probably you supplied the wrong PIN code or network unreachable.
 
+=head2 send_csms()
+
+This is simialr to C<send_sms()>, but allows longer messages by concatenated
+SMS to be sent.  If the message fits in a single SMS message, this works
+exactly the same as C<send_sms()>.
+
+Note that not all carriers support CSMS, nor does this necessarily work as
+expected between carriers.  For instance, a message might be received
+as multiple smaller messages, possibly out-of-order.
+
+This method also forces B<PDU> mode, as there is no way to send CSMS from
+the B<TEXT> mode.
+
+Calling C<send_csms()> once may result in many text messages being sent,
+which may be charged individually by your carrier, even though they may
+be reassembled as appear as one message on the receiving station/phone.
+
+See C<send_sms()> for all arguments and return values.
+
+=back
+
 =head2 send_sms()
 
 Obviously, this sends out SMS text messages. I should warn you that B<you cannot send>
@@ -1854,7 +1942,14 @@ on phone memory, while C<normal> is the default.
 =item C<content>
 
 This is the text you want to send, consisting of max 160 chars if you use B<PDU> mode
-and 140 (?) if in B<text> mode (more on this later).
+and 140 (?) if in B<text> mode (more on this later), assuming that the text is either
+standard ASCII or GSM0338-encodable.
+
+If this value contains characters that cannot cleanly map to/from GSM0338, and you are
+using B<PDU> mode, it will send the text as UTF-16. This means you will be unalbe to
+send more than 70 characters, sometimes significantly less (such as with emoticons).
+
+If the length is an issue, you may want to consider C<send_csms()>.
 
 =item C<mode>
 

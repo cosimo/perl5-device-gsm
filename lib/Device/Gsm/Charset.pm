@@ -17,6 +17,8 @@ use constant NPC7   => 0x3F;
 use constant NPC8   => 0x3F;
 use constant ESCAPE => 0x1B;
 
+use Encode;
+
 # The following is the GSM 3.38 standard charset, as shown
 # on some Siemens documentation found on the internet
 
@@ -451,7 +453,12 @@ sub iso8859_to_gsm0338 {
     my $n   = 0;
     for (; $n < length($ascii); $n++) {
         my $ch_ascii = ord(substr($ascii, $n, 1));
-        my $ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_ascii];
+        my $ch_gsm;
+        if ($ch_ascii > 255) {
+            $ch_gsm = NPC7;
+        } else {
+            $ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_ascii];
+        }
 
         # Is this a "replaced" char?
         if ($ch_gsm <= 0xFF) {
@@ -535,6 +542,16 @@ sub gsm0338_to_iso8859 {
     return $ascii;
 }
 
+sub gsm0338_ok {
+    my $in = shift;
+
+    if ($in eq gsm0338_to_iso8859(iso8859_to_gsm0338($in))) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 sub gsm0338_length {
     my $ascii          = shift;
     my $gsm0338_length = 0;
@@ -584,6 +601,33 @@ sub gsm0338_split {
     push(@parts, $part);
     return (@parts);
 }
+
+sub ucs2_split {
+    my $ucs2 = shift;
+    return '' if !defined $ucs2 || $ucs2 eq '';
+    my @parts;
+
+    my $part = '';
+    my (@chars) = split //, $ucs2;
+
+    foreach my $c (@chars) {
+        my $len = length(encode('UTF-16BE', $part));
+        $len += length(encode('UTF-16BE', $c));
+
+        if ($len < 134) { # 140 - 6 (for the User Data Header)
+            $part .= $c;
+        } else {
+            push @parts, $part;
+            $part = $c;
+        }
+    }
+
+    if ($part ne '') {
+        push @parts, $part;
+    }
+    return (@parts);
+}
+
 1;
 
 __END__

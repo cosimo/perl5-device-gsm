@@ -1,6 +1,7 @@
 # Device::Gsm::Pdu - PDU encoding/decoding functions for Device::Gsm class
 # Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
 # Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
+# Copyright (C) 2016 Joel Maslak, jmaslak@antelope.net
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -20,6 +21,7 @@ package Device::Gsm::Pdu;
 use strict;
 use Device::Gsm::Charset;
 use Device::Gsm::Sms::Token::UDH;
+use Encode;
 
 # decode a pdu encoded phone number into human readable format
 sub decode_address {
@@ -161,18 +163,59 @@ sub encode_address {
 }
 
 sub decode_text_UCS2 {
+    # UCS2 is "supposed" to be one of the original Unicode
+    # encodings, where each character is 16 bits whide.  However,
+    # Unicode was later extended to longer code points - something
+    # that was not supported by UCS2.  However, since backwards
+    # compatibility needed to be maintained, most phones interpret
+    # UCS2 as UTF-16 with big endian ordering.  This allows things
+    # like emoticons to work which have codepoints > 65535.
+    #
+    # We treat this as if it is UTF-16BE, unless the encoding fails.
+    # If it fails, we treat it like UCS-2
+    #
+    # For compatibility, we take an optional second parameter, with
+    # options provided in a hashref format.  The only option
+    # currently available is encoding which defaults to "utf-8".
+    # You can pass your preferred decoding, or pass 'none' to
+    # indicate you don't want any decoding (so the string is
+    # returned in native Unicode format)
+
     my $encoded = shift;
     return undef unless $encoded;
+
+    my $options = shift || {};
+    my $encoding = $options->{encoding} || 'UTF-8';
+
+    if (length($encoded) < 2) { die("no length field") }
+    if (length($encoded) % 2) { die("partial bytes found") }
 
     my $len = hex substr($encoded, 0, 2);
     $encoded = substr $encoded, 2;
 
+    my $orig = $encoded;
+
     my $decoded = "";
     while ($encoded) {
-        $decoded .= pack("C0U", hex(substr($encoded, 0, 4)));
+        $decoded .= pack("C", hex(substr($encoded, 0, 2)));
+        $encoded = substr($encoded, 2);
+    }
+    eval { $decoded = decode("UTF-16BE", $decoded) };
+    if (length($decoded)) {
+        return ($encoding eq 'none') ? $decoded : encode($encoding, $decoded);
+    }
+
+    # If we get here, the decode almost certainly failed, so it's
+    # probably actually UCS2
+    $encoded = $orig;
+    if (length($encoded) % 4) { die("odd number of bytes found") }
+
+    my $decoded = "";
+    while ($encoded) {
+        $decoded .= pack("U", hex(substr($encoded, 0, 4)));
         $encoded = substr($encoded, 4);
     }
-    return $decoded;
+    return ($encoding eq 'none') ? $decoded : encode($encoding, $decoded);
 }
 
 sub encode_text7 {
@@ -229,6 +272,51 @@ sub encode_text7_udh {
         wantarray
         ? ($len_hex, $pdu_msg, $len_hex . $pdu_msg)
         : $len_hex . $pdu_msg;
+}
+
+#
+#encode text with padding
+#
+# No padding needed in UCS2
+sub encode_text_UCS2_udh {
+    my $decoded = shift;
+
+    my $pdu_msg = '';
+    my $len_hex = '00';
+
+    if ($decoded ne '') {
+        $pdu_msg = encode_text_UCS2($decoded);
+
+        $len_hex = substr($pdu_msg, 0, 2);
+        $pdu_msg = substr($pdu_msg, 2);
+    }
+
+    return
+        wantarray
+        ? ($len_hex, $pdu_msg, $len_hex . $pdu_msg)
+        : $len_hex . $pdu_msg;
+}
+
+#
+#encode ucs-2 text
+#
+sub encode_text_UCS2 {
+    # This actually encodes into UTF-16 big endian, not UCS2. This is
+    # what most phones actually use.
+    # The input should be a unicode string (so make sure to "decode" any
+    # UTF-8 into a unicode string.
+    my $txt = shift;
+
+    my $utf16 = encode('UTF-16BE', $txt);
+    # if (length($utf16) > 255) { die("input string encodes > 256 characters") }
+
+    my $c2 = 0;
+    my $output = sprintf("%02X", length($utf16));
+    foreach my $c (split //, $utf16) {
+        $output .= sprintf("%02X", ord($c));
+    }
+
+    return $output;
 }
 
 sub pdu_to_latin1 {
@@ -347,6 +435,21 @@ Converts a PDU (without the initial length octet) into a latin1 string.
 =head2 latin1_to_pdu($text)
 
 Converts a text string in latin1 encoding (ISO-8859-1) into a PDU string.
+
+=head2 decode_text_UCS2($text, $options)
+
+Decodes text from UCS2 (actually UTF16-BE).  C<$options> is a hashref
+that contains only one key/value pair for the key C<encoding>.  If
+this is provided, the returned text is encoded in the appropriate
+encoding (valid encodings are any encoding supported by L<Encoding>
+and the special encoding C<'none'> which indicates that a raw Unicode
+string should be returned.  If C<$options> is not passed, or if there
+is no value sent for C<encoding>, it defaults to UTF-8.
+
+=head2 encode_text_UCS2($text)
+
+Encodes text into UCS2 (actually UTF16-BE).  The text is assumed to
+be a Unicode string (no encoding).
 
 =head3 Example
 
