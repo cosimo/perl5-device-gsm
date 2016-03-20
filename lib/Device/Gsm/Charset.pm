@@ -451,7 +451,12 @@ sub iso8859_to_gsm0338 {
     my $n   = 0;
     for (; $n < length($ascii); $n++) {
         my $ch_ascii = ord(substr($ascii, $n, 1));
-        my $ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_ascii];
+        my $ch_gsm;
+        if ($ch_ascii > 255) {
+            $ch_gsm = NPC7;
+        } else {
+            $ch_gsm = $Device::Gsm::Charset::ISO8859_TO_GSM0338[$ch_ascii];
+        }
 
         # Is this a "replaced" char?
         if ($ch_gsm <= 0xFF) {
@@ -533,6 +538,16 @@ sub gsm0338_to_iso8859 {
     }
 
     return $ascii;
+}
+
+sub gsm0338_ok {
+    my $in = shift;
+
+    if ($in eq gsm0338_to_iso8859(iso8859_to_gsm0338($in))) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 sub gsm0338_length {
