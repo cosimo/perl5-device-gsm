@@ -275,6 +275,29 @@ sub encode_text7_udh {
 }
 
 #
+#encode text with padding
+#
+# No padding needed in UCS2
+sub encode_text_UCS2_udh {
+    my $decoded = shift;
+
+    my $pdu_msg = '';
+    my $len_hex = '00';
+
+    if ($decoded ne '') {
+        $pdu_msg = encode_text_UCS2($decoded);
+
+        $len_hex = substr($pdu_msg, 0, 2);
+        $pdu_msg = substr($pdu_msg, 2);
+    }
+
+    return
+        wantarray
+        ? ($len_hex, $pdu_msg, $len_hex . $pdu_msg)
+        : $len_hex . $pdu_msg;
+}
+
+#
 #encode ucs-2 text
 #
 sub encode_text_UCS2 {
@@ -285,11 +308,12 @@ sub encode_text_UCS2 {
     my $txt = shift;
 
     my $utf16 = encode('UTF-16BE', $txt);
-    if (length($utf16) > 255) { die("input string encodes > 256 characters") }
+    # if (length($utf16) > 255) { die("input string encodes > 256 characters") }
 
-    my $output = sprintf("%02x", length($utf16));
+    my $c2 = 0;
+    my $output = sprintf("%02X", length($utf16));
     foreach my $c (split //, $utf16) {
-        $output .= sprintf("%02x", ord($c));
+        $output .= sprintf("%02X", ord($c));
     }
 
     return $output;

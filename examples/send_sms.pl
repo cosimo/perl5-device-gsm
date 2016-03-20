@@ -4,6 +4,7 @@
 
 use strict;
 use Device::Gsm;
+use encoding 'utf8';
 
 print "\nthis is send_sms.pl\n";
 print "I hope I can send an SMS on your GSM phone attached to...\n";
@@ -14,9 +15,13 @@ my $myport;
 my $pin  = '0000';
 my $mypin;
 
-print "Select your serial port [$port] : ";
-chomp( $myport = <STDIN> );
-$myport ||= $port;
+if (exists($ENV{'GSM_PORT'})) {
+    $myport = $ENV{'GSM_PORT'};
+} else {
+    print "Select your serial port [$port] : ";
+    chomp( $myport = <STDIN> );
+    $myport ||= $port;
+}
 
 print "Insert your PIN number if you need to register to GSM network [$pin] : ";
 chomp( $mypin = <STDIN> );
