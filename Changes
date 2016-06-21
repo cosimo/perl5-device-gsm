@@ -1,5 +1,12 @@
 Revision history for Perl extension Device::Gsm.
 
+1.61  Tue Jun 21 21:05:12 CEST 2016
+    - Fixed RT#115491, remove the use of the encodings pragma, now deprecated.
+    - Plenty of style, test and functionality fixes contributed by Joel Maslak
+      and Paul Cochrane, as part of the CPAN PR Challenge. Awesome job, thanks!
+    - Amended the main module documentation to make it clear this module is
+      in maintenance mode and hasn't seen any major development work in years.
+
 1.60  Fri Mar 16 12:14:07 CET 2012
     - Removed the syslog test. Was artificial and pointless,
       and it failed on Windows and Solaris. Thanks to CPAN testers reports.

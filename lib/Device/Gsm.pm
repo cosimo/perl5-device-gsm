@@ -1,8 +1,8 @@
 # Device::Gsm - a Perl class to interface GSM devices as AT modems
-# Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
+# Copyright (C) 2002-2016 Cosimo Streppone, cosimo@cpan.org
 # Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
 # Copyright (C) 2016 Joel Maslak, jmaslak@antelope.net
-#
+
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
 #
@@ -13,7 +13,7 @@
 
 package Device::Gsm;
 
-$Device::Gsm::VERSION = '1.60';
+$Device::Gsm::VERSION = '1.61';
 
 use strict;
 use Device::Modem 1.47;
@@ -1492,29 +1492,42 @@ Device::Gsm - Perl extension to interface GSM phones / modems
 
 =head1 DESCRIPTION
 
-C<Device::Gsm> class implements basic GSM functions, network registration and SMS sending.
+C<Device::Gsm> class implements basic GSM functions, network registration
+and SMS sending.
 
 This class supports also C<PDU> mode to send C<SMS> messages, and should be
-fairly usable. In the past, I have developed and tested it under Linux RedHat 7.1
-with a 16550 serial port and Siemens C35i/C45 GSM phones attached with
-a Siemens-compatible serial cable. Currently, I'm developing and testing this stuff
-with Linux Slackware 10.2 and a B<Cambridge Silicon Radio> (CSR) USB
+fairly usable. In the past, I have developed and tested it under Linux RedHat
+7.1 with a 16550 serial port and Siemens C35i/C45 GSM phones attached with
+a Siemens-compatible serial cable. After some years, I have developed and
+tested it with Linux Slackware 10.2 and a B<Cambridge Silicon Radio> (CSR) USB
 bluetooth dongle, connecting to a Nokia 6600 phone.
 
-Please be kind to the universe and contact me if you have troubles or you are
-interested in this.
+Currently I don't use this software anymore. It should probably still work,
+but it's unlikely I will ever be able to test it with a real gsm module.
 
-Please be monstrously kind to the universe and (if you don't mind spending an SMS)
-use the C<examples/send_to_cosimo.pl> script to make me know that Device::Gsm works
-with your device (thanks!).
+Feel free to contact me if you have any trouble or you are interested in
+improving this software.
 
-Recent versions of C<Device::Gsm> have also an utility called C<autoscan> in
-the C<bin/> folder, that creates a little profile of the devices it runs
-against, that contains information about supported commands and exact output
-of commands to help recognize similar devices.
+If you need a way to test your gsm module or phone, and you don't mind spending
+an SMS, use the C<examples/send_to_cosimo.pl> script to notify me that
+C<Device::Gsm> still works and works well with your device (thanks!).
 
-Be sure to send me your profile by email (if you want to),
-so I can add better support for your device in the future!
+Over the years, I have collected hundreds of messages from all over the
+world :-)
+
+=head1 WHY?
+
+Why would you want to use this?
+
+When I started writing this software, around year 2000, I needed a practical
+way to automatically send tens of SMS messages through my phone.
+
+Fast forward to 2016, I barely use SMS messages anymore, and you can find
+plenty of TCP/IP based services to send SMS messages, maybe even for free.
+
+The only motivation left would be to learn how AT commands work for GSM
+modules. I had lots of fun learning this, but it was so many years ago, and
+YMMV, as they say.
 
 =head1 METHODS
 
@@ -1576,9 +1589,9 @@ Example:
 
 Used to get or set your phone/gsm modem date and time.
 
-If called without parameters, it gets the current phone/gsm date and time in "gsm"
-format "YY/MM/DD,HH:MN:SS". For example C<03/12/15,22:48:59> means December the 15th,
-at 10:48:59 PM. Example:
+If called without parameters, it gets the current phone/gsm date and time in
+"gsm" format, "YY/MM/DD,HH:MN:SS". For example C<03/12/15,22:48:59> means
+December the 15th, at 10:48:59 PM. Example:
 
     $datestr = $gsm->datetime();
 
@@ -1587,27 +1600,28 @@ of supplied value. Example:
 
     $newdate = $gsm->datetime( time() );
 
-where C<time()> is the perl's builtin C<time()> function (see C<perldoc -f time> for details).
-Another variant allows to pass a C<localtime> array to set the correspondent datetime. Example:
-
+where C<time()> is the perl's builtin C<time()> function (see
+C<perldoc -f time> for details). Another variant allows one to pass a
+C<localtime> array to set the correspondent datetime. Example:
+ 
     $newdate = $gsm->datetime( localtime() );
 
-(Note the list context). Again you can read the details for C<localtime> function
-with C<perldoc -f localtime>.
+(Note the list context). Again you can read the details for C<localtime>
+function with C<perldoc -f localtime>.
 
-If your device does not support this command, an B<undefined> value will be returned
-in either case.
+If your device does not support this command, an B<undefined> value will be
+returned in either case.
 
 
 =head2 delete_sms()
 
-This method deletes a message from your SIM card, given the message index number.
-Example:
+This method deletes a message from your SIM card, given the message index
+number.  Example:
 
     $gsm->delete_sms(3);
 
-An optional second parameter specifies the "storage". It allows to delete messages
-from gsm phone memory or sim card memory. Example:
+An optional second parameter specifies the "storage". It allows one to delete
+messages from gsm phone memory or sim card memory. Example:
 
     # Deletes first message from gsm phone memory
     $gsm->delete_sms(1, 'ME');
@@ -1620,8 +1634,9 @@ By default, it uses the currently set storage, via the C<storage()> method.
 =head2 forward()
 
 Sets call forwarding. Accepts three arguments: reason, mode and number.
-Reason can be the string C<unconditional>, C<busy>, C<no reply> and C<unreachable>.
-Mode can be the string C<disable>, C<enable>, C<query>, C<register>, C<erase>.
+Reason can be the string C<unconditional>, C<busy>, C<no reply> and
+C<unreachable>.  Mode can be the string C<disable>, C<enable>, C<query>,
+C<register>, C<erase>.  
 
 Example:
 
@@ -1644,9 +1659,11 @@ Example:
 
 =head2 imei()
 
-Returns the device own IMEI number (International Mobile Equipment Identifier ???).
-This identifier is numeric and should be unique among all GSM mobile devices and phones.
-This is not really true, but ... . Example:
+Returns the device own IMEI number
+(B<International Mobile Station Equipment Identity>).
+
+This identifier is numeric and is supposed to be unique among all GSM mobile
+devices and phones. Example:
 
     my $imei = $gsm->imei();
 
@@ -1666,14 +1683,15 @@ C<Siemens>, C<Falcom>, ...). Example:
 
 =head2 messages()
 
-This method is a somewhat unstable and subject to change, but for now it seems to work.
-It is meant to extract all text SMS messages stored on your SIM card or gsm phone.
-In list context, it returns a list of messages (or undefined value if no message or errors),
-every message being a C<Device::Gsm::Sms> object.
+This method is a somewhat unstable and subject to change, but for now it seems
+to work. It is meant to extract all text SMS messages stored on your SIM card
+or gsm phone.  In list context, it returns a list of messages (or undefined
+value if no message or errors), every message being a C<Device::Gsm::Sms>
+object.
 
-The only parameter specifies the C<storage> where you want to read the messages,
-and can assume some of the following values (but check your phone/modem manual for
-special manufacturer values):
+The only parameter specifies the C<storage> where you want to read the
+messages, and can assume some of the following values (but check your
+phone/modem manual for special manufacturer values):
 
 =over 4
 
@@ -1703,8 +1721,8 @@ Example:
 
 =head2 mode()
 
-Sets the device GSM command mode. Accepts one parameter to set the new mode that can
-be the string C<text> or C<pdu>. Example:
+Sets the device GSM command mode. Accepts one parameter to set the new mode
+that can be the string C<text> or C<pdu>. Example:
 
     # Set text mode
     $gsm->mode('text');
@@ -1744,9 +1762,10 @@ network. See C<register()> method.
 
 =head2 signal_quality()
 
-Returns the measure of signal quality expressed in dBm units, where near to zero is better.
-An example value is -91 dBm, and reported value is C<-91>. Values should range from
--113 to -51 dBm, where -113 is the minimum signal quality and -51 is the theoretical maximum quality.
+Returns the measure of signal quality expressed in dBm units, where near to
+zero is better.  An example value is -91 dBm, and reported value is C<-91>.
+Values should range from -113 to -51 dBm, where -113 is the minimum signal
+quality and -51 is the theoretical maximum quality.
 
     my $level = $gsm->signal_quality();
 
@@ -1763,9 +1782,10 @@ For example, for my Siemens C45, C<$rev> holds C<06>.
 
 =head2 storage()
 
-Allows to get/set the current sms storage, that is where the sms messages are saved,
-either the sim card or gsm phone memory. Phones/modems that do not support this feature
-(implemented by C<+CPMS> AT command won't be affected by this method.
+Allows to get/set the current sms storage, that is where the sms messages are
+saved, either the sim card or gsm phone memory. Phones/modems that do not
+support this feature (implemented by C<+CPMS> AT command won't be affected by
+this method.
 
     my @msg;
     my $storage = $gsm->storage();
@@ -1781,10 +1801,9 @@ either the sim card or gsm phone memory. Phones/modems that do not support this 
 
 =head2 test_command()
 
-This method allows to query the device to know if a specific AT GSM command is supported.
-This is used only with GSM commands (those with C<AT+> prefix).
-For example, I want to know if my device supports the C<AT+GXXX> command.
-All we have to do is:
+This method queries the device to know if a specific AT GSM command is
+supported.  This is used only with GSM commands (those with C<AT+> prefix).
+For example, if I want to know if my device supports the C<AT+GXXX> command:
 
     my $gsm = Device::Gsm->new( port => '/dev/myport' );
 
@@ -1797,7 +1816,8 @@ All we have to do is:
     }
 
 Note that if you omit the starting C<+> character, it is automatically added.
-You can also test commands like C<^SNBR> or the like, without C<+> char being added.
+You can also test commands like C<^SNBR> or the like, without C<+> char being
+added.
 
 This method caches the results of the test to use in future tests (at least
 until the next C<connect()> or C<disconnect()> is executed).
@@ -1810,23 +1830,25 @@ until the next C<connect()> or C<disconnect()> is executed).
 
 =head2 register()
 
-"Registering" on the GSM network is what happens when you turn on your mobile phone or GSM equipment
-and the device tries to reach the GSM operator network. If your device requires a B<PIN> number,
-it is used here (but remember to supply the C<pin> parameter in new() object constructor for this
-to work.
+"Registering" on the GSM network is what happens when you turn on your mobile
+phone or GSM equipment and the device tries to reach the GSM operator network.
+If your device requires a B<PIN> number, it is used here (but remember to
+supply the C<pin> parameter in new() object constructor for this to work.
 
 Registration can take some seconds, don't worry for the wait.
-After that, you are ready to send your SMS messages or do some voice calls, ... .
-Normally you don't need to call register() explicitly because it is done automatically for you
-when/if needed.
+After that, you are ready to send your SMS messages or do some voice calls.
+Normally you don't need to call register() explicitly because it is done
+automatically for you when/if needed.
 
-If return value is true, registration was successful, otherwise there is something wrong;
-probably you supplied the wrong PIN code or network unreachable.
+If return value is true, registration was successful, otherwise there is
+something wrong; probably you supplied the wrong PIN code or network
+unreachable.
 
 =head2 send_sms()
 
-Obviously, this sends out SMS text messages. I should warn you that B<you cannot send>
-(for now) MMS, ringtone, smart, ota messages of any kind with this method.
+Obviously, this sends out SMS text messages. I should warn you that
+B<you cannot send> (for now) MMS, ringtone, smart, ota messages of any kind
+with this method.
 
 Send out an SMS message quickly:
 
@@ -1847,9 +1869,9 @@ The allowed parameters to send_sms() are:
 
 =item C<class>
 
-Class parameter can assume two values: C<normal> and C<flash>. Flash (or class zero) messages are
-particular because they are immediately displayed (without user confirm) and never stored
-on phone memory, while C<normal> is the default.
+Class parameter can assume two values: C<normal> and C<flash>. Flash (or class
+zero) messages are particular because they are immediately displayed (without
+user confirm) and never stored on phone memory, while C<normal> is the default.
 
 =item C<content>
 
@@ -1859,12 +1881,13 @@ and 140 (?) if in B<text> mode (more on this later).
 =item C<mode>
 
 Can assume two values (case insensitive): C<pdu> and C<text>.
-C<PDU> means B<Protocol Data Unit> and it is a sort of B<binary> encoding of commands,
-to save time/space, while C<text> is the normal GSM commands text mode.
+C<PDU> means B<Protocol Data Unit> and it is a sort of B<binary> encoding of
+commands, to save time/space, while C<text> is the normal GSM commands text
+mode.
 
 Recent mobile phones and GSM equipment surely have support for C<PDU> mode.
-Older OEM modules (like Falcom Swing, for example) don't have PDU mode, but only text mode.
-It is just a matter of trying.
+Older OEM modules (like Falcom Swing, for example) don't have PDU mode, but
+only text mode. It is just a matter of trying.
 
 =item C<recipient>
 
@@ -1872,10 +1895,10 @@ Phone number of message recipient
 
 =item C<status_report>
 
-If present with a true value, it enables sending of SMS messages (only for PDU mode,
-text mode SMS won't be influenced by this parameter) with the status report,
-also known as delivery report, that is a short message that reports the status
-of your sent message.
+If present with a true value, it enables sending of SMS messages (only for PDU
+mode, text mode SMS won't be influenced by this parameter) with the status
+report, also known as delivery report, that is a short message that reports the
+status of your sent message.
 Usually this is only available if your mobile company supports this feature,
 and probably you will be charged a small amount for this service.
 
@@ -1885,9 +1908,10 @@ More information on this would be welcome.
 
 =head2 service_center()
 
-If called without parameters, returns the actual SMS Service Center phone number. This is
-the number your phone automatically calls when receiving and sending SMS text messages, and
-your network operator should tell you what this number is.
+If called without parameters, returns the actual SMS Service Center phone
+number. This is the number your phone automatically calls when receiving and
+sending SMS text messages, and your network operator should tell you what this
+number is.
 
 Example:
 
