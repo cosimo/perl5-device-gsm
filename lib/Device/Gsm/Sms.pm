@@ -1,6 +1,7 @@
 # Device::Gsm::Sms - SMS message simple class that represents a text SMS message
 # Copyright (C) 2002-2015 Cosimo Streppone, cosimo@cpan.org
 # Copyright (C) 2006-2015 Grzegorz Wozniak, wozniakg@gmail.com
+# Copyright (C) 2016 Joel Maslak, jmaslak@antelope.net
 #
 # This program is free software; you can redistribute it and/or modify
 # it only under the terms of Perl itself.
@@ -66,7 +67,7 @@ sub new {
 
     # Check for valid msg header (thanks to Pierre Hilson for his patch
     # to make this regex work also for Alcatel gsm software)
-    if ($opt{'header'} =~ /\+CMGL:\s*(\d+),\s*(\d+),\s*(\w*),\s*(\d+)/o) {
+    if ($opt{'header'} =~ /\+CMGL:\s*(\d+),\s*(\d+),\s*([\"\w]*),\s*(\d+)/o) {
 
         $self->{'index'} = $1;    # Position of message in SIM card
         $self->{'status'}

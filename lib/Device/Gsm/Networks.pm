@@ -390,10 +390,15 @@ our %NETWORKS = (
 
 sub name {
     my $number = $_[0];
-    $number =~ s/\D//;
-    return exists $NETWORKS{$number}
-        ? $NETWORKS{$number}
-        : 'unknown';
+    if ($number =~ m/\d/) {
+        $number =~ s/\D//;
+        return exists $NETWORKS{$number}
+            ? $NETWORKS{$number}
+            : 'unknown';
+    } else {
+        # We assume we've been passed a name (Adafruit Fona does this)
+        return $number;
+    }
 }
 
 sub country {
