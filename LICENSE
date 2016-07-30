@@ -1,4 +1,12 @@
-This software is copyright (c) 2002-2015 by Cosimo Streppone and Grzegorz Wozniak.
+The installation package includes programmer documentation derived
+from Unicode sources licensed for free use for development and
+documentation.  This is:
+    Copyright (c) 2000 Unicode, Inc.  All Rights reserved.
+For additional information, see docs/gsm0388.txt
+
+This software includes parts:
+copyright (c) 2002-2015 by Cosimo Streppone and Grzegorz Wozniak.
+copyright (c) 2016 by Joel Maslak
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
@@ -12,7 +20,9 @@ b) the "Artistic License"
 
 --- The GNU General Public License, Version 1, February 1989 ---
 
-This software is Copyright (c) 2015 by Cosimo Streppone and Grzegorz Wozniak.
+This software includes parts:
+    Copyright (c) 2002-2015 by Cosimo Streppone and Grzegorz Wozniak
+    Copyright (c) 2016 by Joel Maslak
 
 This is free software, licensed under:
 
@@ -272,7 +282,9 @@ That's all there is to it!
 
 --- The Artistic License 1.0 ---
 
-This software is Copyright (c) 2015 by Cosimo Streppone and Grzegorz Wozniak.
+This software includes parts:
+ Copyright (c) 2002-2015 by Cosimo Streppone and Grzegorz Wozniak.
+ Copyright (c) 2016 by Joel Maslak
 
 This is free software, licensed under:
 
