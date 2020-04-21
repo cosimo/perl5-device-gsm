@@ -410,13 +410,21 @@ sub model {
 #
 sub imei {
     my $self = shift;
-    my ($code, $imei);
+    my ($code, $imei, @imei);
 
     # Test if manufacturer code command is supported
     if ($self->test_command('+CGSN')) {
 
         $self->atsend('AT+CGSN' . Device::Modem::CR);
-        ($code, $imei) = $self->parse_answer($Device::Modem::STD_RESPONSE);
+        ($code, @imei) = $self->parse_answer($Device::Modem::STD_RESPONSE);
+
+        # Thu Apr 21 12:00:13 2020 smsd    info    answer: read [AT+CGSN^M888888888888888^M^MOK^M]
+        # Thu Apr 21 12:00:17 2020 smsd    info    answer: read [^M888888888888888^M^MOK^M]
+        if( $#imei > 0 and $imei[0] eq 'AT+CGSN' ){
+           $imei = $imei[1];
+        }elsif( $#imei >= 0 ){
+           $imei = $imei[0];
+        }
 
         $self->log->write('info', 'IMEI code is [' . $imei . ']');
 
